@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Parkinsans:wght@300..800&display=swap');
+
+body {
+    font-family: "Parkinsans", sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #FFCC00;
+    padding: 20px;
+    font-size: 25px;
+    
+}
+
+.header-content p {
+    padding-bottom: 20px;
+}
+
+.logo {
+    width: 180px;
+    height: auto;
+    margin-right: 20px;
+}
+
+.header-text {
+    text-align: left;
+}
+
+.banner {
+    position: relative;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    background-image: url('imgs/IMG_20240917_205341_808 (1).jpg');
+    background-size: cover;
+    background-position: center;
+    padding: 100px 20px;
+    height: 70vh; 
+}
+
+.banner-content {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    display: inline-block;
+    border-radius: 10px;
+
+}
+
+section {
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.sobre-nos {
+    padding: 50px 20px;
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px;
+}
+
+.galeria .fotos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.galeria .fotos img {
+    margin: 10px;
+    max-width: 100%;
+    height: auto;
+}
