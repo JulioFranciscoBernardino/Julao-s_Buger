@@ -37,7 +37,7 @@ body {
     justify-content: center;
     align-items: center;
     color: white;
-    background-image: url('imgs/IMG_20240917_205341_808 (1).jpg');
+    background-image: url('imgs/salao.jpg');
     background-size: cover;
     background-position: center;
     padding: 100px 20px;
@@ -78,4 +78,22 @@ footer {
     margin: 10px;
     max-width: 100%;
     height: auto;
+}
+
+.galeria .fotos img{
+    width: 320px;
+    height: 460px;
+    border-radius: 5px;
+}
+
+.galeria .fotos img.dog{
+    width: 500px;
+}
+
+.galeria .fotos img.salada{
+    width: 300px;
+}
+
+.galeria .fotos img.king{
+    width: 300px;
 }
