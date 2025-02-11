@@ -6,6 +6,12 @@ body {
     padding: 0;
 }
 
+.header {
+    position: relative;
+    height: 100px;
+    background-color: #f2f2f2; /* Cor de fundo opcional */
+  }
+
 .header-content {
     display: flex;
     align-items: center;
@@ -13,11 +19,40 @@ body {
     background-color: #FFCC00;
     padding: 20px;
     font-size: 25px;
+    padding-left: 120px;
     
 }
 
 .header-content p {
     padding-bottom: 20px;
+}
+
+.navegation {
+    position: absolute; /* Posiciona a navegação de forma absoluta */
+    top: 0; /* Alinha ao topo do header */
+    right: 0; /* Alinha à direita do header */
+    margin-top: 20px;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px
+}
+
+.menu {
+    width: 350px;
+    background-color: #c79f00;
+    padding: 2px;
+    border-radius: 5px;
+  }
+
+.navegation-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 5px;
+    padding-left: 15px;
+    justify-content: center;
+    list-style-type: none;  
 }
 
 .logo {
@@ -87,7 +122,7 @@ footer {
 }
 
 .galeria .fotos img.dog{
-    width: 500px;
+    width: 700px;
 }
 
 .galeria .fotos img.salada{
