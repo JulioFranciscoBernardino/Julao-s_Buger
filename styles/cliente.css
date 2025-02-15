@@ -1,11 +1,41 @@
 body{
-    position: relative;
-    background-image: url('');
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    height: 100vh;
+    margin: 0;
+    background-image: url('/imgs/salao.jpg');
 }
 
-.conteiner{
+.container {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: row; 
+    flex-wrap: nowrap; 
     justify-content: center;
-    gap: 100px;
+    gap: 35%; 
+    margin-bottom: 15px;
+    
+}
+
+.login, .register {
+    white-space: nowrap;
+    flex: 1; 
+    min-width: 200px;
+    font-size: 20px;
+    background-color: #FFCC00;
+    padding: 10px;
+    padding-right: 140px;
+    border-radius: 10px;
+    border: 1px solid black;
+
+}
+
+
+input[type="text"], input[type="password"] {
+    width: 300px; 
+    height: 25px; 
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
 }
