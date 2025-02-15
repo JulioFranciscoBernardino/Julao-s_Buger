@@ -28,9 +28,9 @@ body {
 }
 
 .navegation {
-    position: absolute; /* Posiciona a navegação de forma absoluta */
-    top: 0; /* Alinha ao topo do header */
-    right: 0; /* Alinha à direita do header */
+    position: absolute; 
+    top: 0;
+    right: 0; 
     margin-top: 20px;
     margin-right: 20px;
     display: flex;
@@ -39,18 +39,18 @@ body {
 }
 
 .menu {
-    width: 350px;
+    width: 110px;
     background-color: #c79f00;
-    padding: 2px;
     border-radius: 5px;
   }
 
 .navegation-content {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
     padding: 5px;
-    padding-left: 15px;
+    padding-left: auto;
     justify-content: center;
     list-style-type: none;  
 }
