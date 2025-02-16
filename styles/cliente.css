@@ -5,7 +5,7 @@ body{
     flex-wrap: wrap;
     height: 100vh;
     margin: 0;
-    background-image: url('/imgs/salao.jpg');
+    background-image: url('imgs/salao.jpg');
 }
 
 .container {
