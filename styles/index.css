@@ -156,3 +156,35 @@ footer a:hover{
 .galeria .fotos img.king{
     width: 300px;
 }
+
+@media (max-width: 768px) {
+    .header-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; 
+        justify-content: flex-start;
+        padding-left: 10px; 
+    }
+    
+    .header-content img {
+        width: 100px;
+        margin-bottom: 10px;
+    }
+
+    .header-text {
+        margin-left: 0;
+        font-size: 15px;
+    }
+
+    .navegation{
+        position: absolute;
+        right: 0;
+        padding-right: 0;
+        margin-right: 60px;
+        font-size: 10px;
+        width: 10px;
+    }
+
+
+
+}
