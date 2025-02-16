@@ -72,8 +72,6 @@ body {
     justify-content: center;
     align-items: center;
     color: white;
-    background-image: url('/imgs/salao.jpg');
-    background-size: cover;
     background-position: center;
     padding: 100px 20px;
     height: 70vh; 
