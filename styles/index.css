@@ -6,10 +6,24 @@ body {
     padding: 0;
 }
 
+body a{
+    text-decoration: none;
+}
+
+body .navegation a{
+    text-decoration: none;
+    color: black;
+}
+
+
+body a:hover{
+    color: #f2f2f2;
+}
+
 .header {
     position: relative;
     height: 100px;
-    background-color: #f2f2f2; /* Cor de fundo opcional */
+    background-color: #f2f2f2;
   }
 
 .header-content {
@@ -20,6 +34,7 @@ body {
     padding: 20px;
     font-size: 25px;
     padding-left: 120px;
+    text-decoration: none;
     
 }
 
@@ -35,13 +50,15 @@ body {
     margin-right: 20px;
     display: flex;
     align-items: center;
-    gap: 20px
+    gap: 20px;
+    text-decoration: none;
 }
 
 .menu {
     width: 111px;
     background-color: #c79f00;
     border-radius: 5px;
+    text-decoration: none;
   }
 
 .navegation-content {
@@ -53,6 +70,7 @@ body {
     padding-left: auto;
     justify-content: center;
     list-style-type: none;  
+    text-decoration: none;
 }
 
 .logo {
@@ -99,6 +117,14 @@ footer {
     color: white;
     text-align: center;
     padding: 10px;
+}
+
+footer a{
+    color: #f2f2f2;
+}
+
+footer a:hover{
+    color: darkorchid;
 }
 
 .galeria .fotos {

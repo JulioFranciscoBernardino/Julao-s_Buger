@@ -6,6 +6,11 @@ body{
     height: 100vh;
     margin: 0;
     background-image: url('imgs/salao.jpg');
+    text-decoration: none;
+}
+
+body a {
+    text-decoration: none;
 }
 
 .container {
@@ -19,6 +24,7 @@ body{
 }
 
 .login, .register {
+    text-align: left;
     white-space: nowrap;
     flex: 1; 
     min-width: 200px;
@@ -38,4 +44,39 @@ input[type="text"], input[type="password"] {
     padding: 10px;
     font-size: 16px;
     border-radius: 5px;
+}
+
+button {
+    display: block;
+    margin-left: 105px;
+    margin-top: 20px;
+    background-color: #c79f00;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+button:hover {
+    background-color: #b88e00
+}
+
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .login, .register {
+        padding-right: 10px;
+    }
+
+    button {
+        margin-left: 0;
+        width: 100%;
+    }
+
 }
