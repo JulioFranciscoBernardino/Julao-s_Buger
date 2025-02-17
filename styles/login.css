@@ -100,7 +100,7 @@ button:hover {
         gap: 20px;
     }
 
-    .login, .register {
+    .login, .register, .login-empresa {
         padding-right: 10px;
     }
 
@@ -116,6 +116,10 @@ button:hover {
 
     footer.admin p a{
         font-size: 20px;
+    }
+
+    .login-empresa button {
+        margin-left: 1px;
     }
     
 }
