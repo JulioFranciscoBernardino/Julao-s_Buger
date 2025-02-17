@@ -23,32 +23,33 @@ body a {
     
 }
 
-.login, .register {
+.login, .register{
     text-align: left;
     white-space: nowrap;
     flex: 1; 
-    min-width: 200px;
+    min-width: auto;
     font-size: 20px;
     background-color: #FFCC00;
     padding: 10px;
-    padding-right: 140px;
+    padding-right: 10px;
     border-radius: 10px;
-    border: 1px solid black;
+    border: 0px solid black;
 
 }
 
 
-input[type="text"], input[type="password"] {
+input[type="text"], input[type="password"], input[type="email"] {
     width: 300px; 
     height: 25px; 
     padding: 10px;
     font-size: 16px;
     border-radius: 5px;
+    border: 0px solid black;
 }
 
 button {
     display: block;
-    margin-left: 105px;
+    margin-left: 115px;
     margin-top: 20px;
     background-color: #c79f00;
     color: white;
