@@ -5,11 +5,8 @@ body{
     flex-wrap: wrap;
     height: 100vh;
     margin: 0;
-    background-image: url('imgs/salao.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
     text-decoration: none;
+    background-color: antiquewhite;
 }
 
 body a {
@@ -26,12 +23,12 @@ body a {
     
 }
 
-.login, .register{
+.login, .register, .login-empresa{
     text-align: left;
     white-space: nowrap;
     flex: 1; 
     min-width: auto;
-    font-size: 20px;
+    font-size: 17px;
     background-color: #FFCC00;
     padding: 10px;
     padding-left: 10px;
@@ -47,6 +44,13 @@ body a {
     padding-left: 49px;
 }
 
+.login p {
+    padding-left: 13px;
+}
+
+.login-empresa button{
+    margin-left: 125px;
+}
 
 input[type="text"], input[type="password"], input[type="email"] {
     width: 300px; 
@@ -59,11 +63,11 @@ input[type="text"], input[type="password"], input[type="email"] {
 
 button {
     display: block;
-    margin-left: 115px;
+    margin-left: 113px;
     margin-top: 20px;
     background-color: #c79f00;
     color: white;
-    padding: 10px 20px;
+    padding: 10px 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
