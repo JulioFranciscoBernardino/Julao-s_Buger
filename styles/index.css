@@ -131,7 +131,6 @@ footer a:hover{
 
 .galeria .fotos {
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
 }
 
@@ -147,20 +146,45 @@ footer a:hover{
     border-radius: 5px;
 }
 
-.galeria .fotos img.dog{
-    width: 700px;
+.galeria-container {
+    position: relative;
+    width: 80%;
+    margin: 0 auto;
+    overflow: hidden;
 }
 
-.galeria .fotos img.salada{
-    width: 300px;
+.fotos.rolagem {
+    display: flex;
+    overflow-x: auto; /* Permitir rolagem horizontal */
+    scroll-behavior: smooth; /* Adicionar transição suave */
 }
 
-.galeria .fotos img.king{
-    width: 300px;
+.fotos img {
+    max-width: 100%;
+    height: auto;
+    margin-right: 10px;
 }
 
-.galeria .fotos img.double{
-    width: auto;
+button.prev,
+button.next {
+    position: absolute; /* Manter os botões dentro do contêiner */
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 10;
+}
+
+button.prev {
+    left: 10px;
+}
+
+button.next {
+    right: 10px;
 }
 
 @media (max-width: 768px) {
