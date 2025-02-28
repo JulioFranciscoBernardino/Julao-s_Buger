@@ -23,7 +23,7 @@ body a {
     
 }
 
-.login, .register, .login-empresa{
+.login, .register{
     text-align: left;
     white-space: nowrap;
     flex: 1; 
@@ -37,11 +37,13 @@ body a {
     border: 0px solid black;
     box-shadow: 5px 5px 10px #5f5f5f;
     text-shadow: 2px 2px 1px #a3a3a3;
+    opacity: 95%;
 
 }
 
 .register p {
     padding-left: 49px;
+    
 }
 
 .login p {
