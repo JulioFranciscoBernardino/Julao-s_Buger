@@ -129,14 +129,19 @@ footer a:hover{
     color: darkorchid;
 }
 
+.galeria{
+    background-color: #5f5f5f;
+    overflow-x: auto;
+}
+
 .galeria .fotos {
     display: flex;
-    justify-content: center;
+    justify-content: left;
 }
 
 .galeria .fotos img {
     margin: 10px;
-    max-width: 100%;
+    max-width: auto;
     height: auto;
 }
 
@@ -146,46 +151,7 @@ footer a:hover{
     border-radius: 5px;
 }
 
-.galeria-container {
-    position: relative;
-    width: 80%;
-    margin: 0 auto;
-    overflow: hidden;
-}
 
-.fotos.rolagem {
-    display: flex;
-    overflow-x: auto; /* Permitir rolagem horizontal */
-    scroll-behavior: smooth; /* Adicionar transição suave */
-}
-
-.fotos img {
-    max-width: 100%;
-    height: auto;
-    margin-right: 10px;
-}
-
-button.prev,
-button.next {
-    position: absolute; /* Manter os botões dentro do contêiner */
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    border: none;
-    font-size: 2rem;
-    cursor: pointer;
-    padding: 10px;
-    z-index: 10;
-}
-
-button.prev {
-    left: 10px;
-}
-
-button.next {
-    right: 10px;
-}
 
 @media (max-width: 768px) {
     .header-content {
