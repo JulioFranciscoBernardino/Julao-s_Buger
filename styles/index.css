@@ -183,6 +183,11 @@ footer a:hover{
         width: 10px;
     }
 
+    .galeria .fotos img{
+        width: 200px;
+        height: 200px;
+    }
+
 
 
 }
