@@ -1,5 +1,5 @@
 
-.parent {
+.menu {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(5, 1fr);
@@ -10,9 +10,64 @@
     grid-column: span 5 / span 5;
 }
 
-.div2 {
+.item-cardapio {
     grid-column: span 5 / span 5;
     grid-row: span 4 / span 4;
     grid-row-start: 2;
 }
-        
+
+
+.carrinho-botao {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.carrinho-botao:hover {
+    background-color: #218838;
+}
+
+
+.carrinho-lateral {
+    position: fixed;
+    top: 0;
+    right: -100%; 
+    width: 300px;
+    height: 100%;
+    background-color: #f9f9f9;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    transition: right 0.3s ease-in-out;
+    z-index: 999;
+    overflow-y: auto;
+}
+
+.carrinho-lateral.ativo {
+    right: 0; 
+}
+
+.carrinho-lateral h2 {
+    margin-top: 0;
+}
+
+.fechar-carrinho {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin-top: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.fechar-carrinho:hover {
+    background-color: #c82333;
+}
