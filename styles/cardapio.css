@@ -6,8 +6,11 @@
     gap: 8px;
 }
     
-.div1 {
+.navegation-item {
     grid-column: span 5 / span 5;
+    background-color: #FFCC00;
+    height: 72px;
+    width: auto;
 }
 
 .item-cardapio {
