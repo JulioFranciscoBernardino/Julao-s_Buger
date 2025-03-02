@@ -11,6 +11,7 @@
     background-color: #FFCC00;
     height: 72px;
     width: auto;
+    border-radius: 5px;
 }
 
 .item-cardapio {
@@ -73,4 +74,20 @@
 
 .fechar-carrinho:hover {
     background-color: #c82333;
+}
+
+.inicio i{
+    padding: 5px;
+    text-decoration: none;
+    
+}
+
+.inicio a{
+    text-decoration: none;
+    color: black;
+}
+
+.inicio a:hover{
+    color: white;
+    transition: 0.5s;
 }
