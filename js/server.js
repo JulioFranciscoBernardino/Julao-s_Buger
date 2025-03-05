@@ -26,13 +26,13 @@ db.connect(err => {
 // Rota para login
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
-    const sql = 'SELECT * FROM Users WHERE email = ? AND password = ?'; // Assumindo uma tabela `Users`
+    const sql = 'SELECT * FROM Usuario WHERE email = ? AND senha = ?'; // Usando a tabela `Usuario`
     db.query(sql, [email, password], (err, results) => {
         if (err) throw err;
         if (results.length > 0) {
             const user = results[0];
-            const token = jwt.sign({ email: user.email, type: user.type }, secretKey, { expiresIn: '1h' });
-            res.json({ token, type: user.type }); // Inclui o tipo de usuário na resposta
+            const token = jwt.sign({ email: user.email, type: user.tipo }, secretKey, { expiresIn: '1h' });
+            res.json({ token, type: user.tipo }); // Inclui o tipo de usuário na resposta
         } else {
             res.status(401).send('Credenciais inválidas');
         }
@@ -127,7 +127,7 @@ app.delete('/produtos/:id', authenticateToken, (req, res) => {
 
 // Exemplo de rota protegida para funcionários
 app.get('/admin/dashboard', authenticateToken, (req, res) => {
-    if (req.user.type === 'employee') {
+    if (req.user.type === 'funcionario') {
         res.send('Bem-vindo ao Painel Administrativo');
     } else {
         res.status(403).send('Acesso negado');

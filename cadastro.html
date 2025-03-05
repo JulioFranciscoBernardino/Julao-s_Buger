@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
     <link rel="stylesheet" href="styles/login.css">
     <link rel="stylesheet" href="styles/index.css">
     <link rel="shortcut icon" href="imgs/Logo Julãos Burguinho.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             background-image: url('imgs/salao.jpg');
@@ -17,6 +20,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="navegation">
         <nav class="menu">
@@ -33,25 +37,28 @@
             <h1>Cadastre-se</h1>
 
             <h2>CPF</h2>
-            <input type="text">
+            <input type="text" id="cpf">
 
             <h2>Nome completo</h2>
-            <input type="text">
+            <input type="text" id="nome">
 
             <h2>Email</h2>
-            <input type="email">
+            <input type="email" id="email">
 
             <h2>Senha</h2>
-            <input type="password">
+            <input type="password" id="senha">
 
             <h2>Confirmação de senha</h2>
-            <input type="password">
+            <input type="password" id="confirmarSenha">
 
-            <button>Concluir</button>
+            <button id="btnCadastro">Concluir</button>
 
             <p>Já tem uma conta? <a href="login.html">Login</a></p>
 
         </div>
     </div>
+
+    <script src="js/cadastro.js"></script>
 </body>
+
 </html>
