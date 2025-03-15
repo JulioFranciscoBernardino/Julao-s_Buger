@@ -9,8 +9,16 @@ CREATE TABLE Usuario (
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    tipo ENUM('admin', 'funcionario', 'cliente') NOT NULL,
+    tipo ENUM('cliente') NOT NULL,
     pontos INT DEFAULT 0
+);
+
+CREATE TABLE Funcionario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL
+    
 );
 
 CREATE TABLE Endereco (
@@ -55,3 +63,16 @@ CREATE TABLE PedidoProduto (
     FOREIGN KEY (idpedido) REFERENCES Pedido(idpedido),
     FOREIGN KEY (idproduto) REFERENCES Produto(idproduto)
 );
+
+UPDATE Funcionario 
+SET tipo = 'admin' 
+WHERE email = 'juliofranciscobernardino@gmail.com'; -- Altere o email conforme necessário
+
+ALTER TABLE Funcionario 
+ADD COLUMN tipo ENUM('admin', 'funcionario') NOT NULL DEFAULT 'funcionario';
+
+INSERT INTO Funcionario (nome, email, senha) VALUES ('julio', 'juliofranciscobernardino@gmail.com', '310705');
+INSERT INTO Funcionario (nome, email, senha) VALUES ('suellen', 'suellenjulao@hotmail', '310705');
+INSERT INTO Funcionario (nome, email, senha) VALUES ('juliano', 'julaosh3@gmail,com', '310705');
+
+

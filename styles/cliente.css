@@ -1,0 +1,105 @@
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    height: 100vh;
+    margin: 0;
+    background-image: url('imgs/salao.jpg');
+    text-decoration: none;
+}
+
+body a {
+    text-decoration: none;
+}
+
+.container {
+    display: flex;
+    flex-direction: row; 
+    flex-wrap: nowrap; 
+    justify-content: center;
+    gap: 35%; 
+    margin-bottom: 15px;
+    
+}
+
+.login, .register {
+    text-align: left;
+    white-space: nowrap;
+    flex: 1; 
+    min-width: 200px;
+    font-size: 20px;
+    background-color: #FFCC00;
+    padding: 10px;
+    padding-right: 140px;
+    border-radius: 10px;
+    border: 1px solid black;
+
+}
+
+
+input[type="text"], input[type="password"] {
+    width: 300px; 
+    height: 25px; 
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+button {
+    display: block;
+    margin-left: 105px;
+    margin-top: 20px;
+    background-color: #c79f00;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+button:hover {
+    background-color: #b88e00
+}
+
+.admin{
+    background-color: #c79f00;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin: 10px;
+    border-radius: 10%;
+    border: none;
+    
+}
+
+.admin p a{
+    font-size: 15px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .login, .register {
+        padding-right: 10px;
+    }
+
+    button {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    footer.admin {
+        position: relative;
+        margin-top: 20px;
+    }
+
+    footer.admin p a{
+        font-size: 20px;
+    }
+    
+}
