@@ -1,3 +1,4 @@
+// Função de login
 function login() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -9,31 +10,37 @@ function login() {
 
     fetch('http://localhost:3000/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, senha: password })
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, senha: password }) 
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Credenciais inválidas');
+        }
+        return response.json();
+    })
     .then(data => {
-        if (data.error) {
-            alert(data.error); // Exibe erro do backend
-        } else if (data.type === 'admin') {
-            window.location.href = 'admin-dashboard.html';
+        if (data.type === 'admin') {
+            window.location.href = 'admin-dashboard.html'; 
         } else if (data.type === 'cliente') {
-            window.location.href = 'index.html';
+            window.location.href = 'index.html'; 
         } else {
-            alert('Tipo de usuário desconhecido.');
+            alert('Credenciais inválidas');
         }
     })
     .catch(error => {
         console.error('Erro:', error);
-        alert('Erro ao conectar ao servidor. Tente novamente.');
+        alert(error.message);
     });
 }
 
+// Função de cadastro
 document.getElementById('btnCadastro').addEventListener('click', () => {
     const cpf = document.getElementById('cpf').value;
     const nome = document.getElementById('nome').value;
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('emailCadastro').value; 
     const senha = document.getElementById('senha').value;
     const confirmarSenha = document.getElementById('confirmarSenha').value;
 
@@ -55,12 +62,15 @@ document.getElementById('btnCadastro').addEventListener('click', () => {
     .catch(error => console.error('Erro:', error));
 });
 
-
 // Alternar entre Login e Cadastro
-document.querySelector('.register-btn').addEventListener('click', () => {
-    document.querySelector('.container').classList.add('active');
-});
+const container = document.querySelector('.container');
+const registerBtn = document.querySelector('.register-btn');
+const loginBtn = document.querySelector('.login-btn');
 
-document.querySelector('.login-btn').addEventListener('click', () => {
-    document.querySelector('.container').classList.remove('active');
-});
+registerBtn.addEventListener('click', () => {
+    container.classList.add('active');
+})
+
+loginBtn.addEventListener('click', () => {
+    container.classList.remove('active');
+})
