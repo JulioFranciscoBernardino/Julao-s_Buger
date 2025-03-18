@@ -1,55 +1,61 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+   <html lang="pt-br">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+      <link rel="stylesheet" href="styles/login.css">
+    <link rel="shortcut icon" href="imgs/Logo Julãos Burguinho.png" type="image/x-icon">
+      <title>Julão's Burguinho - Login</title>
+   </head>
+   <body>
+      <div class="login">
+         <img src="imgs/salao.jpg" class="login__img">
+         
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Julão's Burguinho - Login</title>
-    <link rel="stylesheet" href="styles/login.css">
-    <link rel="stylesheet" href="styles/index.css">
-    <link rel="shortcut icon" href="imgs/Logo Julãos Burguinho.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        body {
-            background-image: url('imgs/salao.jpg');
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center center;
-        }
-    </style>
-</head>
+         <form action="" class="container">
+            <h1 class="login__title">Login</h1>
 
-<body>
+            <div class="login__content">
+               <div class="login__box">
+                  <i class="ri-user-3-line login__icon"></i>
 
-    <div class="navegation">
-        <nav class="menu">
-            <ul class="navegation-content">
-                <li><a href="index.html"><i class="fa-solid fa-house"></a></i></li>
-                <li><a href="cardapio.html"><i class="fa-solid fa-bars"></a></i></li>
-                <li><a href="login.html"><i class="fa-solid fa-right-to-bracket"></a></i></li>
-                <li><a href=""><i class="fa-solid fa-user"></a></i></li>
-            </ul>
-        </nav>
-    </div>
+                  <div class="login__box-input">
+                     <input type="email" required class="login__input" id="login-email" placeholder=" ">
+                     <label for="login-email" class="login__label">Email</label>
+                  </div>
+               </div>
 
-    <div class="container">
-        <div class="login">
-            <h1>Login</h1>
+               <div class="login__box">
+                  <i class="ri-lock-2-line login__icon"></i>
 
-            <h2>Email</h2>
-            <input type="text" id="email">
+                  <div class="login__box-input">
+                     <input type="password" required class="login__input" id="login-pass" placeholder=" ">
+                     <label for="login-pass" class="login__label">Password</label>
+                     <i class="ri-eye-off-line login__eye" id="login-eye"></i>
+                  </div>
+               </div>
+            </div>
 
-            <h2>Senha</h2>
-            <input type="password" id="password">
+            <div class="login__check">
+               <div class="login__check-group">
+                  <input type="checkbox" class="login__check-input" id="login-check">
+                  <label for="login-check" class="login__check-label">Remember me</label>
+               </div>
 
-            <button onclick="login()">Concluir</button>
+               <a href="#" class="login__forgot">Forgot Password?</a>
+            </div>
 
-            <p>Não tem uma conta? <a href="cadastro.html">Cadastre-se</a></p>
+            <button type="submit" class="login__button">Login</button>
 
-        </div>
-    </div>
+            <p class="login__register">
 
-    <script src="scripts/login.js"></script>
-</body>
 
+                
+               Não tem uma conta? <a href="#">Cadastre-se</a>
+            </p>
+         </form>
+      </div>
+      
+   </body>
 </html>
