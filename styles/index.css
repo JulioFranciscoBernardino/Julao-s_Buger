@@ -91,7 +91,7 @@
   
   /* Banner */
   .banner {
-    background-image: url('/imgs/salao.jpg');
+    background: url('../imgs/salao.jpg') no-repeat center center/cover;
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
