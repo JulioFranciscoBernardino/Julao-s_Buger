@@ -1,43 +1,66 @@
 function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if (!email || !password) {
+        alert('Preencha todos os campos!');
+        return;
+    }
 
     fetch('http://localhost:3000/login', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, senha: password }) // Corrigindo a chave para "senha"
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, senha: password })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Credenciais inválidas');
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        if (data.type === 'admin') {
-            window.location.href = 'admin-dashboard.html'; // Redireciona para o painel administrativo
+        if (data.error) {
+            alert(data.error); // Exibe erro do backend
+        } else if (data.type === 'admin') {
+            window.location.href = 'admin-dashboard.html';
         } else if (data.type === 'cliente') {
-            window.location.href = 'index.html'; // Redireciona para a página inicial ou qualquer outra página do cliente
+            window.location.href = 'index.html';
         } else {
-            alert('Credenciais inválidas');
+            alert('Tipo de usuário desconhecido.');
         }
     })
     .catch(error => {
         console.error('Erro:', error);
-        alert(error.message);
+        alert('Erro ao conectar ao servidor. Tente novamente.');
     });
 }
 
-const container = document.querySelector('.container');
-const registerBtn = document.querySelector('.register-btn');
-const loginBtn = document.querySelector('.login-btn');
+document.getElementById('btnCadastro').addEventListener('click', () => {
+    const cpf = document.getElementById('cpf').value;
+    const nome = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    const senha = document.getElementById('senha').value;
+    const confirmarSenha = document.getElementById('confirmarSenha').value;
 
-registerBtn.addEventListener('click', () => {
-    container.classList.add('active');
-})
+    if (senha !== confirmarSenha) {
+        alert('As senhas não coincidem!');
+        return;
+    }
 
-loginBtn.addEventListener('click', () => {
-    container.classList.remove('active');
-})
+    fetch('http://localhost:3000/cadastro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cpf, nome, email, senha })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('Cadastro realizado com sucesso!');
+        window.location.href = 'login.html';
+    })
+    .catch(error => console.error('Erro:', error));
+});
+
+
+// Alternar entre Login e Cadastro
+document.querySelector('.register-btn').addEventListener('click', () => {
+    document.querySelector('.container').classList.add('active');
+});
+
+document.querySelector('.login-btn').addEventListener('click', () => {
+    document.querySelector('.container').classList.remove('active');
+});
