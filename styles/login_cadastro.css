@@ -64,6 +64,8 @@ body {
 .container h1 {
     font-size: 36px;
     margin: -10px 0;
+    padding-left: 15px;
+    
 }
 
 .container p {
