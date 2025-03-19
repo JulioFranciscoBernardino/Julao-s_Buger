@@ -41,7 +41,7 @@ CREATE TABLE Produto (
     nome VARCHAR(255) NOT NULL,
     descricao TEXT,
     preco DECIMAL(10, 2) NOT NULL,
-    idcategoria INT,
+    idcategoria INT NOT NULL,
     FOREIGN KEY (idcategoria) REFERENCES Categoria(idcategoria)
 );
 
@@ -75,4 +75,15 @@ INSERT INTO Funcionario (nome, email, senha) VALUES ('julio', 'juliofranciscober
 INSERT INTO Funcionario (nome, email, senha) VALUES ('suellen', 'suellenjulao@hotmail', '310705');
 INSERT INTO Funcionario (nome, email, senha) VALUES ('juliano', 'julaosh3@gmail,com', '310705');
 
+SELECT * FROM Categoria;
+
+INSERT INTO Categoria (nome) VALUES ('LANCHES 140g');
+INSERT INTO Produto (nome, descricao, preco) VALUES ('HUNGER ZERO', 'BURGER 100% CARNE BOVINA ARTESANAL 140G, QUEIJO DERRETIDO, BACON, BARBECUE, REQUEIJÃO
+CREMOSO, ALFACE SELECIONADA, TOMATE, MOLHO CLASSICO JULÃOS, CEBOLA ROXA, PICLES, OVO, PÃO BURGER MACIO.', 38.90);
+
+SELECT idcategoria FROM Categoria WHERE nome = 'LANCHES 140g';
+SET SQL_SAFE_UPDATES = 1;
+UPDATE Produto 
+SET idcategoria = 1 
+WHERE nome = 'HUNGER ZERO';
 
