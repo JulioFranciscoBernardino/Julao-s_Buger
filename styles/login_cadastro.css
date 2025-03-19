@@ -64,7 +64,8 @@ body {
 .container h1 {
     font-size: 36px;
     margin: -10px 0;
-    padding-left: 15px;
+    align-items: center;
+    text-align: center;
     
 }
 
@@ -207,6 +208,11 @@ form { width: 100%; }
 
 @media screen and (max-width: 650px) {
     .container { height: calc(100vh - 40px); }
+
+    .back-button{
+        margin-top: -20px;
+        margin-left: -20px;
+    }
 
     .form-box {
         bottom: 0;
