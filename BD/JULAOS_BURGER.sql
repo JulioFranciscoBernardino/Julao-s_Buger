@@ -1,89 +1,62 @@
-CREATE DATABASE JULAOS_BURGER;
-
-show databases;
-
-USE JULAOS_BURGER;
-
 CREATE TABLE Usuario (
     cpf CHAR(11) PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    tipo ENUM('cliente') NOT NULL,
+    tipo VARCHAR(10) CHECK (tipo IN ('cliente')) NOT NULL,
     pontos INT DEFAULT 0
 );
 
 CREATE TABLE Funcionario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL
-    
+    senha VARCHAR(255) NOT NULL,
+    tipo VARCHAR(20) CHECK (tipo IN ('admin', 'funcionario')) NOT NULL
 );
 
 CREATE TABLE Endereco (
-    idendereco INT AUTO_INCREMENT PRIMARY KEY,
-    cpf CHAR(11),
+    idendereco SERIAL PRIMARY KEY,
+    cpf CHAR(11) NOT NULL,
     endereco VARCHAR(255) NOT NULL,
     cidade VARCHAR(100) NOT NULL,
     estado VARCHAR(50) NOT NULL,
     cep CHAR(8) NOT NULL,
-    FOREIGN KEY (cpf) REFERENCES Usuario(cpf)
-)
+    FOREIGN KEY (cpf) REFERENCES Usuario(cpf) ON DELETE CASCADE
+);
 
 CREATE TABLE Categoria (
-    idcategoria INT AUTO_INCREMENT PRIMARY KEY,
+    idcategoria SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE Produto (
-    idproduto INT AUTO_INCREMENT PRIMARY KEY,
+    idproduto SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
-    descricao TEXT,
+    descricao TEXT NOT NULL,
     preco DECIMAL(10, 2) NOT NULL,
+    imagem VARCHAR(500), -- URL da imagem do produto
     idcategoria INT NOT NULL,
-    FOREIGN KEY (idcategoria) REFERENCES Categoria(idcategoria)
+    FOREIGN KEY (idcategoria) REFERENCES Categoria(idcategoria) ON DELETE CASCADE
 );
 
 CREATE TABLE Pedido (
-    idpedido INT AUTO_INCREMENT PRIMARY KEY,
+    idpedido SERIAL PRIMARY KEY,
     cpf CHAR(11) NOT NULL,
-    data_pedido DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('pendente', 'em preparo', 'finalizado') NOT NULL,
-	idendereco INT,
-    FOREIGN KEY (cpf) REFERENCES Usuario(cpf),
-    FOREIGN KEY (idendereco) REFERENCES Endereco(idendereco)
+    data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) CHECK (status IN ('pendente', 'em preparo', 'finalizado')) NOT NULL,
+    idendereco INT NOT NULL,
+    FOREIGN KEY (cpf) REFERENCES Usuario(cpf) ON DELETE CASCADE,
+    FOREIGN KEY (idendereco) REFERENCES Endereco(idendereco) ON DELETE SET NULL
 );
 
 CREATE TABLE PedidoProduto (
-    idpedidoproduto INT AUTO_INCREMENT PRIMARY KEY,
+    idpedidoproduto SERIAL PRIMARY KEY,
     idpedido INT NOT NULL,
     idproduto INT NOT NULL,
-    quantidade INT NOT NULL,
-    FOREIGN KEY (idpedido) REFERENCES Pedido(idpedido),
-    FOREIGN KEY (idproduto) REFERENCES Produto(idproduto)
+    quantidade INT NOT NULL CHECK (quantidade > 0),
+    FOREIGN KEY (idpedido) REFERENCES Pedido(idpedido) ON DELETE CASCADE,
+    FOREIGN KEY (idproduto) REFERENCES Produto(idproduto) ON DELETE CASCADE
 );
 
-UPDATE Funcionario 
-SET tipo = 'admin' 
-WHERE email = 'juliofranciscobernardino@gmail.com'; -- Altere o email conforme necessário
-
-ALTER TABLE Funcionario 
-ADD COLUMN tipo ENUM('admin', 'funcionario') NOT NULL DEFAULT 'funcionario';
-
-INSERT INTO Funcionario (nome, email, senha) VALUES ('julio', 'juliofranciscobernardino@gmail.com', '310705');
-INSERT INTO Funcionario (nome, email, senha) VALUES ('suellen', 'suellenjulao@hotmail', '310705');
-INSERT INTO Funcionario (nome, email, senha) VALUES ('juliano', 'julaosh3@gmail,com', '310705');
-
-SELECT * FROM Categoria;
-
-INSERT INTO Categoria (nome) VALUES ('LANCHES 140g');
-INSERT INTO Produto (nome, descricao, preco) VALUES ('HUNGER ZERO', 'BURGER 100% CARNE BOVINA ARTESANAL 140G, QUEIJO DERRETIDO, BACON, BARBECUE, REQUEIJÃO
-CREMOSO, ALFACE SELECIONADA, TOMATE, MOLHO CLASSICO JULÃOS, CEBOLA ROXA, PICLES, OVO, PÃO BURGER MACIO.', 38.90);
-
-SELECT idcategoria FROM Categoria WHERE nome = 'LANCHES 140g';
-SET SQL_SAFE_UPDATES = 1;
-UPDATE Produto 
-SET idcategoria = 1 
-WHERE nome = 'HUNGER ZERO';
 
