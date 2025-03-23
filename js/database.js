@@ -1,11 +1,15 @@
-const { Pool } = require('pg'); // Importa o Pool do módulo pg
+const mysql = require('mysql2');
 
-const pool = new Pool({
-    user: 'postgres', // Substitua pelo seu usuário do PostgreSQL
-    host: 'localhost',
+// Configuração da conexão com o MySQL
+const pool = mysql.createPool({
+    host: 'localhost', // Endereço do banco de dados
+    user: 'root', // Usuário do MySQL
+    password: '#Julio310705', // Senha do MySQL
     database: 'JULAOS_BURGER', // Nome do banco de dados
-    password: '310705', // Substitua pela sua senha do PostgreSQL (ou omita se não tiver senha)
-    port: 5432, // Porta padrão do PostgreSQL
+    waitForConnections: true,
+    connectionLimit: 10, // Número máximo de conexões
+    queueLimit: 0,
 });
 
-module.exports = pool;
+// Exporta a conexão
+module.exports = pool.promise(); // Usando promises para async/await

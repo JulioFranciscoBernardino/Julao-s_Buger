@@ -1,6 +1,6 @@
 const express = require('express');
 const routes = require('./routes'); // Importa as rotas
-const pool = require('./database'); // Importa a conexão com o PostgreSQL
+const pool = require('./database'); // Importa a conexão com o MySQL
 
 const app = express();
 const PORT = 3000;
@@ -12,13 +12,13 @@ app.use(express.json());
 app.use(routes);
 
 // Testar conexão com o banco de dados
-pool.query('SELECT NOW()', (err, res) => {
-    if (err) {
+pool.query('SELECT 1 + 1 AS result')
+    .then(() => {
+        console.log('Conexão com o banco de dados estabelecida');
+    })
+    .catch((err) => {
         console.error('Erro ao conectar ao banco de dados:', err);
-    } else {
-        console.log('Conexão com o banco de dados estabelecida:', res.rows[0].now);
-    }
-});
+    });
 
 // Iniciar o servidor
 app.listen(PORT, () => {
