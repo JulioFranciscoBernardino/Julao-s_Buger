@@ -57,7 +57,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Função de Cadastro
-    // Função de Cadastro
 async function cadastro() {
     const cpf = document.getElementById('cpf').value;
     const nome = document.getElementById('nome').value;
