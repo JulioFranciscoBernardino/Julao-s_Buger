@@ -2,9 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const pool = require('./config/bd'); // Certifique-se de que o nome está correto
+const pool = require('./config/bd');
 const usuarioRoutes = require('./routes/usuarioRoutes');
-
 
 const app = express();
 const PORT = 3000;
@@ -21,10 +20,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// 🔥 Corrigindo a definição das rotas
 app.use('/api/usuarios', usuarioRoutes);
-
-
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT} 🚀`);

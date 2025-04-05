@@ -1,166 +1,187 @@
-/* Estilização Geral */
-body {
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Estilos globais */
+body, body button{
     font-family: Arial, sans-serif;
-    background-color: #f8f8f8;
+    background-color: #f4f4f4;
+    color: #333;
+    font-family: "Poppins", sans-serif;
+}
+
+/* Header */
+header {
+    background-color: #FFCC00;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo {
+    max-width: 100px;
+}
+
+.header-text h1 {
+    font-size: 2rem;
+}
+
+.header-text p {
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Navegação */
+.navegation {
+    margin-top: 20px;
+}
+
+
+.navegation nav {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    padding: 10px 35px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Lista de navegação */
+.navegation nav ul {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    align-items: center;
     margin: 0;
     padding: 0;
 }
 
-/* Container principal do menu */
-.menu {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 16px;
-    padding: 20px;
+
+.navegation nav ul li a.menu {
+    color: #333;
+    text-decoration: none;
+    position: relative;
+    padding: 0.5rem;
+    transition: color 0.3s ease;
 }
 
-/* Barra de navegação */
-.navegation-item {
+.navegation nav ul li a.menu::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: #333;
+    bottom: 0;
+    left: 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.navegation nav ul li a.menu:hover::before {
+    transform: scaleX(1);
+}
+
+/* Estilizando o ícone do carrinho */
+.cart-icon {
+    padding: 10px;
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    font-size: 25px;
+    background-color: #000000;
+    border-radius: 10px;
+    transition: color 0.5s ease, background-color 0.5s ease;
+}
+
+.cart-icon:hover{
+    background-color: #f5f5f5;
+}
+
+/* Estilizando o carrinho */
+.cart {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    /* Inicialmente oculto fora da tela */
+    width: 400px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: right 0.3s ease;
+    z-index: 1000;
+}
+
+/* Cabeçalho do carrinho */
+.cart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #FFCC00;
-    height: 72px;
-    border-radius: 5px;
-    padding: 0 20px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
 }
 
-/* Estilo do botão do carrinho */
-.carrinho-botao {
-    background-color: #28a745;
-    color: white;
+/* Botão de fechar no cabeçalho do carrinho */
+.cart-header button {
+    background: none;
     border: none;
-    padding: 12px 16px;
-    border-radius: 5px;
-    font-size: 1rem;
+    font-size: 24px;
     cursor: pointer;
-    transition: background 0.3s;
 }
 
-.carrinho-botao:hover {
-    background-color: #218838;
+/* Conteúdo do carrinho */
+.cart-items {
+    padding: 15px;
+    /* Adicione estilos adicionais conforme necessário */
 }
 
-/* Menu lateral do carrinho */
-.carrinho-lateral {
-    position: fixed;
-    top: 0;
-    right: -320px;
-    width: 320px;
-    height: 100%;
-    background-color: white;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-    padding: 20px;
-    transition: right 0.3s ease-in-out;
-    z-index: 999;
-    overflow-y: auto;
+/* Rodapé do carrinho */
+.cart-footer {
+    padding: 15px;
+    border-top: 1px solid #ddd;
+    background-color: #f5f5f5;
 }
 
-.carrinho-lateral.ativo {
+.cart-footer button{
+    cursor: pointer;
+    padding: 8px;
+    border: none;
+    border-radius: 10px;
+    color: initial; /* Cor inicial do texto */
+    background-color: #afafaf; /* Cor inicial do plano de fundo */
+    transition: color 0.5s ease, background-color 0.5s ease;
+}
+
+.cart-footer button:hover{
+    color: black;
+    background-color: #FFCC00;
+}
+
+/* Classe para mostrar o carrinho */
+.cart.open {
     right: 0;
 }
 
-/* Botão para fechar o carrinho */
-.fechar-carrinho {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    margin-top: 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-    transition: background 0.3s;
+/* Classe para ocultar o ícone com animação */
+.cart-icon.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
-.fechar-carrinho:hover {
-    background-color: #c82333;
-}
-
-/* Link do menu */
-.inicio a {
-    text-decoration: none;
-    color: black;
-    font-weight: bold;
-}
-
-.inicio a:hover {
-    color: white;
-    transition: 0.3s;
-}
-
-/* Seção dos produtos */
-.item-cardapio {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-/* Cartão de produto */
-.produto {
-    width: 280px;
-    padding: 15px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.produto:hover {
-    transform: translateY(-5px);
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-/* Título do produto */
-.produto h3 {
-    font-size: 20px;
-    margin-bottom: 8px;
-    color: #333;
-}
-
-/* Descrição do produto */
-.produto p {
-    font-size: 14px;
-    margin: 5px 0;
-    color: #666;
-}
-
-/* Preço do produto */
-.produto p strong {
-    color: #000;
-}
-
-/* Botão de adicionar ao carrinho */
-.adicionar-carrinho {
-    background: #ff9800;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 1rem;
-    transition: background 0.3s;
-}
-
-.adicionar-carrinho:hover {
-    background: #e68900;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-    .menu {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-
-    .produto {
-        width: 100%;
-    }
-
-    .carrinho-lateral {
-        width: 100%;
-    }
-}
