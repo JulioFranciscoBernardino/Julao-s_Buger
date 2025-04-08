@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Julão's Burger - Cardápio</title>
-    <link rel="stylesheet" href="assets/styles/index.css">
-    <link rel="shortcut icon" href="assets/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
+    <link rel="stylesheet" href="/assets/styles/index.css">
+    <link rel="shortcut icon" href="/assets/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -23,7 +24,7 @@
         <div class="navegation">
             <nav>
                 <ul>
-                    <!-- As categoria serão carregados aqui via JS -->
+                    <!-- As categorias serão carregadas aqui via JS -->
                 </ul>
             </nav>
         </div>
@@ -45,19 +46,31 @@
                 <button>Finalizar Compra</button>
             </div>
         </div>
-
-
     </header>
     <main id="cardapio">
-        <!-- Produtos serão carregados aqui via JS -->
+        <!-- Produtos serão carregados aqui -->
+        <% produtos.forEach(produto=> { %>
+            <div class="produto">
+                <img src="<%= produto.imagem %>" alt="<%= produto.nome %>">
+                <h2>
+                    <%= produto.nome %>
+                </h2>
+                <p>
+                    <%= produto.descricao %>
+                </p>
+                <p>Preço: R$<%= produto.preco.toFixed(2) %>
+                </p>
+                <!-- Adicione outros detalhes conforme necessário -->
+            </div>
+            <% }); %>
     </main>
 
     <div class="space"></div>
 
     <footer>
-
+        <!-- Conteúdo do rodapé -->
     </footer>
-    <script src="assets/js/index.js"></script>
+    <script src="/assets/js/index.js"></script>
 </body>
 
 </html>
