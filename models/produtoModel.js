@@ -3,17 +3,23 @@ const db = require('../config/bd');
 const Produto = {
   getAll: async () => {
     try {
-      const [rows] = await db.query('SELECT * FROM Produto');
-      const produtos = rows.map(p => ({
-        ...p,
-        preco: Number(p.preco)
+      const [rows] = await db.query(`
+        SELECT Produto.*, Categoria.nome AS categoria_nome
+        FROM Produto
+        JOIN Categoria ON Produto.idcategoria = Categoria.idcategoria
+      `);
+
+      // Convertendo preco para número (caso venha como string do MySQL)
+      const produtosFormatados = rows.map(produto => ({
+        ...produto,
+        preco: Number(produto.preco)
       }));
-      return produtos;
+
+      return produtosFormatados;
     } catch (err) {
       throw err;
     }
   }
-  // Outras funções relacionadas ao Produto podem ser adicionadas aqui
 };
 
 module.exports = Produto;

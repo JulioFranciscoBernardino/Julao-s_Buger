@@ -1,16 +1,19 @@
 const Produto = require('../models/produtoModel');
+const Categoria = require('../models/categoriaModel');
 
 const produtoController = {
   listarProdutos: async (req, res) => {
     try {
       const produtos = await Produto.getAll();
-      res.render('index', { produtos });
+      const categorias = await Categoria.getAll();
+      res.render('index', { produtos, categorias });
     } catch (err) {
-      console.error(err);
-      res.status(500).send('Erro ao buscar produtos.');
+      console.error('Erro ao buscar produtos e categorias:', err);
+      res.status(500).send('Erro interno do servidor');
     }
-  }
-  // Outras funções relacionadas aos produtos podem ser adicionadas aqui
+  },
+  // Outros métodos do controlador...
 };
+
 
 module.exports = produtoController;

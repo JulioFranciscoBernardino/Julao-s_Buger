@@ -24,7 +24,15 @@
         <div class="navegation">
             <nav>
                 <ul>
-                    <!-- As categorias serão carregadas aqui via JS -->
+                    <% if (typeof categorias !=='undefined' && categorias.length> 0) { %>
+                        <% categorias.forEach(categoria=> { %>
+                            <li><a href="#categoria-<%= categoria.id %>">
+                                    <%= categoria.nome %>
+                                </a></li>
+                            <% }); %>
+                                <% } else { %>
+                                    <li>Nenhuma categoria disponível</li>
+                                    <% } %>
                 </ul>
             </nav>
         </div>
@@ -48,21 +56,30 @@
         </div>
     </header>
     <main id="cardapio">
-        <!-- Produtos serão carregados aqui -->
-        <% produtos.forEach(produto=> { %>
-            <div class="produto">
-                <img src="<%= produto.imagem %>" alt="<%= produto.nome %>">
+        <% categorias.forEach(categoria=> { %>
+            <section id="categoria-<%= categoria.id %>">
                 <h2>
-                    <%= produto.nome %>
+                    <%= categoria.nome %>
                 </h2>
-                <p>
-                    <%= produto.descricao %>
-                </p>
-                <p>Preço: R$<%= produto.preco.toFixed(2) %>
-                </p>
-                <!-- Adicione outros detalhes conforme necessário -->
-            </div>
+                <div class="produtos">
+                    <% produtos .filter(produto=> produto.categoria_id === categoria.id)
+                        .forEach(produto => { %>
+                        <div class="produto-card">
+                            <img src="<%= produto.imagem %>" alt="<%= produto.nome %>">
+                            <h3>
+                                <%= produto.nome %>
+                            </h3>
+                            <p>
+                                <%= produto.descricao %>
+                            </p>
+                            <p>Preço: R$<%= produto.preco.toFixed(2) %>
+                            </p>
+                        </div>
+                        <% }); %>
+                </div>
+            </section>
             <% }); %>
+
     </main>
 
     <div class="space"></div>
