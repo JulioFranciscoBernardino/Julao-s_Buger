@@ -15,3 +15,5 @@ document.addEventListener('DOMContentLoaded', function() {
         openCartButton.classList.remove('hidden');
     });
 });
+
+
