@@ -5,6 +5,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    text-decoration: none;
+    list-style: none;
 }
 
 /* Estilos globais */
@@ -202,9 +204,10 @@ header {
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 16px;
-    width: calc(33.333% - 20px); /* Para exibir três cards por linha com espaçamento */
+    width: calc(33.333% - 300px); /* Para exibir três cards por linha com espaçamento */
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
+  
   
   .produto-card img {
     max-width: 100%;
@@ -220,3 +223,13 @@ header {
     margin: 8px 0;
   }
   
+  .cardapio {
+    margin: 0 auto;
+    padding: 0 25px;
+}
+
+.cardapio h2{
+    padding-top: 10px;
+    padding-bottom: 5px;
+}
+

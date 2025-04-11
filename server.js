@@ -25,8 +25,8 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Arquivos estáticos
-app.use(express.static(path.join(__dirname, 'public'))); // para CSS, JS, imagens
-app.use(express.static(path.join(__dirname, 'viewHTML'))); // para os arquivos .html como sobre_nos.html
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'viewHTML'))); 
 
 // Limitação de requisições
 const limiter = rateLimit({

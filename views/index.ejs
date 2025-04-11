@@ -20,12 +20,13 @@
             <div class="header-text">
                 <h1>Julão's Burguinho</h1>
             </div>
-            <div class="navegation-pages">
-                <ul>
-                    <a href="/sobre_nos.html">Sobre nós</a>
-                    <a href="/login_cadastro.html">Login</a>
-
-                </ul>
+            <div class="navegation">
+                <nav>
+                    <ul>
+                        <li><a class="menu" href="/sobre_nos.html">Sobre nós</a></li>
+                        <li><a class="menu" href="/login_cadastro.html">Login</a></li>
+                    </ul>
+                </nav>
             </div>
         </div>
         <div class="navegation">
@@ -33,7 +34,7 @@
                 <ul>
                     <% if (typeof categorias !=='undefined' && categorias.length> 0) { %>
                         <% categorias.forEach(categoria=> { %>
-                            <li><a href="#categoria-<%= categoria.id %>">
+                            <li><a class="menu" href="#categoria-<%= categoria.idcategoria %>">
                                     <%= categoria.nome %>
                                 </a></li>
                             <% }); %>
@@ -43,6 +44,7 @@
                 </ul>
             </nav>
         </div>
+
         <!-- Ícone para abrir o carrinho -->
         <button id="openCart" class="cart-icon">
             <i class="fa-solid fa-cart-shopping fa-lg" style="color: #FFCC00;" class="icon"></i>
@@ -62,14 +64,15 @@
             </div>
         </div>
     </header>
-    <main id="cardapio">
+
+    <main id="cardapio" class="cardapio">
         <% categorias.forEach(categoria=> { %>
-            <section id="categoria-<%= categoria.id %>">
+            <section id="categoria-<%= categoria.idcategoria %>">
                 <h2>
                     <%= categoria.nome %>
                 </h2>
                 <div class="produtos">
-                    <% produtos .filter(produto=> produto.categoria_id === categoria.id)
+                    <% produtos .filter(produto=> produto.idcategoria === categoria.idcategoria)
                         .forEach(produto => { %>
                         <div class="produto-card">
                             <img src="<%= produto.imagem %>" alt="<%= produto.nome %>">
@@ -79,14 +82,13 @@
                             <p>
                                 <%= produto.descricao %>
                             </p>
-                            <p>Preço: R$<%= produto.preco.toFixed(2) %>
+                            <p>Preço: R$ <%= produto.preco.toFixed(2) %>
                             </p>
                         </div>
                         <% }); %>
                 </div>
             </section>
             <% }); %>
-
     </main>
 
     <div class="space"></div>
@@ -94,6 +96,7 @@
     <footer>
         <!-- Conteúdo do rodapé -->
     </footer>
+
     <script src="/assets/js/index.js"></script>
 </body>
 
