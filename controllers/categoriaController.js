@@ -10,7 +10,7 @@ const categoriaController = {
         res.status(500).send('Erro ao buscar categorias.');
       }
     },
-    // Outros métodos relacionados às categorias podem ser adicionados aqui
+    
   };
   
   module.exports = categoriaController;

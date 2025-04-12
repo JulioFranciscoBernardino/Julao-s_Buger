@@ -12,7 +12,7 @@ const produtoController = {
       res.status(500).send('Erro interno do servidor');
     }
   },
-  // Outros métodos do controlador...
+ 
 };
 
 
