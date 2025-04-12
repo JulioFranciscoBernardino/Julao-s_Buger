@@ -15,6 +15,9 @@ DROP TABLE IF EXISTS Endereco;
 DROP TABLE IF EXISTS Funcionario;
 DROP TABLE IF EXISTS Usuario;
 
+
+TRUNCATE TABLE Usuario;
+
 -- Cria a tabela Usuario
 CREATE TABLE Usuario (
     cpf CHAR(11) PRIMARY KEY,
@@ -25,6 +28,8 @@ CREATE TABLE Usuario (
     pontos INT DEFAULT 0
 );
 
+SELECT * FROM Usuario;
+
 -- Cria a tabela Funcionario
 CREATE TABLE Funcionario (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -34,11 +39,31 @@ CREATE TABLE Funcionario (
     tipo VARCHAR(20) NOT NULL -- Removido o CHECK
 );
 
+SELECT * FROM Funcionario;
+INSERT INTO Funcionario(nome, email, senha, tipo) VALUES ('Julio Francisco Bernardino', 'juliofranciscobernardino@gmail.com', 'julio310705', 'admin');
+
 -- Cria a tabela Categoria
 CREATE TABLE Categoria (
     idcategoria INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL
 );
+
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM Categoria;
+ALTER TABLE Categoria AUTO_INCREMENT = 1;
+SET SQL_SAFE_UPDATES = 1;
+
+select * from categoria;
+
+INSERT INTO Categoria (nome) VALUES 
+('CLASSICOS 140'),
+('CLASSICOS C/BACON 140G'),
+('MEGA LANCHES 140G'),
+('MEGA LANCHES GOURMET 140G'),
+('BEIRUTES'),
+('MEGA HOT DOGS'),
+('PETISCOS'), ('BEBIDAS');
+
 
 -- Cria a tabela Endereco
 CREATE TABLE Endereco (
@@ -56,11 +81,31 @@ CREATE TABLE Produto (
     idproduto INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     descricao TEXT NOT NULL,
-    preco DECIMAL(10, 2) NOT NULL,
-    imagem VARCHAR(500), -- URL da imagem do produto
+    preco DECIMAL(10 , 2 ) NOT NULL,
+    imagem VARCHAR(500),
     idcategoria INT NOT NULL,
-    FOREIGN KEY (idcategoria) REFERENCES Categoria(idcategoria) ON DELETE CASCADE
+    FOREIGN KEY (idcategoria)
+        REFERENCES Categoria (idcategoria)
+        ON DELETE CASCADE
 );
+
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM Produto;
+ALTER TABLE Produto AUTO_INCREMENT = 1;
+SET SQL_SAFE_UPDATES = 1;
+
+INSERT INTO Produto (nome, descricao, preco, imagem, idcategoria) VALUES
+('Americano Cheddar', 'Burger 100% Carne Bovina Artesanal 140g, Bacon, Cheddar Derretido, Cebola Chapada na Manteiga e Shoyo, Pão Australiano Macio.', 36.90,'', 3),
+('Feroz Cheese Burger', 'Burger 100% Carne Bovina Artesanal 140g, Queijo Derretido, Bacon, Requeijão Cremoso, Cebola Roxa, Picles, Mostarda, Ketchup, Molho Clássico Julãos, Pão Parmesão Macio.', 36.90,'', 3);
+
+
+
+
+SELECT * FROM Produto;
+
+UPDATE Produto
+SET imagem = '/assets/imgs/hunger_zero.jpg'
+WHERE idproduto = 1;
 
 -- Cria a tabela Pedido
 CREATE TABLE Pedido (
@@ -82,3 +127,5 @@ CREATE TABLE PedidoProduto (
     FOREIGN KEY (idpedido) REFERENCES Pedido(idpedido) ON DELETE CASCADE,
     FOREIGN KEY (idproduto) REFERENCES Produto(idproduto) ON DELETE CASCADE
 );
+
+
