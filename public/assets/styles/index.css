@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
-/* Reset básico */
 * {
     margin: 0;
     padding: 0;
@@ -9,12 +8,10 @@
     list-style: none;
 }
 
-/* Estilos globais */
 body, body button{
-    font-family: Arial, sans-serif;
+    font-family: "Poppins", sans-serif;
     background-color: #f4f4f4;
     color: #333;
-    font-family: "Poppins", sans-serif;
 }
 
 .space{
@@ -24,7 +21,6 @@ body, body button{
     background-color: #afafaf;
 }
 
-/* Header */
 header {
     background-color: #FFCC00;
     padding: 20px;
@@ -50,11 +46,9 @@ header {
     color: #555;
 }
 
-/* Navegação */
 .navegation {
     margin-top: 20px;
 }
-
 
 .navegation nav {
     background-color: rgba(255, 255, 255, 0.8);
@@ -65,7 +59,6 @@ header {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Lista de navegação */
 .navegation nav ul {
     display: flex;
     gap: 1rem;
@@ -74,7 +67,6 @@ header {
     margin: 0;
     padding: 0;
 }
-
 
 .navegation nav ul li a.menu {
     color: #333;
@@ -101,7 +93,6 @@ header {
     transform: scaleX(1);
 }
 
-/* Estilizando o ícone do carrinho */
 .cart-icon {
     padding: 10px;
     position: fixed;
@@ -123,12 +114,10 @@ header {
     background-color: #f5f5f5;
 }
 
-/* Estilizando o carrinho */
 .cart {
     position: fixed;
     top: 0;
     right: -400px;
-    /* Inicialmente oculto fora da tela */
     width: 400px;
     height: 100%;
     background-color: #fff;
@@ -137,7 +126,6 @@ header {
     z-index: 1000;
 }
 
-/* Cabeçalho do carrinho */
 .cart-header {
     display: flex;
     justify-content: space-between;
@@ -147,7 +135,6 @@ header {
     border-bottom: 1px solid #ddd;
 }
 
-/* Botão de fechar no cabeçalho do carrinho */
 .cart-header button {
     background: none;
     border: none;
@@ -155,13 +142,10 @@ header {
     cursor: pointer;
 }
 
-/* Conteúdo do carrinho */
 .cart-items {
     padding: 15px;
-    /* Adicione estilos adicionais conforme necessário */
 }
 
-/* Rodapé do carrinho */
 .cart-footer {
     padding: 15px;
     border-top: 1px solid #ddd;
@@ -173,8 +157,8 @@ header {
     padding: 8px;
     border: none;
     border-radius: 10px;
-    color: initial; /* Cor inicial do texto */
-    background-color: #afafaf; /* Cor inicial do plano de fundo */
+    color: initial;
+    background-color: #afafaf;
     transition: color 0.5s ease, background-color 0.5s ease;
 }
 
@@ -183,12 +167,10 @@ header {
     background-color: #FFCC00;
 }
 
-/* Classe para mostrar o carrinho */
 .cart.open {
     right: 0;
 }
 
-/* Classe para ocultar o ícone com animação */
 .cart-icon.hidden {
     opacity: 0;
     pointer-events: none;
@@ -198,32 +180,31 @@ header {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-  }
-  
-  .produto-card {
+}
+
+.produto-card {
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 16px;
-    width: calc(33.333% - 300px); /* Para exibir três cards por linha com espaçamento */
+    width: calc(33.333% - 300px);
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
-  
-  
-  .produto-card img {
+}
+
+.produto-card img {
     max-width: 100%;
     border-radius: 8px;
-  }
-  
-  .produto-card h3 {
+}
+
+.produto-card h3 {
     margin-top: 10px;
     font-size: 1.2em;
-  }
-  
-  .produto-card p {
+}
+
+.produto-card p {
     margin: 8px 0;
-  }
-  
-  .cardapio {
+}
+
+.cardapio {
     margin: 0 auto;
     padding: 0 25px;
 }
@@ -233,3 +214,61 @@ header {
     padding-bottom: 5px;
 }
 
+/* Responsividade */
+@media (max-width: 1024px) {
+  .produto-card {
+    width: calc(50% - 20px);
+  }
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .navegation nav ul {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cart-icon {
+    top: 20px;
+    right: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .produto-card {
+    width: 100%;
+  }
+  .cardapio {
+    padding: 0 15px;
+  }
+  .logo {
+    max-width: 80px;
+  }
+  .header-text h1 {
+    font-size: 1.5rem;
+  }
+  .cart {
+    width: 100%;
+  }
+  .cart-icon {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    padding: 10px;
+  }
+  .header-content {
+    gap: 10px;
+  }
+  .produto-card {
+    padding: 12px;
+  }
+  .cart-header span {
+    font-size: 1rem;
+  }
+  .cart-footer button {
+    width: 100%;
+    padding: 10px;
+  }
+}

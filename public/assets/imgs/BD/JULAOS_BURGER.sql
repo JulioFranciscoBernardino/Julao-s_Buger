@@ -95,10 +95,7 @@ ALTER TABLE Produto AUTO_INCREMENT = 1;
 SET SQL_SAFE_UPDATES = 1;
 
 INSERT INTO Produto (nome, descricao, preco, imagem, idcategoria) VALUES
-('Americano Cheddar', 'Burger 100% Carne Bovina Artesanal 140g, Bacon, Cheddar Derretido, Cebola Chapada na Manteiga e Shoyo, Pão Australiano Macio.', 36.90,'', 3),
-('Feroz Cheese Burger', 'Burger 100% Carne Bovina Artesanal 140g, Queijo Derretido, Bacon, Requeijão Cremoso, Cebola Roxa, Picles, Mostarda, Ketchup, Molho Clássico Julãos, Pão Parmesão Macio.', 36.90,'', 3);
-
-
+('Las Vegas','Burger 100% Carne Bovina(Costela) Artesanal 140G, Queijo Derretido(American Cheese), Pepperoni Tostado, Requeijão Cremoso, Palmito Picado, Molho Classico Julãos, Pão Parmesão Macio.', 39.90, '')
 
 
 SELECT * FROM Produto;
