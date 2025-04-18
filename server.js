@@ -28,14 +28,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'viewHTML'))); 
 
-// Limitação de requisições
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // Limite por IP
-    message: 'Muitas requisições, tente novamente mais tarde.'
-});
-app.use(limiter);
-
 // Rotas
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/produtos', produtoRoutes);
