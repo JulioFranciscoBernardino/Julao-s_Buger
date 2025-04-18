@@ -29,6 +29,7 @@ CREATE TABLE Usuario (
 );
 
 SELECT * FROM Usuario;
+-- DELETE FROM Usuario;
 
 -- Cria a tabela Funcionario
 CREATE TABLE Funcionario (
@@ -36,10 +37,12 @@ CREATE TABLE Funcionario (
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    tipo VARCHAR(20) NOT NULL -- Removido o CHECK
+    tipo VARCHAR(20) NOT NULL 
 );
 
 SELECT * FROM Funcionario;
+-- DELETE FROM Funcionario;
+
 INSERT INTO Funcionario(nome, email, senha, tipo) VALUES ('Julio Francisco Bernardino', 'juliofranciscobernardino@gmail.com', 'julio310705', 'admin');
 
 -- Cria a tabela Categoria
@@ -55,15 +58,17 @@ SET SQL_SAFE_UPDATES = 1;
 
 select * from categoria;
 
-INSERT INTO Categoria (nome) VALUES 
-('CLASSICOS 140'),
-('CLASSICOS C/BACON 140G'),
-('MEGA LANCHES 140G'),
-('MEGA LANCHES GOURMET 140G'),
-('BEIRUTES'),
-('MEGA HOT DOGS'),
-('PETISCOS'), ('BEBIDAS');
+-- INSERT INTO Categoria (nome) VALUES 
+-- ('CLASSICOS 140'),
+-- ('CLASSICOS C/BACON 140G'),
+-- ('MEGA LANCHES 140G'),
+-- ('MEGA LANCHES GOURMET 140G'),
+-- ('BEIRUTES'),
+-- ('MEGA HOT DOGS'),
+-- ('PETISCOS'), ('BEBIDAS');
 
+-- INSERT INTO Categoria (nome) VALUES
+-- ('PROMOÇÃO DOIS POR');
 
 -- Cria a tabela Endereco
 CREATE TABLE Endereco (
@@ -94,15 +99,17 @@ DELETE FROM Produto;
 ALTER TABLE Produto AUTO_INCREMENT = 1;
 SET SQL_SAFE_UPDATES = 1;
 
+-- Inserção dos lanches: Las Vegas, Rock Star e Liverpool
 INSERT INTO Produto (nome, descricao, preco, imagem, idcategoria) VALUES
-('Las Vegas','Burger 100% Carne Bovina(Costela) Artesanal 140G, Queijo Derretido(American Cheese), Pepperoni Tostado, Requeijão Cremoso, Palmito Picado, Molho Classico Julãos, Pão Parmesão Macio.', 39.90, '')
+('Beirute Americano', 'Presunto Tostado, Queijo Derretido, Cheddar, Ovo, Requeijão Cremoso, Bacon, Alface Selecionada, Tomate Rodelas, Molho Classico Julãos, Mega Pão Sirio.', 44.90, '/assets/imgs/beirute.jpg', 5);
 
 
-SELECT * FROM Produto;
+SELECT * FROM Produto
+where nome = 'Cheddar Melt 140G';
 
 UPDATE Produto
-SET imagem = '/assets/imgs/hunger_zero.jpg'
-WHERE idproduto = 1;
+SET imagem = '/imgs/cheddar_melt.jpg'
+WHERE idproduto = 4;
 
 -- Cria a tabela Pedido
 CREATE TABLE Pedido (
