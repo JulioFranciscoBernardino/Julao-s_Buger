@@ -53,6 +53,8 @@ CREATE TABLE Categoria (
 
 SET SQL_SAFE_UPDATES = 0;
 
+delete from Categoria
+where idcategoria = 5;
 
 DELETE FROM Categoria;
 ALTER TABLE Categoria AUTO_INCREMENT = 1;
@@ -97,13 +99,13 @@ CREATE TABLE Produto (
 );
 
 SET SQL_SAFE_UPDATES = 0;
-DELETE FROM Produto;
+DELETE FROM Produto
+where idproduto = 21;
 ALTER TABLE Produto AUTO_INCREMENT = 1;
 SET SQL_SAFE_UPDATES = 1;
 
--- Inserção dos lanches: Las Vegas, Rock Star e Liverpool
-INSERT INTO Produto (nome, descricao, preco, imagem, idcategoria) VALUES
-('Beirute Americano', 'Presunto Tostado, Queijo Derretido, Cheddar, Ovo, Requeijão Cremoso, Bacon, Alface Selecionada, Tomate Rodelas, Molho Classico Julãos, Mega Pão Sirio.', 44.90, '/assets/imgs/beirute.jpg', 5);
+-- INSERT INTO Produto (nome, descricao, preco, imagem, idcategoria) VALUE
+-- ()
 
 
 SELECT * FROM Produto
@@ -112,6 +114,8 @@ where nome = 'Cheddar Melt 140G';
 UPDATE Produto
 SET imagem = '/imgs/cheddar_melt.jpg'
 WHERE idproduto = 4;
+
+
 
 -- Cria a tabela Pedido
 CREATE TABLE Pedido (
@@ -123,6 +127,7 @@ CREATE TABLE Pedido (
     FOREIGN KEY (cpf) REFERENCES Usuario(cpf) ON DELETE CASCADE,
     FOREIGN KEY (idendereco) REFERENCES Endereco(idendereco) ON DELETE CASCADE -- Alterado para CASCADE
 );
+
 
 -- Cria a tabela PedidoProduto
 CREATE TABLE PedidoProduto (
