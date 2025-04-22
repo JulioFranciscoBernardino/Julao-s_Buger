@@ -66,30 +66,55 @@
     </header>
 
     <main id="cardapio" class="cardapio">
-        <% categorias.forEach(categoria=> { %>
+        <% if (typeof categorias !== 'undefined' && categorias.length > 0) { %>
+          <% categorias.forEach(categoria => { %>
             <section id="categoria-<%= categoria.idcategoria %>">
-                <h2>
-                    <%= categoria.nome %>
-                </h2>
+              <h2><%= categoria.nome %></h2> <!-- Exibe o nome da categoria -->
+              
+              <% // Filtra os produtos dessa categoria %>
+              <% let produtosDaCategoria = produtos.filter(produto => produto.idcategoria === categoria.idcategoria); %>
+      
+              <% if (produtosDaCategoria.length > 0) { %>
                 <div class="produtos">
-                    <% produtos .filter(produto=> produto.idcategoria === categoria.idcategoria)
-                        .forEach(produto => { %>
-                        <div class="produto-card">
-                            <img src="<%= produto.imagem %>" alt="<%= produto.nome %>">
-                            <h3>
-                                <%= produto.nome %>
-                            </h3>
-                            <p>
-                                <%= produto.descricao %>
-                            </p>
-                            <p>Preço: R$ <%= produto.preco.toFixed(2) %>
-                            </p>
-                        </div>
-                        <% }); %>
+                  <% produtosDaCategoria.forEach(produto => { %>
+                    <div class="produto-card">
+                      <img src="<%= produto.imagem ? produto.imagem : 'default-image.jpg' %>" alt="<%= produto.nome %>">
+                      <h3><%= produto.nome %></h3>
+                      <p><%= produto.descricao %></p>
+                      <p>Preço: R$ <%= produto.preco.toFixed(2) %></p>
+      
+                      <% if (typeof sabores !== 'undefined' && sabores.length > 0) { %>
+                        <% var saboresDoProduto = sabores.filter(function(s) {
+                          return s.idproduto === produto.idproduto;
+                        }); %>
+                      
+                        <% if (saboresDoProduto.length > 0) { %>
+                          <h4>Sabores disponíveis:</h4>
+                          <ul class="sabores">
+                            <% saboresDoProduto.forEach(function(sabor) { %>
+                              <li><%= sabor.nome %></li>
+                            <% }); %>
+                          </ul>
+                        <% } else { %>
+                          <p>Sem sabores disponíveis.</p>
+                        <% } %>
+                      <% } %>
+                    </div>
+                  <% }); %>
                 </div>
+              <% } else { %>
+                <p>Nenhum produto disponível nesta categoria.</p>
+              <% } %>
             </section>
-            <% }); %>
-    </main>
+          <% }); %>
+        <% } else { %>
+          <p>Nenhuma categoria disponível.</p>
+        <% } %>
+      </main>
+      
+      
+      
+       
 
     <div class="space"></div>
 

@@ -9,7 +9,7 @@ const Produto = {
         JOIN Categoria ON Produto.idcategoria = Categoria.idcategoria
       `);
 
-    
+      // Converter preço para número
       const produtosFormatados = rows.map(produto => ({
         ...produto,
         preco: Number(produto.preco)
