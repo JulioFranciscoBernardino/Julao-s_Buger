@@ -109,12 +109,21 @@ SET SQL_SAFE_UPDATES = 1;
 
 
 SELECT * FROM Produto
-where nome = 'Cheddar Melt 140G';
+WHERE nome LIKE '%batata%';
 
 UPDATE Produto
-SET imagem = '/imgs/cheddar_melt.jpg'
-WHERE idproduto = 4;
+SET imagem = '/imgs/batata_com_cheddar_bacon.jpg'
+WHERE idproduto = 23;
 
+-- Tabela SaborBebida
+CREATE TABLE SaborBebida (
+    idsaborbebida INT AUTO_INCREMENT PRIMARY KEY,
+    idproduto INT NOT NULL,
+    sabor VARCHAR(100) NOT NULL,
+    FOREIGN KEY (idproduto) REFERENCES Produto(idproduto)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
 
 
 -- Cria a tabela Pedido
