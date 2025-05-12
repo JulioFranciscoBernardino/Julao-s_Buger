@@ -1,80 +1,50 @@
+-- Criação do banco
 CREATE DATABASE JULAOS_BURGER;
+USE JULAOS_BURGER;
+SHOW TABLES;
 
-USE JULAOS_BURGER; 
-
+-- Desabilita as verificações temporariamente
 SET FOREIGN_KEY_CHECKS = 0;
 
-SET FOREIGN_KEY_CHECKS = 1;
-
--- Derruba todas as tabelas
+-- Remove tabelas se existirem
 DROP TABLE IF EXISTS PedidoProduto;
 DROP TABLE IF EXISTS Pedido;
+DROP TABLE IF EXISTS SaborBebida;
 DROP TABLE IF EXISTS Produto;
 DROP TABLE IF EXISTS Categoria;
 DROP TABLE IF EXISTS Endereco;
 DROP TABLE IF EXISTS Funcionario;
 DROP TABLE IF EXISTS Usuario;
 
+-- Reabilita as verificações
+SET FOREIGN_KEY_CHECKS = 1;
 
-TRUNCATE TABLE Usuario;
-
--- Cria a tabela Usuario
+-- Criação da tabela Usuario
 CREATE TABLE Usuario (
     cpf CHAR(11) PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    tipo VARCHAR(10) NOT NULL, -- Removido o CHECK
+    tipo VARCHAR(10) NOT NULL,
     pontos INT DEFAULT 0
 );
 
-SELECT * FROM Usuario;
--- DELETE FROM Usuario;
-
--- Cria a tabela Funcionario
+-- Criação da tabela Funcionario
 CREATE TABLE Funcionario (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    tipo VARCHAR(20) NOT NULL 
+    tipo VARCHAR(20) NOT NULL
 );
 
-SELECT * FROM Funcionario;
--- DELETE FROM Funcionario;
-
-INSERT INTO Funcionario(nome, email, senha, tipo) VALUES ('Julio Francisco Bernardino', 'juliofranciscobernardino@gmail.com', 'julio310705', 'admin');
-
--- Cria a tabela Categoria
+-- Criação da tabela Categoria
 CREATE TABLE Categoria (
     idcategoria INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL
 );
 
-SET SQL_SAFE_UPDATES = 0;
-
-delete from Categoria
-where idcategoria = 5;
-
-DELETE FROM Categoria;
-ALTER TABLE Categoria AUTO_INCREMENT = 1;
-SET SQL_SAFE_UPDATES = 1;
-
-select * from categoria;
-
--- INSERT INTO Categoria (nome) VALUES 
--- ('CLASSICOS 140'),
--- ('CLASSICOS C/BACON 140G'),
--- ('MEGA LANCHES 140G'),
--- ('MEGA LANCHES GOURMET 140G'),
--- ('BEIRUTES'),
--- ('MEGA HOT DOGS'),
--- ('PETISCOS'), ('BEBIDAS');
-
--- INSERT INTO Categoria (nome) VALUES
--- ('PROMOÇÃO DOIS POR');
-
--- Cria a tabela Endereco
+-- Criação da tabela Endereco
 CREATE TABLE Endereco (
     idendereco INT AUTO_INCREMENT PRIMARY KEY,
     cpf CHAR(11) NOT NULL,
@@ -85,37 +55,18 @@ CREATE TABLE Endereco (
     FOREIGN KEY (cpf) REFERENCES Usuario(cpf) ON DELETE CASCADE
 );
 
--- Cria a tabela Produto
+-- Criação da tabela Produto
 CREATE TABLE Produto (
     idproduto INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     descricao TEXT NOT NULL,
-    preco DECIMAL(10 , 2 ) NOT NULL,
+    preco DECIMAL(10,2) NOT NULL,
     imagem VARCHAR(500),
     idcategoria INT NOT NULL,
-    FOREIGN KEY (idcategoria)
-        REFERENCES Categoria (idcategoria)
-        ON DELETE CASCADE
+    FOREIGN KEY (idcategoria) REFERENCES Categoria(idcategoria) ON DELETE CASCADE
 );
 
-SET SQL_SAFE_UPDATES = 0;
-DELETE FROM Produto
-where idproduto = 21;
-ALTER TABLE Produto AUTO_INCREMENT = 1;
-SET SQL_SAFE_UPDATES = 1;
-
--- INSERT INTO Produto (nome, descricao, preco, imagem, idcategoria) VALUE
--- ()
-
-
-SELECT * FROM Produto
-WHERE nome LIKE '%batata%';
-
-UPDATE Produto
-SET imagem = '/imgs/batata_com_cheddar_bacon.jpg'
-WHERE idproduto = 23;
-
--- Tabela SaborBebida
+-- Criação da tabela SaborBebida
 CREATE TABLE SaborBebida (
     idsaborbebida INT AUTO_INCREMENT PRIMARY KEY,
     idproduto INT NOT NULL,
@@ -125,20 +76,18 @@ CREATE TABLE SaborBebida (
         ON UPDATE CASCADE
 );
 
-
--- Cria a tabela Pedido
+-- Criação da tabela Pedido
 CREATE TABLE Pedido (
     idpedido INT AUTO_INCREMENT PRIMARY KEY,
     cpf CHAR(11) NOT NULL,
     data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) NOT NULL, -- Removido o CHECK
+    status VARCHAR(20) NOT NULL,
     idendereco INT NOT NULL,
     FOREIGN KEY (cpf) REFERENCES Usuario(cpf) ON DELETE CASCADE,
-    FOREIGN KEY (idendereco) REFERENCES Endereco(idendereco) ON DELETE CASCADE -- Alterado para CASCADE
+    FOREIGN KEY (idendereco) REFERENCES Endereco(idendereco) ON DELETE CASCADE
 );
 
-
--- Cria a tabela PedidoProduto
+-- Criação da tabela PedidoProduto
 CREATE TABLE PedidoProduto (
     idpedidoproduto INT AUTO_INCREMENT PRIMARY KEY,
     idpedido INT NOT NULL,
@@ -147,5 +96,3 @@ CREATE TABLE PedidoProduto (
     FOREIGN KEY (idpedido) REFERENCES Pedido(idpedido) ON DELETE CASCADE,
     FOREIGN KEY (idproduto) REFERENCES Produto(idproduto) ON DELETE CASCADE
 );
-
-
