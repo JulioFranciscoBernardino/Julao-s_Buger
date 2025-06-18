@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const session = require('express-session');
 
 // Importação de rotas
 const usuarioRoutes = require('./routes/usuarioRoutes');
@@ -14,6 +15,17 @@ const rotas = require('./routes/index');
 // Inicialização do app
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(session({
+    secret: process.env.KEY,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 30 * 60 * 1000,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+    }
+}));
 
 // Middlewares globais
 app.use(express.json());
