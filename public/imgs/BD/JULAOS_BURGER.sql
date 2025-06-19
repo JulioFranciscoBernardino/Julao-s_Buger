@@ -29,6 +29,9 @@ CREATE TABLE Usuario (
     pontos INT DEFAULT 0
 );
 
+SELECT * FROM Usuario;
+DELETE FROM Usuario;
+
 -- Criação da tabela Funcionario
 CREATE TABLE Funcionario (
     id INT AUTO_INCREMENT PRIMARY KEY,
