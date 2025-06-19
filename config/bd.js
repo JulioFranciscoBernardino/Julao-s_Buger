@@ -10,13 +10,14 @@ const pool = mysql.createPool({
 }).promise();
 
 // Testar conexão
-pool.getConnection((err, conn) => {
-    if (err) {
-        console.error("❌ Erro ao conectar ao banco de dados:", err);
-    } else {
-        console.log("✅ Conectado ao banco de dados!");
-        conn.release();
-    }
-});
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log("✅ Conectado ao banco de dados!");
+    conn.release();
+  } catch (err) {
+    console.error("❌ Erro ao conectar ao banco de dados:", err);
+  }
+})();
 
 module.exports = pool; // Exportando com suporte a async/await

@@ -57,45 +57,45 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Função de Cadastro
-async function cadastro() {
-    const cpf = document.getElementById('cpf').value;
-    const nome = document.getElementById('nome').value;
-    const email = document.getElementById('emailCadastro').value;
-    const senha = document.getElementById('senha').value;
-    const confirmarSenha = document.getElementById('confirmarSenha').value;
+    async function cadastro() {
+        const cpf = document.getElementById('cpf').value;
+        const nome = document.getElementById('nome').value;
+        const email = document.getElementById('emailCadastro').value;
+        const senha = document.getElementById('senha').value;
+        const confirmarSenha = document.getElementById('confirmarSenha').value;
 
-    if (senha !== confirmarSenha) {
-        alert('As senhas não coincidem!');
-        return;
-    }
-
-    console.log('Tentando cadastrar com:', { cpf, nome, email, senha });
-
-    try {
-        const response = await fetch('http://localhost:3000/api/cadastro', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ cpf, nome, email, senha })
-        });
-
-        const data = await response.json();
-        console.log('Resposta do cadastro:', data);
-
-        if (data.message) {
-            // Esconde o formulário de cadastro e mostra o de login
-            document.querySelector('.form-box.register').style.display = 'none';
-            document.querySelector('.form-box.login').style.display = 'flex';
-            toggleForms();  // Ativa a animação de transição
-        } else {
-            alert('Erro no cadastro: ' + data.error);
+        if (senha !== confirmarSenha) {
+            alert('As senhas não coincidem!');
+            return;
         }
-    } catch (error) {
-        console.error('Erro ao tentar fazer o cadastro:', error);
-        alert('Erro ao cadastrar. Verifique o console.');
+
+        console.log('Tentando cadastrar com:', { cpf, nome, email, senha });
+
+        try {
+            const response = await fetch('http://localhost:3000/api/usuarios/cadastro', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cpf, nome, email, senha })
+            });
+
+            const data = await response.json();
+            console.log('Resposta do cadastro:', data);
+
+            if (data.message) {
+                // Esconde o formulário de cadastro e mostra o de login
+                document.querySelector('.form-box.register').style.display = 'none';
+                document.querySelector('.form-box.login').style.display = 'flex';
+                toggleForms();  // Ativa a animação de transição
+            } else {
+                alert('Erro no cadastro: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Erro ao tentar fazer o cadastro:', error);
+            alert('Erro ao cadastrar. Verifique o console.');
+        }
     }
-}
 
 
     // Atribuindo funções de submit aos botões
