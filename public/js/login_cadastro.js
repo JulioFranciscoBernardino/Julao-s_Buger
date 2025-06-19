@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log('Tentando cadastrar com:', { cpf, nome, email, senha });
 
         try {
-            const response = await fetch('http://localhost:3000/api/usuarios/cadastro', {
+            const response = await fetch('api/usuarios/cadastro', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
