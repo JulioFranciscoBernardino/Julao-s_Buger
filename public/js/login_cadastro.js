@@ -98,6 +98,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    async function logout() {
+        localStorage.removeItem('token'); // remove o token JWT
+        alert('Logout realizado com sucesso!');
+        window.location.href = '/login_cadastro.html'; // redireciona para login
+    }
 
     // Atribuindo funções de submit aos botões
     document.querySelector('.form-box.login form').addEventListener('submit', function (event) {
