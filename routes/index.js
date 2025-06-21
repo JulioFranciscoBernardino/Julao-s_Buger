@@ -33,4 +33,9 @@ router.get('/login_cadastro', (req, res) => {
     res.sendFile(path.join(__dirname, '../viewHTML/login_cadastro.html'));
 });
 
+// Página de conta
+router.get('/conta', (req, res) => {
+    res.sendFile(path.join(__dirname, '../viewHTML/conta.html'));
+});
+
 module.exports = router;

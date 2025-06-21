@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", async function() {
     try {
-        const response = await fetch("http://localhost:3000/api/produtos");
+        const response = await fetch("/api/produtos");
         const produtos = await response.json();
         const container = document.getElementById("cardapio");
 

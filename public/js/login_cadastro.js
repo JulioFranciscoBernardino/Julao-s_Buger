@@ -29,17 +29,16 @@ document.addEventListener("DOMContentLoaded", function () {
     // Função de Login
     async function login() {
         const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        const senha = String(document.getElementById('password').value);
 
         console.log('Tentando login com:', { email, password });
-
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('/api/usuarios/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, senha })
             });
 
             const data = await response.json();
@@ -48,6 +47,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data.token) {
                 alert('Login bem-sucedido!');
                 localStorage.setItem('token', data.token);
+
+                window.location.href = '/';
             } else {
                 alert('Erro no login: ' + data.error);
             }
@@ -72,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log('Tentando cadastrar com:', { cpf, nome, email, senha });
 
         try {
-            const response = await fetch('http://localhost:3000/api/usuarios/cadastro', {
+            const response = await fetch('/api/usuarios/cadastro', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
