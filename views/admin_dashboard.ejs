@@ -1,11 +1,46 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Julão's Burguinho</title>
+    <title>Dashboard Admin - Julão’s Burger</title>
+    <link rel="stylesheet" href="/styles/admin.css">
 </head>
 <body>
-    
+    <header>
+        <h1>Dashboard do Administrador</h1>
+        <button onclick="logout()">Sair</button>
+    </header>
+
+    <main>
+        <section>
+            <h2>Estatísticas</h2>
+            <p>Total de pedidos hoje: <span id="totalPedidos">...</span></p>
+            <p>Faturamento do dia: R$ <span id="faturamento">...</span></p>
+        </section>
+
+        <section>
+            <h2>Pedidos recentes</h2>
+            <div id="pedidosRecentes">
+                <!-- Lista de pedidos vai aqui -->
+            </div>
+        </section>
+
+        <section>
+            <h2>Produtos</h2>
+            <a href="/admin/produtos">Gerenciar Produtos</a>
+        </section>
+
+        <section>
+            <h2>Categorias</h2>
+            <a href="/admin/categorias">Gerenciar Categorias</a>
+        </section>
+    </main>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login_cadastro.html';
+        }
+    </script>
 </body>
 </html>

@@ -38,6 +38,10 @@ router.get('/conta', (req, res) => {
     res.sendFile(path.join(__dirname, '../viewHTML/conta.html'));
 });
 
+router.get('/admin_dashboard', (req, res) => {
+    res.render('admin_dashboard'); 
+});
+
 
 
 
