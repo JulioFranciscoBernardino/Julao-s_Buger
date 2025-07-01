@@ -1,24 +1,126 @@
-body {
-    font-family: Arial, sans-serif;
+/* Reset básico */
+* {
     margin: 0;
     padding: 0;
-    background-color: #f2f2f2;
+    box-sizing: border-box;
 }
 
-header {
-    background-color: #ffcc00;
-    padding: 20px;
-    text-align: center;
+/* Fonte e cores */
+body {
+    font-family: 'Roboto', sans-serif;
+    background: #f2f2f2;
 }
 
-main {
-    padding: 20px;
+.navbar-mainbg {
+    background-color: #5161ce;
+    padding: 0.5rem 1rem;
+    position: relative;
 }
 
-section {
-    background: white;
-    margin-bottom: 20px;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0px 0px 5px rgba(0,0,0,0.1);
+.container {
+    max-width: 1140px;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-logo {
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.navbar-toggler {
+    display: none;
+    font-size: 1.8rem;
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Navbar-collapse e lista */
+.navbar-collapse {
+    display: flex;
+    flex-grow: 1;
+    justify-content: flex-end;
+    position: relative;
+}
+
+.navbar-nav {
+    list-style: none;
+    display: flex;
+}
+
+.navbar-nav li {
+    position: relative;
+}
+
+.navbar-nav li a {
+    display: block;
+    padding: 15px 20px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav li.active a,
+.navbar-nav li a:hover {
+    color: #5161ce;
+    font-weight: 700;
+}
+
+/* .hori-selector - elemento que destaca o item ativo */
+.hori-selector {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: #fff;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    z-index: 0;
+}
+
+/* Para que o texto fique sobre o .hori-selector */
+.navbar-nav li a {
+    position: relative;
+    z-index: 1;
+}
+
+/* Responsivo - menu mobile */
+@media (max-width: 768px) {
+    .navbar-toggler {
+        display: block;
+    }
+
+    .navbar-collapse {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background-color: #5161ce;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        border-radius: 0 0 5px 5px;
+        overflow: hidden;
+        z-index: 10;
+    }
+
+    .navbar-nav {
+        flex-direction: column;
+    }
+
+    .navbar-nav li a {
+        padding: 10px 15px;
+    }
+
+    /* .hori-selector fica oculto no menu mobile */
+    .hori-selector {
+        display: none;
+    }
 }

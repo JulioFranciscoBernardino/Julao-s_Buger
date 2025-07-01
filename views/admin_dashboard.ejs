@@ -1,46 +1,41 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Admin - Julão’s Burger</title>
-    <link rel="stylesheet" href="/styles/admin.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Navbar com Animação Ativa</title>
+
+    <!-- Importa jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Link para o CSS -->
+    <link rel="stylesheet" href="/styles/admin.css" />
 </head>
 <body>
-    <header>
-        <h1>Dashboard do Administrador</h1>
-        <button onclick="logout()">Sair</button>
-    </header>
 
-    <main>
-        <section>
-            <h2>Estatísticas</h2>
-            <p>Total de pedidos hoje: <span id="totalPedidos">...</span></p>
-            <p>Faturamento do dia: R$ <span id="faturamento">...</span></p>
-        </section>
+<nav class="navbar-mainbg">
+    <div class="container">
+        <a class="navbar-logo" href="#">Logo</a>
 
-        <section>
-            <h2>Pedidos recentes</h2>
-            <div id="pedidosRecentes">
-                <!-- Lista de pedidos vai aqui -->
-            </div>
-        </section>
+        <button class="navbar-toggler" type="button" aria-label="Toggle navigation">
+            <i class="fas fa-bars">&#9776;</i>
+        </button>
 
-        <section>
-            <h2>Produtos</h2>
-            <a href="/admin/produtos">Gerenciar Produtos</a>
-        </section>
+        <div class="navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav">
+                <li><a href="admin_dashboard.ejs" class="nav-link">Home</a></li>
+                <li><a href="cardapio.ejs" class="nav-link">Cardápio</a></li>
+                <li><a href="pedidos.ejs" class="nav-link">Pedidos</a></li>
+                <li><a href="contact.html" class="nav-link"></a></li>
+            </ul>
+            <!-- Elemento para animação do item ativo -->
+            <div class="hori-selector"></div>
+        </div>
+    </div>
+</nav>
 
-        <section>
-            <h2>Categorias</h2>
-            <a href="/admin/categorias">Gerenciar Categorias</a>
-        </section>
-    </main>
+<!-- Seu script JS -->
+<script src="/js/admin.js"></script>
 
-    <script>
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = '/login_cadastro.html';
-        }
-    </script>
 </body>
 </html>
