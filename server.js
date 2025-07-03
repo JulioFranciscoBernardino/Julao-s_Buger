@@ -9,7 +9,7 @@ const path = require('path');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 const produtoRoutes = require('./routes/produtoRoutes');
 const categoriaRoutes = require('./routes/categoriaRoutes');
-const cardapioController = require('./routes/cardapioCategoriaRoutes');
+const cardapioRoutes = require('./routes/cardapioCategoriaRoutes');
 const rotas = require('./routes/index');
 
 
@@ -32,10 +32,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'viewHTML'))); 
 
 // Rotas
-app.use('/', usuarioRoutes);
-app.use('/', produtoRoutes);
-app.use('/', categoriaRoutes);
-app.use('/', cardapioController);
+app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/produtos', produtoRoutes);
+app.use('/api/categorias', categoriaRoutes);
+app.use('/', cardapioRoutes);
 app.use('/', rotas);
 
 // Inicialização do servidor
