@@ -5,6 +5,10 @@ const path = require('path');
 // Importa os models
 const CategoriaModel = require('../models/CategoriaModel');
 const ProdutoModel = require('../models/ProdutoModel');
+const cardapioController = require('../controllers/cardapioCategoriaController');
+
+router.get('/cardapio', cardapioController.mostrarCardapio);
+
 
 // Página inicial - cardápio
 router.get('/', async (req, res) => {
@@ -40,6 +44,14 @@ router.get('/conta', (req, res) => {
 
 router.get('/admin_dashboard', (req, res) => {
     res.render('admin_dashboard'); 
+});
+
+router.get('/cardapio', (req, res) => {
+    res.render('cardapio'); 
+});
+
+router.get('/pedidos', (req, res) => {
+    res.render('pedidos'); 
 });
 
 

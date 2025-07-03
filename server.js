@@ -11,6 +11,7 @@ const produtoRoutes = require('./routes/produtoRoutes');
 const categoriaRoutes = require('./routes/categoriaRoutes');
 const rotas = require('./routes/index');
 
+
 // Inicialização do app
 const app = express();
 const PORT = process.env.PORT || 3000;
