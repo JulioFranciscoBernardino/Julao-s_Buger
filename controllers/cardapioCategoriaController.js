@@ -25,10 +25,14 @@ exports.mostrarCardapio = async (req, res) => {
       }
     });
 
-    res.render('cardapio', { categorias: Object.values(categorias) });
+    const categoriasArray = Object.values(categorias);
+    console.log('Categorias:', categoriasArray);
+
+    res.render('cardapio', { categorias: categoriasArray });
 
   } catch (error) {
     console.error('Erro ao carregar o cardápio:', error);
     res.status(500).send('Erro ao carregar o cardápio');
   }
 };
+

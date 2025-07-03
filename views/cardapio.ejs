@@ -51,13 +51,27 @@
   <div class="grupo-container">
     <!-- SIDEBAR DE CATEGORIAS -->
     <div class="grupo-sidebar">
-      <% categorias.forEach((categoria, index) => { %>
-        <div class="grupo-item <%= index === 0 ? 'ativo' : '' %>">
-          <span class="grupo-nome"><%= categoria.nome %></span><br>
-          <span class="grupo-tag verde"><button>Ativo/Inativo</button></span><br>
-          <span class="grupo-itens"><%= categoria.produtos.length %> item(s)</span>
-        </div>
-      <% }) %>
+      <% if (categorias.length === 0) { %>
+  <p>Não há categorias cadastradas no momento.</p>
+<% } else { %>
+  <% categorias.forEach((categoria, index) => { %>
+    <div class="grupo-item <%= index === 0 ? 'ativo' : '' %>">
+      <span class="grupo-nome"><%= categoria.nome %></span><br>
+      <span class="grupo-tag verde"><button>Ativo/Inativo</button></span><br>
+      <!-- Exibir produtos da categoria, se quiser -->
+      <% if(categoria.produtos.length > 0) { %>
+        <ul>
+          <% categoria.produtos.forEach(produto => { %>
+            <li><%= produto.nome %> - R$ <%= produto.preco.toFixed(2) %></li>
+          <% }) %>
+        </ul>
+      <% } else { %>
+        <p>Sem produtos nesta categoria.</p>
+      <% } %>
+    </div>
+  <% }) %>
+<% } %>
+
       <button class="btn-novo-grupo">+ NOVA CATEGORIA</button>
     </div>
 

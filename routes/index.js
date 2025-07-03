@@ -5,10 +5,6 @@ const path = require('path');
 // Importa os models
 const CategoriaModel = require('../models/CategoriaModel');
 const ProdutoModel = require('../models/ProdutoModel');
-const cardapioController = require('../controllers/cardapioCategoriaController');
-
-router.get('/cardapio', cardapioController.mostrarCardapio);
-
 
 // Página inicial - cardápio
 router.get('/', async (req, res) => {
