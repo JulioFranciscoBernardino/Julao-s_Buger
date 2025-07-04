@@ -11,6 +11,7 @@ const produtoRoutes = require('./routes/produtoRoutes');
 const categoriaRoutes = require('./routes/categoriaRoutes');
 const cardapioRoutes = require('./routes/cardapioCategoriaRoutes');
 const rotas = require('./routes/index');
+const viewRoutes = require('./routes/viewRoutes');
 
 
 // Inicialização do app
@@ -37,6 +38,7 @@ app.use('/api/produtos', produtoRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/', cardapioRoutes);
 app.use('/', rotas);
+app.use('/', viewRoutes);
 
 // Inicialização do servidor
 app.listen(PORT, () => {
