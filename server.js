@@ -2,14 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 // Importação de rotas
 const usuarioRoutes = require('./routes/usuarioRoutes');
 const produtoRoutes = require('./routes/produtoRoutes');
 const categoriaRoutes = require('./routes/categoriaRoutes');
-const cardapioRoutes = require('./routes/cardapioCategoriaRoutes');
+const cardapioRoutes = require('./routes/cardapioAdmRoutes');
 const rotas = require('./routes/index');
 const viewRoutes = require('./routes/viewRoutes');
 

@@ -1,4 +1,4 @@
-const CategoriaModel = require('../models/cardapioCategoriaModel');
+const CategoriaModel = require('../models/cardapioAdmModel');
 
 exports.mostrarCardapio = async (req, res) => {
   try {
