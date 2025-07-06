@@ -11,4 +11,16 @@ const Categoria = {
   }
 };
 
+class Categorias {
+  static async cadastrarCategoria({nome}) {
+     await pool.query(
+            'INSERT INTO Categoria (nome) VALUES (?)',
+            [nome]
+        );
+  }
+};
+
+
+module.exports = Categorias;
+
 module.exports = Categoria;
