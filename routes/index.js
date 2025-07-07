@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 
-// Importa os models
-const CategoriaModel = require('../models/CategoriaModel');
-const ProdutoModel = require('../models/ProdutoModel');
+
+const CategoriaModel = require('../models/categoriaModel');
+const ProdutoModel = require('../models/produtoModel');
 
 // Página inicial - cardápio
 router.get('/', async (req, res) => {

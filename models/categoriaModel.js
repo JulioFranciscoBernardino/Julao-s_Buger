@@ -8,19 +8,15 @@ const Categoria = {
     } catch (err) {
       throw err;
     }
+  },
+
+  cadastrarCategoria: async ({ nome }) => {
+    try {
+      await db.query('INSERT INTO Categoria (nome) VALUES (?)', [nome]);
+    } catch (err) {
+      throw err;
+    }
   }
 };
-
-class Categorias {
-  static async cadastrarCategoria({nome}) {
-     await pool.query(
-            'INSERT INTO Categoria (nome) VALUES (?)',
-            [nome]
-        );
-  }
-};
-
-
-module.exports = Categorias;
 
 module.exports = Categoria;
