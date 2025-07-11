@@ -1,101 +1,124 @@
--- Criação do banco
-CREATE DATABASE JULAOS_BURGER;
-USE JULAOS_BURGER;
-SHOW TABLES;
 
--- Desabilita as verificações temporariamente
+CREATE DATABASE IF NOT EXISTS JULAOS_BURGER
+  DEFAULT CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE JULAOS_BURGER;
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Remove tabelas se existirem
+DROP TABLE IF EXISTS PedidoProdutoOpcional;
+DROP TABLE IF EXISTS ProdutoOpcional;
 DROP TABLE IF EXISTS PedidoProduto;
 DROP TABLE IF EXISTS Pedido;
-DROP TABLE IF EXISTS SaborBebida;
 DROP TABLE IF EXISTS Produto;
 DROP TABLE IF EXISTS Categoria;
-DROP TABLE IF EXISTS Endereco;
-DROP TABLE IF EXISTS Funcionario;
 DROP TABLE IF EXISTS Usuario;
 
--- Reabilita as verificações
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Criação da tabela Usuario
 CREATE TABLE Usuario (
-    cpf CHAR(11) PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
-    tipo VARCHAR(10) NOT NULL,
-    pontos INT DEFAULT 0
-);
+  idusuario INT AUTO_INCREMENT PRIMARY KEY,
+  nome      VARCHAR(255)          NOT NULL,
+  email     VARCHAR(255) UNIQUE   NOT NULL,
+  senha     VARCHAR(255)          NOT NULL,
+  tipo      VARCHAR(10)           NOT NULL,
+  pontos    INT DEFAULT 0
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
-SELECT * FROM Usuario;
-DELETE FROM Usuario;
-
--- Criação da tabela Funcionario
-CREATE TABLE Funcionario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
-    tipo VARCHAR(20) NOT NULL
-);
-
--- Criação da tabela Categoria
 CREATE TABLE Categoria (
-    idcategoria INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL
-);
+  idcategoria INT AUTO_INCREMENT PRIMARY KEY,
+  nome        VARCHAR(255) NOT NULL
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Criação da tabela Endereco
-CREATE TABLE Endereco (
-    idendereco INT AUTO_INCREMENT PRIMARY KEY,
-    cpf CHAR(11) NOT NULL,
-    endereco VARCHAR(255) NOT NULL,
-    cidade VARCHAR(100) NOT NULL,
-    estado VARCHAR(50) NOT NULL,
-    cep CHAR(8) NOT NULL,
-    FOREIGN KEY (cpf) REFERENCES Usuario(cpf) ON DELETE CASCADE
-);
-
--- Criação da tabela Produto
 CREATE TABLE Produto (
-    idproduto INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    descricao TEXT NOT NULL,
-    preco DECIMAL(10,2) NOT NULL,
-    imagem VARCHAR(500),
-    idcategoria INT NOT NULL,
-    FOREIGN KEY (idcategoria) REFERENCES Categoria(idcategoria) ON DELETE CASCADE
-);
+  idproduto   INT AUTO_INCREMENT PRIMARY KEY,
+  nome        VARCHAR(255)  NOT NULL,
+  descricao   TEXT          NOT NULL,
+  preco       DECIMAL(10,2) NOT NULL,
+  imagem      VARCHAR(500),
+  idcategoria INT           NOT NULL,
+  CONSTRAINT fk_produto_categoria
+    FOREIGN KEY (idcategoria)
+    REFERENCES Categoria(idcategoria)
+    ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Criação da tabela SaborBebida
-CREATE TABLE SaborBebida (
-    idsaborbebida INT AUTO_INCREMENT PRIMARY KEY,
-    idproduto INT NOT NULL,
-    sabor VARCHAR(100) NOT NULL,
-    FOREIGN KEY (idproduto) REFERENCES Produto(idproduto)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
 
--- Criação da tabela Pedido
 CREATE TABLE Pedido (
-    idpedido INT AUTO_INCREMENT PRIMARY KEY,
-    cpf CHAR(11) NOT NULL,
-    data_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) NOT NULL,
-    idendereco INT NOT NULL,
-    FOREIGN KEY (cpf) REFERENCES Usuario(cpf) ON DELETE CASCADE,
-    FOREIGN KEY (idendereco) REFERENCES Endereco(idendereco) ON DELETE CASCADE
-);
+  idpedido     INT AUTO_INCREMENT PRIMARY KEY,
+  idusuario    INT           NOT NULL,
+  data_pedido  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  status       VARCHAR(20)   NOT NULL,
+  CONSTRAINT fk_pedido_usuario
+    FOREIGN KEY (idusuario)
+    REFERENCES Usuario(idusuario)
+    ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Criação da tabela PedidoProduto
 CREATE TABLE PedidoProduto (
-    idpedidoproduto INT AUTO_INCREMENT PRIMARY KEY,
-    idpedido INT NOT NULL,
-    idproduto INT NOT NULL,
-    quantidade INT NOT NULL,
-    FOREIGN KEY (idpedido) REFERENCES Pedido(idpedido) ON DELETE CASCADE,
-    FOREIGN KEY (idproduto) REFERENCES Produto(idproduto) ON DELETE CASCADE
-);
+  idpedidoproduto INT AUTO_INCREMENT PRIMARY KEY,
+  idpedido        INT NOT NULL,
+  idproduto       INT NOT NULL,
+  quantidade      INT NOT NULL,
+  CONSTRAINT fk_pp_pedido
+    FOREIGN KEY (idpedido)
+    REFERENCES Pedido(idpedido)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_pp_produto
+    FOREIGN KEY (idproduto)
+    REFERENCES Produto(idproduto)
+    ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE Opcional (
+  idopcional INT AUTO_INCREMENT PRIMARY KEY,
+  nome       VARCHAR(100)            NOT NULL,
+  tipo       ENUM('adicionar','remover') NOT NULL,
+  preco      DECIMAL(10,2) DEFAULT 0.00
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE ProdutoOpcional (
+  idproduto  INT NOT NULL,
+  idopcional INT NOT NULL,
+  PRIMARY KEY (idproduto, idopcional),
+  CONSTRAINT fk_prodop_produto
+    FOREIGN KEY (idproduto)
+    REFERENCES Produto(idproduto)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_prodop_opcional
+    FOREIGN KEY (idopcional)
+    REFERENCES Opcional(idopcional)
+    ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE PedidoProdutoOpcional (
+  idpedidoproduto INT NOT NULL,
+  idopcional      INT NOT NULL,
+  quantidade      INT DEFAULT 1,
+  PRIMARY KEY (idpedidoproduto, idopcional),
+  CONSTRAINT fk_pedprodop_pp
+    FOREIGN KEY (idpedidoproduto)
+    REFERENCES PedidoProduto(idpedidoproduto)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_pedprodop_opcional
+    FOREIGN KEY (idopcional)
+    REFERENCES Opcional(idopcional)
+    ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+ALTER TABLE Usuario
+ADD COLUMN ativo TINYINT(1) NOT NULL DEFAULT 1;
+
+ALTER TABLE Categoria
+ADD COLUMN ativo TINYINT(1) NOT NULL DEFAULT 1;
+
+ALTER TABLE Produto
+ADD COLUMN ativo TINYINT(1) NOT NULL DEFAULT 1;
+
+ALTER TABLE Pedido
+ADD COLUMN ativo TINYINT(1) NOT NULL DEFAULT 1;
+
+ALTER TABLE Opcional
+ADD COLUMN ativo TINYINT(1) NOT NULL DEFAULT 1;
+
