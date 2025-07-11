@@ -4,7 +4,7 @@ exports.mostrarCardapio = async (req, res) => {
   try {
     const categoriasProdutos = await CategoriaModel.getCategoriasComProdutos();
 
-    // Agrupar os produtos por categoria
+    // Agrupando produtos por categoria
     const categorias = {};
     categoriasProdutos.forEach(item => {
       const id = item.idcategoria;
@@ -26,13 +26,11 @@ exports.mostrarCardapio = async (req, res) => {
     });
 
     const categoriasArray = Object.values(categorias);
-    console.log('Categorias:', categoriasArray);
 
-    res.render('cardapio', { categorias: categoriasArray });
+    res.json({ categorias: categoriasArray });
 
   } catch (error) {
     console.error('Erro ao carregar o cardápio:', error);
-    res.status(500).send('Erro ao carregar o cardápio');
+    res.status(500).json({ erro: 'Erro ao carregar o cardápio' });
   }
 };
-

@@ -53,4 +53,52 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Erro ao cadastrar categoria.');
     }
   });
+
+  // Carregar dados do cardápio dinamicamente
+    fetch('/api/cardapio/mostrarCardapio')
+      .then(response => response.json())
+      .then(data => {
+        const categorias = data.categorias;
+        const lista = document.getElementById('listaCategorias');
+        const detalhes = document.getElementById('detalhesCategoria');
+
+        lista.innerHTML = '';
+        categorias.forEach((categoria, index) => {
+          const div = document.createElement('div');
+          div.className = 'grupo-item';
+          div.dataset.index = index;
+          div.innerHTML = `
+            <span class="grupo-nome">${categoria.nome}</span><br>
+            <span class="grupo-tag verde"><button>Ativo/Inativo</button></span><br>
+          `;
+          div.addEventListener('click', () => {
+            detalhes.innerHTML = '';
+            if (categoria.produtos.length === 0) {
+              detalhes.innerHTML = '<p>Nenhum produto nesta categoria.</p>';
+              return;
+            }
+            categoria.produtos.forEach(produto => {
+              const prodDiv = document.createElement('div');
+              prodDiv.className = 'produto-item';
+              prodDiv.innerHTML = `
+                <h3>${produto.nome}</h3>
+                <p>${produto.descricao}</p>
+                <p>Preço: R$ ${produto.preco.toFixed(2)}</p>
+              `;
+              detalhes.appendChild(prodDiv);
+            });
+          });
+          lista.appendChild(div);
+        });
+
+        // Adiciona o botão novamente após renderizar as categorias
+        const btnNova = document.createElement('button');
+        btnNova.className = 'btn-novo-grupo';
+        btnNova.textContent = '+ NOVA CATEGORIA';
+        lista.appendChild(btnNova);
+      })
+      .catch(error => {
+        console.error('Erro ao carregar o cardápio:', error);
+      });
+
 });

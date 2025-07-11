@@ -31,7 +31,7 @@ app.use(express.static(path.join(__dirname, 'view')));
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/produtos', produtoRoutes);
 app.use('/api/categorias', categoriaRoutes);
-app.use('/', cardapioRoutes);
+app.use('/api/cardapio', cardapioRoutes);
 app.use('/', rotas);
 app.use('/', viewRoutes);
 
