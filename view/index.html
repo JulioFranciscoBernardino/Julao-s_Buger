@@ -7,7 +7,6 @@
   <title>Julão's Burger - Cardápio</title>
   <link rel="stylesheet" href="/styles/index.css">
   <link rel="shortcut icon" href="/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -16,110 +15,46 @@
 <body>
   <header>
     <div class="header-content">
-      <img src="/imgs/Logo Julãos Burguinho.png" class="logo">
+      <img src="/imgs/Logo Julãos Burguinho.png" class="logo" alt="Logo Julão's Burguinho">
       <div class="header-text">
         <h1>Julão's Burguinho</h1>
-      </div>
-      <div class="navegation">
-        <nav>
-          <ul>
-            <li><a class="menu" href="/sobre_nos.html">Sobre nós</a></li>
-            <li><a class="menu" href="/login_cadastro.html">Login</a></li>
-            <li><a class="menu" href="/conta.html">Conta</a></li>
-            <li><button id="logoutBtn">Sair</button></li>
+        <div class="navegation">
+          <nav>
+            <ul>
+              <li><a class="menu" href="/sobre_nos.html">Sobre nós</a></li>
+              <li><a class="menu" href="/login_cadastro.html">Login</a></li>
+              <li><a class="menu" href="/conta.html">Conta</a></li>
+              <li><button id="logoutBtn">Sair</button></li>
+            </ul>
+          </nav>
+        </div>
+
+        <nav class="navegation">
+          <ul id="categorias-nav">
+            <!-- Categorias serão inseridas aqui via JavaScript -->
           </ul>
         </nav>
-      </div>
-    </div>
-    <div class="navegation">
-      <nav>
-        <ul>
-          <% if (typeof categorias !=='undefined' && categorias.length> 0) { %>
-            <% categorias.forEach(categoria=> { %>
-              <li><a class="menu" href="#categoria-<%= categoria.idcategoria %>">
-                  <%= categoria.nome %>
-                </a></li>
-              <% }); %>
-                <% } else { %>
-                  <li>Nenhuma categoria disponível</li>
-                  <% } %>
-        </ul>
-      </nav>
-    </div>
 
-    <!-- Ícone para abrir o carrinho -->
-    <button id="openCart" class="cart-icon">
-      <i class="fa-solid fa-cart-shopping fa-lg" style="color: #FFCC00;" class="icon"></i>
-    </button>
+        <button id="openCart" class="cart-icon">
+          <i class="fa-solid fa-cart-shopping fa-lg" style="color: #FFCC00;"></i>
+        </button>
 
-    <!-- Estrutura do carrinho -->
-    <div class="cart" id="cart">
-      <div class="cart-header">
-        <span>Carrinho de Compras</span>
-        <button id="closeCart">&times;</button>
-      </div>
-      <div class="cart-items">
-        <!-- Itens do carrinho serão adicionados aqui -->
-      </div>
-      <div class="cart-footer">
-        <button>Finalizar Compra</button>
-      </div>
-    </div>
+        <div class="cart" id="cart">
+          <div class="cart-header">
+            <span>Carrinho de Compras</span>
+            <button id="closeCart">&times;</button>
+          </div>
+          <div class="cart-items">
+            <!-- Itens do carrinho serão adicionados aqui -->
+          </div>
+          <div class="cart-footer">
+            <button>Finalizar Compra</button>
+          </div>
+        </div>
   </header>
 
   <main id="cardapio" class="cardapio">
-    <% if (typeof categorias !=='undefined' && categorias.length> 0) { %>
-      <% categorias.forEach(categoria=> { %>
-        <section id="categoria-<%= categoria.idcategoria %>">
-          <h2>
-            <%= categoria.nome %>
-          </h2> <!-- Exibe o nome da categoria -->
-
-          <% // Filtra os produtos dessa categoria %>
-            <% let produtosDaCategoria=produtos.filter(produto=> produto.idcategoria === categoria.idcategoria); %>
-
-              <% if (produtosDaCategoria.length> 0) { %>
-                <div class="produtos">
-                  <% produtosDaCategoria.forEach(produto=> { %>
-                    <div class="produto-card">
-                      <img src="<%= produto.imagem ? produto.imagem : 'default-image.jpg' %>" alt="<%= produto.nome %>">
-                      <h3>
-                        <%= produto.nome %>
-                      </h3>
-                      <p>
-                        <%= produto.descricao %>
-                      </p>
-                      <p>Preço: R$ <%= produto.preco.toFixed(2) %>
-                      </p>
-
-                      <% if (typeof sabores !=='undefined' && sabores.length> 0) { %>
-                        <% var saboresDoProduto=sabores.filter(function(s) { return s.idproduto===produto.idproduto; });
-                          %>
-
-                          <% if (saboresDoProduto.length> 0) { %>
-                            <h4>Sabores disponíveis:</h4>
-                            <ul class="sabores">
-                              <% saboresDoProduto.forEach(function(sabor) { %>
-                                <li>
-                                  <%= sabor.nome %>
-                                </li>
-                                <% }); %>
-                            </ul>
-                            <% } else { %>
-                              <p>Sem sabores disponíveis.</p>
-                              <% } %>
-                                <% } %>
-                    </div>
-                    <% }); %>
-                </div>
-                <% } else { %>
-                  <p>Nenhum produto disponível nesta categoria.</p>
-                  <% } %>
-        </section>
-        <% }); %>
-          <% } else { %>
-            <p>Nenhuma categoria disponível.</p>
-            <% } %>
+    <!-- Categorias e produtos serão inseridos aqui via JavaScript -->
   </main>
 
   <div class="space"></div>

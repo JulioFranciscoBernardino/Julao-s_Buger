@@ -39,6 +39,10 @@ header {
   max-width: 100px;
 }
 
+.header-text{
+  display: flex;
+}
+
 .header-text h1 {
   font-size: 2rem;
 }
@@ -49,9 +53,7 @@ header {
 }
 
 /* ================= MENU ================= */
-.navegation {
-  margin-top: 20px;
-}
+
 
 .navegation nav {
   background-color: rgba(255, 255, 255, 0.8);
@@ -59,6 +61,7 @@ header {
   padding: 10px 35px;
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-left: 20px;
 }
 
 .navegation nav ul {
