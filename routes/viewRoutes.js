@@ -3,34 +3,34 @@ const router = express.Router();
 const path = require('path');
 
 
-// Página sobre nós
+router.get('/index', (req, res) => {
+    res.sendFile(path.join(__dirname, '../view/index.html'));
+});
+
 router.get('/sobre_nos', (req, res) => {
-    res.sendFile(path.join(__dirname, '../viewHTML/sobre_nos.html'));
+    res.sendFile(path.join(__dirname, '../view/sobre_nos.html'));
 });
 
-// Página de login/cadastro
 router.get('/login_cadastro', (req, res) => {
-    res.sendFile(path.join(__dirname, '../viewHTML/login_cadastro.html'));
+    res.sendFile(path.join(__dirname, '../view/login_cadastro.html'));
 });
 
-// Página de conta
+
 router.get('/conta', (req, res) => {
-    res.sendFile(path.join(__dirname, '../viewHTML/conta.html'));
+    res.sendFile(path.join(__dirname, '../view/conta.html'));
 });
 
 router.get('/admin_dashboard', (req, res) => {
-    res.render('admin_dashboard'); 
+    res.sendFile(path.join(__dirname, '../view/admin_dashboard.html'));
 });
 
 router.get('/cardapio', (req, res) => {
-    res.render('cardapio'); 
+    res.sendFile(path.join(__dirname, '../view/cardapio.html'));
 });
 
 router.get('/pedidos', (req, res) => {
-    res.render('pedidos'); 
+    res.sendFile(path.join(__dirname, '../view/pedidos.html'));
 });
-
-
 
 
 module.exports = router;

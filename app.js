@@ -23,13 +23,9 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 
-// View engine - EJS
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
 // Arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'viewHTML'))); 
+app.use(express.static(path.join(__dirname, 'view'))); 
 
 // Rotas
 app.use('/api/usuarios', usuarioRoutes);

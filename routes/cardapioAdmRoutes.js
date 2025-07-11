@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const cardapioController = require('../controllers/cardapioAdmController');
+const cardapioController = require('../controller/cardapioAdmController');
 
 router.get('/cardapio', cardapioController.mostrarCardapio);
 
