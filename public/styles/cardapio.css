@@ -1,161 +1,168 @@
 /* Aqui já está incluso o CSS embutido do cardápio */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
-        .menu-admin {
-          padding: 2rem;
-          font-family: 'Poppins', sans-serif;
-        }
+.menu-admin {
+  padding: 2rem;
+  font-family: 'Poppins', sans-serif;
+}
 
-        .menu-header {
-          display: flex;
-          gap: 2rem;
-          margin-bottom: 1.5rem;
-          border-bottom: 1px solid #ccc;
-        }
+.menu-header {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ccc;
+}
 
-        .menu-tabs li {
-          display: inline-block;
-          padding: 0.5rem 1rem;
-          color: blue;
-          cursor: pointer;
-        }
+.menu-tabs li {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  color: blue;
+  cursor: pointer;
+}
 
-        .menu-tabs .active {
-          font-weight: bold;
-          border-bottom: 2px solid blue;
-        }
+.menu-tabs .active {
+  font-weight: bold;
+  border-bottom: 2px solid blue;
+}
 
-        .grupo-container {
-          display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
+.grupo-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 
-        .grupo-sidebar {
-          width: 220px;
-          background: #f3f3f3;
-          padding: 1rem;
-          border-radius: 8px;
-        }
+.grupo-sidebar {
+  width: 220px;
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 8px;
+}
 
-        .grupo-item {
-          padding: 0.5rem;
-          margin-bottom: 1rem;
-          cursor: pointer;
-        }
+.grupo-item {
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  background: #cccccc;
+  border-radius: 10px;
+}
 
-        .grupo-item.ativo {
-          background: #eaeaea;
-          border-left: 4px solid blue;
-        }
+.grupo-item:hover{
+  background: #ffe588;
 
-        .grupo-tag.verde {
-          background: #1ec38b;
-          color: white;
-          font-size: 0.75rem;
-          padding: 3px 8px;
-          border-radius: 12px;
-          margin-top: 5px;
-          display: inline-block;
-        }
+}
 
-        .btn-novo-grupo {
-          background: blue;
-          color: white;
-          border: none;
-          padding: 10px;
-          width: 100%;
-          border-radius: 4px;
-          font-weight: bold;
-          cursor: pointer;
-        }
+.grupo-item.ativo {
+  background: #eaeaea;
+  border-left: 4px solid blue;
+}
 
-        .grupo-detalhes {
-          flex: 1;
-          background: #fff;
-          padding: 1rem;
-          border-radius: 8px;
-          min-width: 300px;
-        }
+.grupo-tag.verde {
+  background: #1ec38b;
+  color: white;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-top: 5px;
+  display: inline-block;
+}
 
-        .grupo-topo {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 1rem;
-        }
+.btn-novo-grupo {
+  background: blue;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-        .grupo-topo-tags span {
-          margin-right: 0.5rem;
-        }
+.grupo-detalhes {
+  flex: 1;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  min-width: 300px;
+}
 
-        .grupo-acoes button {
-          margin-left: 0.4rem;
-          background: transparent;
-          border: 1px solid #ccc;
-          padding: 6px 10px;
-          border-radius: 4px;
-          cursor: pointer;
-        }
+.grupo-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
 
-        .btn-excluir {
-          border-color: red;
-          color: red;
-        }
+.grupo-topo-tags span {
+  margin-right: 0.5rem;
+}
 
-        .produto-item {
-          display: flex;
-          align-items: center;
-          margin-top: 1rem;
-          gap: 1rem;
-          border-top: 1px solid #eee;
-          padding-top: 1rem;
-          flex-wrap: wrap;
-        }
+.grupo-acoes button {
+  margin-left: 0.4rem;
+  background: transparent;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-        .produto-imagem {
-          width: 70px;
-          height: 70px;
-          background: #e6e6e6;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2rem;
-          color: gray;
-        }
+.btn-excluir {
+  border-color: red;
+  color: red;
+}
 
-        .produto-info h4 {
-          margin: 0;
-        }
+.produto-item {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+  flex-wrap: wrap;
+}
 
-        .produto-preco {
-          font-weight: bold;
-          margin-top: 0.3rem;
-        }
+.produto-imagem {
+  width: 70px;
+  height: 70px;
+  background: #e6e6e6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: gray;
+}
 
-        .produto-acoes {
-          margin-left: auto;
-          text-align: right;
-        }
+.produto-info h4 {
+  margin: 0;
+}
 
-        .produto-opcionais {
-          display: block;
-          margin: 0.3rem 0;
-          font-size: 0.8rem;
-          color: gray;
-        }
+.produto-preco {
+  font-weight: bold;
+  margin-top: 0.3rem;
+}
 
-        .produto-botoes button {
-          background: none;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          padding: 5px 8px;
-          margin-left: 0.3rem;
-          cursor: pointer;
-        }
+.produto-acoes {
+  margin-left: auto;
+  text-align: right;
+}
 
-        .produto-botoes .btn-excluir {
-          color: red;
-          border-color: red;
-        }
+.produto-opcionais {
+  display: block;
+  margin: 0.3rem 0;
+  font-size: 0.8rem;
+  color: gray;
+}
+
+.produto-botoes button {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin-left: 0.3rem;
+  cursor: pointer;
+}
+
+.produto-botoes .btn-excluir {
+  color: red;
+  border-color: red;
+}
