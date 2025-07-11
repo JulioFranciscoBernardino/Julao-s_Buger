@@ -1,9 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('modalCategoria');
-  const btnAbrir = document.querySelector('.btn-novo-grupo');
+  const modal = document.getElementById('modalProduto');
+  const btnAbrir = document.querySelector('.btn-novo-produto');
   const btnFechar = document.getElementById('Fechar');
-  const formCategoria = document.getElementById('formCategoria');
-  const inputCategoria = document.getElementById('NovaCategoria'); // certifique-se de que o input tem esse id
+  const formProduto = document.getElementById('formProduto');
+
+  //FORM PRODUTO
+  const nome = document.getElementById('nome'); 
 
   btnAbrir.addEventListener('click', () => {
     modal.style.display = 'block';
@@ -19,17 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  formCategoria.addEventListener('submit', async (e) => {
+  formProduto.addEventListener('submit', async (e) => {
     e.preventDefault(); // evita reload da página
 
-    const nome = inputCategoria.value.trim();
+    const nome = nome.value.trim();
     if (!nome) {
-      alert('Informe o nome da categoria!');
+      alert('Informe o nome do produto!');
       return;
     }
 
     try {
-      const response = await fetch('/api/categorias/inserir', {
+      const response = await fetch('/api/produtos/inserir', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

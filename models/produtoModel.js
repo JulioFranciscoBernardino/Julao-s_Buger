@@ -19,6 +19,14 @@ const Produto = {
     } catch (err) {
       throw err;
     }
+  },
+
+  cadastrarProduto: async ({ nome }) => {
+    try {
+      await db.query('INSERT INTO Produto (nome, descricao, preco, imagem, idcategoria) VALUES (?,?,?,?,?)', [nome, descricao, preco, imagem, idcategoria]);
+    } catch (err) {
+      throw err;
+    }
   }
 };
 
