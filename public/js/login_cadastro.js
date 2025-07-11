@@ -115,7 +115,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Função de Cadastro
     async function cadastro() {
-        const cpf = document.getElementById('cpf').value;
         const nome = document.getElementById('nome').value;
         const email = document.getElementById('emailCadastro').value;
         const senha = document.getElementById('senha').value;
@@ -126,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        console.log('Tentando cadastrar com:', { cpf, nome, email, senha });
+        console.log('Tentando cadastrar com:', { nome, email, senha });
 
         try {
             const response = await fetch('/api/usuarios/cadastro', {
@@ -134,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ cpf, nome, email, senha })
+                body: JSON.stringify({ nome, email, senha })
             });
 
             const data = await response.json();

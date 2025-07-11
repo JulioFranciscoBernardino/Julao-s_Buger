@@ -38,9 +38,9 @@ exports.login = async (req, res) => {
 
 
 exports.cadastro = async (req, res) => {
-    const { cpf, nome, email, senha, tipo } = req.body;
+    const {  nome, email, senha, tipo } = req.body;
     try {
-        await Usuario.cadastrar({ cpf, nome, email, senha, tipo });
+        await Usuario.cadastrar({ nome, email, senha, tipo });
         res.json({ message: 'Usuário cadastrado com sucesso' });
     } catch (error) {
         console.error('Erro ao cadastrar usuário:', error);

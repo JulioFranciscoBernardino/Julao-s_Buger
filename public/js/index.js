@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', function() {
         cart.classList.remove('open');
         openCartButton.classList.remove('hidden');
     });
+    
+    
+
 });
+
 
 

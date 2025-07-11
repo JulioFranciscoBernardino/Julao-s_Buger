@@ -7,11 +7,11 @@ class Usuario {
         return rows[0];
     }
 
-    static async cadastrar({ cpf, nome, email, senha, tipo }) {
+    static async cadastrar({ nome, email, senha, tipo }) {
         const senhaHash = await argon2.hash(senha);
         await pool.query(
-            'INSERT INTO Usuario (cpf, nome, email, senha, tipo) VALUES (?, ?, ?, ?, ?)',
-            [cpf, nome, email, senhaHash, tipo || 'cliente']
+            'INSERT INTO Usuario ( nome, email, senha, tipo) VALUES (?, ?, ?, ?)',
+            [ nome, email, senhaHash, tipo || 'admin']
         );
     }
 }
