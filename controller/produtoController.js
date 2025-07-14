@@ -30,7 +30,7 @@ const produtoController = {
       res.status(500).json({ error: 'Erro ao cadastrar produto' });
     }
   }
-
+  
   
 };
 

@@ -38,7 +38,7 @@
   <!-- MODAL DE CATEGORIA -->
   <div id="modalCategoria" class="modal">
     <div class="modal-content">
-      <span class="close" id="Fechar">&times;</span>
+      <span class="close" id="FecharCategoria">&times;</span>
       <h2>Nova Categoria</h2>
       <form id="formCategoria">
         <input type="text" id="NovaCategoria" class="texto" placeholder="Nome da categoria" required />
@@ -50,19 +50,19 @@
   <!-- MODAL DE PRODUTO -->
   <div id="modalProduto" class="modal">
     <div class="modal-content">
-      <span class="close" id="Fechar">&times;</span>
+      <span class="close" id="FecharProduto">&times;</span>
       <h2>Novo Produto</h2>
       <form id="formProduto">
         <label for="nomeProduto">Nome</label><br>
-        <input type="text" id="nomeProduto" class="texto" placeholder="Ex: Cheese Burger..." required /><br><br>
+        <input type="text" id="nomeProduto" class="texto" placeholder="Ex: Cheese Burger..." required /><br>
         <label for="descricaoProduto">Descrição</label><br>
-        <input type="text" id="descricaoProduto" class="texto" placeholder="Ex: Hamburguer, queijo..."
-          required /><br><br>
+        <input type="text" id="descricaoProduto" class="texto" placeholder="Ex: Hamburguer, queijo..." required /><br>
         <label for="precoProduto">Preço</label><br>
-        <input type="number" id="precoProduto" class="texto" placeholder="Ex: 22,90..." required /><br><br>
-        <label for="imagem">Imagem</label><br>
-        <input type="file" id="imagem" multiple accept="image/*"><br><br>
-        <!-- Select Dinamico das categorias-->
+        <input type="number" id="precoProduto" class="texto" placeholder="Ex: 22,90..." required /><br>
+        <label for="produtoCategoria">Categoria</label><br>
+        <select id="produtoCategoria" class="texto" required></select><br>
+        <label for="produtoImagem">Imagem</label><br>
+        <input type="file" id="produtoImagem" multiple accept="image/*"><br>
         <button type="submit" id="Concluir">Concluir</button>
       </form>
     </div>
@@ -90,10 +90,11 @@
         <p>Selecione uma categoria para visualizar os produtos.</p>
 
         <div class="botoes-acoes">
-          <button id="btnAddProduto" class="btn-adicionar">+ NOVO PRODUTO</button>
+          <button id="btnAddProdutoEstatico" class="btn-adicionar">+ NOVO PRODUTO</button>
           <button class="btn-acao editar"><i class="fas fa-pen"></i></button>
           <button class="btn-acao excluir"><i class="fas fa-trash"></i></button>
         </div>
+
 
         <div id="produtosLista"></div>
       </div>

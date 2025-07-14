@@ -1,61 +1,56 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Modal para cadastro de categoria
+  // Modal de categoria
   const modal = document.getElementById('modalCategoria');
-  const btnFechar = document.getElementById('Fechar');
+  const btnFechar = document.getElementById('FecharCategoria');
   const formCategoria = document.getElementById('formCategoria');
   const inputCategoria = document.getElementById('NovaCategoria');
 
-  // Modal para cadastro de produto
+  // Modal de produto
   const modalProduto = document.getElementById('modalProduto');
   const btnFecharProduto = document.getElementById('FecharProduto');
   const formProduto = document.getElementById('formProduto');
-
-  const inputProdutoNome = document.getElementById('produtoNome');
-  const inputProdutoDescricao = document.getElementById('produtoDescricao');
-  const inputProdutoPreco = document.getElementById('produtoPreco');
+  const inputProdutoNome = document.getElementById('nomeProduto');
+  const inputProdutoDescricao = document.getElementById('descricaoProduto');
+  const inputProdutoPreco = document.getElementById('precoProduto');
   const inputProdutoCategoria = document.getElementById('produtoCategoria');
   const inputProdutoImagem = document.getElementById('produtoImagem');
-  
-  const botoesDiv = document.querySelector('.botoes-acoes');
 
+  const btnAddProdutoEstatico = document.getElementById('btnAddProdutoEstatico');
+  if (btnAddProdutoEstatico) {
+    btnAddProdutoEstatico.addEventListener('click', () => {
+      modalProduto.style.display = 'block';
+    });
+  }
 
+  // Fechar modais
   btnFechar.addEventListener('click', () => {
     modal.style.display = 'none';
   });
 
-  window.addEventListener('click', (event) => {
-    if (event.target === modal) {
-      modal.style.display = 'none';
-    }
+  btnFecharProduto.addEventListener('click', () => {
+    modalProduto.style.display = 'none';
   });
 
+  window.addEventListener('click', (event) => {
+    if (event.target === modal) modal.style.display = 'none';
+    if (event.target === modalProduto) modalProduto.style.display = 'none';
+  });
 
-  //cadastro de categoria
+  // Cadastro de categoria
   formCategoria.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const nome = inputCategoria.value.trim();
-    if (!nome) {
-      alert('Informe o nome da categoria!');
-      return;
-    }
+
+    if (!nome) return alert('Informe o nome da categoria!');
 
     try {
       const response = await fetch('/api/categorias/inserir', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome })
       });
 
       const data = await response.json();
-      console.log('Resposta do cadastro:', data);
-          // Adiciona evento para abrir o modal de produto
-          const btnAddProduto = botoesDiv.querySelector('#btnAddProduto');
-          btnAddProduto.addEventListener('click', () => {
-            modalProduto.style.display = 'block';
-          });
 
       if (response.ok) {
         alert('Categoria cadastrada com sucesso!');
@@ -71,39 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  //Cadastro de produto
+  // Cadastro de produto
   formProduto.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const nomeProduto = inputProdutoNome.value.trim();
-    if (!nomeProduto) {
-      alert('Informe o nome do produto!');
-      return;
-    }
-
     const descricaoProduto = inputProdutoDescricao.value.trim();
-    if (!descricaoProduto) {
-      alert('Informe a descrição do produto!');
-      return;
-    }
-
     const precoProduto = parseFloat(inputProdutoPreco.value);
-    if (isNaN(precoProduto) || precoProduto <= 0) {
-      alert('Informe um preço válido para o produto!');
-      return;
-    }
-
     const categoriaProduto = inputProdutoCategoria.value.trim();
-    if (!categoriaProduto) {
-      alert('Informe a categoria do produto!');
-      return;
-    }
-
     const imagemProduto = inputProdutoImagem.files[0];
-    if (!imagemProduto) {
-      alert('Selecione uma imagem para o produto!');
-      return;
-    }
+
+    if (!nomeProduto) return alert('Informe o nome do produto!');
+    if (!descricaoProduto) return alert('Informe a descrição do produto!');
+    if (isNaN(precoProduto) || precoProduto <= 0) return alert('Informe um preço válido!');
+    if (!categoriaProduto) return alert('Informe a categoria!');
+    if (!imagemProduto) return alert('Selecione uma imagem!');
 
     const formData = new FormData();
     formData.append('nome', nomeProduto);
@@ -111,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.append('preco', precoProduto);
     formData.append('categoria', categoriaProduto);
     formData.append('imagem', imagemProduto);
-    formData.append('imagem', categoriaProduto);
 
     try {
       const response = await fetch('/api/produtos/inserir', {
@@ -120,16 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const data = await response.json();
-      console.log('Resposta do cadastro:', data);
 
       if (response.ok) {
         alert('Produto cadastrado com sucesso!');
         modalProduto.style.display = 'none';
-        inputProdutoNome.value = '';
-        inputProdutoDescricao.value = '';
-        inputProdutoPreco.value = '';
-        inputProdutoCategoria.value = '';
-        inputProdutoImagem.value = '';
+        formProduto.reset();
         location.reload();
       } else {
         alert(data.mensagem || 'Erro ao cadastrar produto.');
@@ -138,11 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Erro:', error);
       alert('Erro ao cadastrar produto.');
     }
-
   });
 
-
-  // Carregar dados do cardápio dinamicamente
+  // Carregar cardápio
   fetch('/api/cardapio/mostrarCardapio')
     .then(response => response.json())
     .then(data => {
@@ -151,7 +120,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const detalhes = document.getElementById('detalhesCategoria');
 
       lista.innerHTML = '';
+      inputProdutoCategoria.innerHTML = '';
+
       categorias.forEach((categoria, index) => {
+        // Sidebar: exibir categorias
         const div = document.createElement('div');
         div.className = 'grupo-item';
         div.dataset.index = index;
@@ -160,20 +132,30 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="grupo-tag verde"><button>Ativo/Inativo</button></span><br>
         `;
 
+        // <select> do formulário
+        const option = document.createElement('option');
+        option.value = categoria.id; // use `categoria.nome` se preferir
+        option.textContent = categoria.nome;
+        inputProdutoCategoria.appendChild(option);
+
+        // Evento ao clicar na categoria
         div.addEventListener('click', () => {
           detalhes.innerHTML = '';
 
-          // Botões de ação ao selecionar categoria
           const botoesDiv = document.createElement('div');
           botoesDiv.className = 'botoes-acoes';
           botoesDiv.innerHTML = `
-            <button id="btnAddProduto" class="btn-adicionar">+ NOVO PRODUTO</button>
+            <button class="btn-adicionar" id="btnAddProduto">+ NOVO PRODUTO</button>
             <button class="btn-acao editar" title="Editar categoria"><i class="fas fa-pen"></i></button>
             <button class="btn-acao excluir" title="Excluir categoria"><i class="fas fa-trash"></i></button>
           `;
           detalhes.appendChild(botoesDiv);
 
-          // Produtos da categoria
+          // Evento botão adicionar produto
+          botoesDiv.querySelector('#btnAddProduto').addEventListener('click', () => {
+            modalProduto.style.display = 'block';
+          });
+
           if (categoria.produtos.length === 0) {
             const aviso = document.createElement('p');
             aviso.textContent = 'Nenhum produto nesta categoria.';
@@ -200,10 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const btnNova = document.createElement('button');
       btnNova.className = 'btn-novo-grupo';
       btnNova.textContent = '+ NOVA CATEGORIA';
-      lista.appendChild(btnNova);
       btnNova.addEventListener('click', () => {
         modal.style.display = 'block';
       });
+      lista.appendChild(btnNova);
     })
     .catch(error => {
       console.error('Erro ao carregar o cardápio:', error);
