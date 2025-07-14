@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const nomeProduto = inputProdutoNome.value.trim();
     const descricaoProduto = inputProdutoDescricao.value.trim();
-    const precoProduto = parseFloat(inputProdutoPreco.value);
+    const precoProduto = parseFloat(inputProdutoPreco.value.replace(',', '.'));
     const categoriaProduto = inputProdutoCategoria.value.trim();
     const imagemProduto = inputProdutoImagem.files[0];
 
