@@ -1,13 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('modalCategoria');
-  const btnAbrir = document.querySelector('.btn-novo-grupo');
   const btnFechar = document.getElementById('Fechar');
   const formCategoria = document.getElementById('formCategoria');
-  const inputCategoria = document.getElementById('NovaCategoria'); // certifique-se de que o input tem esse id
-
-  btnAbrir.addEventListener('click', () => {
-    modal.style.display = 'block';
-  });
+  const inputCategoria = document.getElementById('NovaCategoria');
 
   btnFechar.addEventListener('click', () => {
     modal.style.display = 'none';
@@ -20,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   formCategoria.addEventListener('submit', async (e) => {
-    e.preventDefault(); // evita reload da página
+    e.preventDefault();
 
     const nome = inputCategoria.value.trim();
     if (!nome) {
@@ -68,30 +63,47 @@ document.addEventListener('DOMContentLoaded', () => {
         div.className = 'grupo-item';
         div.dataset.index = index;
         div.innerHTML = `
-            <span class="grupo-nome">${categoria.nome}</span><br>
-            <span class="grupo-tag verde"><button>Ativo/Inativo</button></span><br>
-          `;
+          <span class="grupo-nome">${categoria.nome}</span><br>
+          <span class="grupo-tag verde"><button>Ativo/Inativo</button></span><br>
+        `;
+
         div.addEventListener('click', () => {
           detalhes.innerHTML = '';
+
+          // Botões de ação ao selecionar categoria
+          const botoesDiv = document.createElement('div');
+          botoesDiv.className = 'botoes-acoes';
+          botoesDiv.innerHTML = `
+            <button id="btnAddProduto" class="btn-adicionar">+ NOVO PRODUTO</button>
+            <button class="btn-acao editar" title="Editar categoria"><i class="fas fa-pen"></i></button>
+            <button class="btn-acao excluir" title="Excluir categoria"><i class="fas fa-trash"></i></button>
+          `;
+          detalhes.appendChild(botoesDiv);
+
+          // Produtos da categoria
           if (categoria.produtos.length === 0) {
-            detalhes.innerHTML = '<p>Nenhum produto nesta categoria.</p>';
+            const aviso = document.createElement('p');
+            aviso.textContent = 'Nenhum produto nesta categoria.';
+            detalhes.appendChild(aviso);
             return;
           }
+
           categoria.produtos.forEach(produto => {
             const prodDiv = document.createElement('div');
             prodDiv.className = 'produto-item';
             prodDiv.innerHTML = `
-                <h3>${produto.nome}</h3>
-                <p>${produto.descricao}</p>
-                <p>Preço: R$ ${produto.preco.toFixed(2)}</p>
-              `;
+              <h3>${produto.nome}</h3>
+              <p>${produto.descricao}</p>
+              <p>Preço: R$ ${produto.preco.toFixed(2)}</p>
+            `;
             detalhes.appendChild(prodDiv);
           });
         });
+
         lista.appendChild(div);
       });
 
-      // Adiciona o botão novamente após renderizar as categorias
+      // Botão dinâmico de nova categoria
       const btnNova = document.createElement('button');
       btnNova.className = 'btn-novo-grupo';
       btnNova.textContent = '+ NOVA CATEGORIA';
@@ -103,5 +115,4 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(error => {
       console.error('Erro ao carregar o cardápio:', error);
     });
-
 });

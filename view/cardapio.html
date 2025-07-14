@@ -9,7 +9,7 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <link rel="stylesheet" href="/styles/cardapio.css">
   <link rel="stylesheet" href="/styles/navbar.css" />
-  <link rel="stylesheet" href="/styles/formCategoria.css" />
+  <link rel="stylesheet" href="/styles/formCardapio.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -47,7 +47,7 @@
     </div>
   </div>
 
-   <!-- MODAL DE PRODUTO -->
+  <!-- MODAL DE PRODUTO -->
   <div id="modalProduto" class="modal">
     <div class="modal-content">
       <span class="close" id="Fechar">&times;</span>
@@ -56,7 +56,8 @@
         <label for="nomeProduto">Nome</label><br>
         <input type="text" id="nomeProduto" class="texto" placeholder="Ex: Cheese Burger..." required /><br><br>
         <label for="descricaoProduto">Descrição</label><br>
-        <input type="text" id="descricaoProduto" class="texto" placeholder="Ex: Hamburguer, queijo..." required /><br><br>
+        <input type="text" id="descricaoProduto" class="texto" placeholder="Ex: Hamburguer, queijo..."
+          required /><br><br>
         <label for="precoProduto">Preço</label><br>
         <input type="number" id="precoProduto" class="texto" placeholder="Ex: 22,90..." required /><br><br>
         <label for="imagem">Imagem</label><br>
@@ -85,13 +86,19 @@
       </div>
 
       <!-- DETALHES DA CATEGORIA ESCOLHIDA -->
+      <!-- DETALHES DA CATEGORIA ESCOLHIDA -->
       <div class="grupo-detalhes" id="detalhesCategoria">
         <p>Selecione uma categoria para visualizar os produtos.</p>
-        <div class="acoes-produto">
-          <button id="btnAddProduto">+ Novo Produto</button>
+
+        <div class="botoes-acoes">
+          <button id="btnAddProduto" class="btn-adicionar">+ NOVO PRODUTO</button>
+          <button class="btn-acao editar"><i class="fas fa-pen"></i></button>
+          <button class="btn-acao excluir"><i class="fas fa-trash"></i></button>
         </div>
+
         <div id="produtosLista"></div>
       </div>
+
     </div>
   </section>
 

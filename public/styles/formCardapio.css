@@ -58,6 +58,50 @@
   color: red;
 }
 
+.botoes-acoes {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.btn-adicionar {
+  padding: 10px 16px;
+  border: 2px solid blue;
+  color: blue;
+  background: white;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-adicionar:hover {
+  background-color: blue;
+  color: white;
+}
+
+.btn-acao {
+  padding: 10px;
+  border: none;
+  background-color: #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 16px;
+}
+
+.btn-acao.excluir {
+  background-color: #ffdddd;
+  color: red;
+}
+
+.btn-acao.duplicar,
+.btn-acao.editar {
+  background-color: #f0f0f0;
+}
+
+
 /* Animações */
 @keyframes fadeIn {
   from {opacity: 0;}
