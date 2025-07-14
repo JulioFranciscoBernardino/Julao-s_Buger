@@ -48,12 +48,20 @@
   </div>
 
    <!-- MODAL DE PRODUTO -->
-  <div id="modalCategoria" class="modal">
+  <div id="modalProduto" class="modal">
     <div class="modal-content">
       <span class="close" id="Fechar">&times;</span>
-      <h2>Nova Categoria</h2>
-      <form id="formCategoria">
-        <input type="text" id="NovaCategoria" class="texto" placeholder="Nome da categoria" required />
+      <h2>Novo Produto</h2>
+      <form id="formProduto">
+        <label for="nomeProduto">Nome</label><br>
+        <input type="text" id="nomeProduto" class="texto" placeholder="Ex: Cheese Burger..." required /><br><br>
+        <label for="descricaoProduto">Descrição</label><br>
+        <input type="text" id="descricaoProduto" class="texto" placeholder="Ex: Hamburguer, queijo..." required /><br><br>
+        <label for="precoProduto">Preço</label><br>
+        <input type="number" id="precoProduto" class="texto" placeholder="Ex: 22,90..." required /><br><br>
+        <label for="imagem">Imagem</label><br>
+        <input type="file" id="imagem" multiple accept="image/*"><br><br>
+        <!-- Select Dinamico das categorias-->
         <button type="submit" id="Concluir">Concluir</button>
       </form>
     </div>
@@ -86,20 +94,6 @@
       </div>
     </div>
   </section>
-
-  <!-- MODAIS DE PRODUTO E EDIÇÃO -->
-  <div id="modalProduto" class="modal">
-    <div class="modal-content">
-      <span class="close" id="fecharProduto">&times;</span>
-      <h2>Novo Produto</h2>
-      <form id="formProduto">
-        <input type="text" id="nomeProduto" placeholder="Nome do produto" required />
-        <textarea id="descProduto" placeholder="Descrição do produto" required></textarea>
-        <input type="number" id="precoProduto" placeholder="Preço" step="0.01" required />
-        <button type="submit">Salvar Produto</button>
-      </form>
-    </div>
-  </div>
 
   <script src="/js/cardapio.js"></script>
   <script src="/js/login_cadastro.js"></script>

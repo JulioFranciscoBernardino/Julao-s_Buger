@@ -2,10 +2,10 @@
     "name": "julaos_burger",
     "version": "1.0.0",
     "description": "E-commerce de lanches Julao's Burger",
-    "main": "server.js",
+    "main": "app.js",
     "scripts": {
-        "start": "node server.js",
-        "dev": "nodemon server.js"
+        "start": "node app.js",
+        "dev": "nodemon app.js"
     },
     "dependencies": {
         "argon2": "^0.31.2",
