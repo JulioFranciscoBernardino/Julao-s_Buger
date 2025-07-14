@@ -18,13 +18,16 @@ const produtoController = {
   },
 
   inserirProduto: async (req, res) => {
-    const {nome, descricao, preco, imagem, idcategoria} = req.body;
     try {
-      await Categoria.cadastrarProduto({nome, descricao, preco, imagem, idcategoria});
-      res.json({ message: 'Categoria cadastrada com sucesso!' });
+      const { nome, descricao, preco, categoria } = req.body;
+
+      const imagemUrl = `/imgs/${req.file.filename}`;
+
+      await Produto.cadastrarProduto({ nome, descricao, preco, imagem: imagemUrl, idcategoria: categoria });
+      res.json({ message: 'Produto cadastrado com sucesso!', imagem: imagemUrl });
     } catch (error) {
-      console.error('Erro ao cadastrar a categoria:', error);
-      res.status(500).json({ error: 'Erro ao cadastrar a categoria' });
+      console.error('Erro ao cadastrar produto:', error);
+      res.status(500).json({ error: 'Erro ao cadastrar produto' });
     }
   }
 

@@ -17,6 +17,7 @@
         "express-session": "^1.18.1",
         "helmet": "^7.0.0",
         "jsonwebtoken": "^9.0.2",
+        "multer": "^2.0.1",
         "mysql2": "^3.6.0"
     },
     "devDependencies": {

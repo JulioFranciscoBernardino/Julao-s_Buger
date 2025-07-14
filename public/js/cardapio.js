@@ -1,8 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Modal para cadastro de categoria
   const modal = document.getElementById('modalCategoria');
   const btnFechar = document.getElementById('Fechar');
   const formCategoria = document.getElementById('formCategoria');
   const inputCategoria = document.getElementById('NovaCategoria');
+
+  // Modal para cadastro de produto
+  const modalProduto = document.getElementById('modalProduto');
+  const btnFecharProduto = document.getElementById('FecharProduto');
+  const formProduto = document.getElementById('formProduto');
+
+  const inputProdutoNome = document.getElementById('produtoNome');
+  const inputProdutoDescricao = document.getElementById('produtoDescricao');
+  const inputProdutoPreco = document.getElementById('produtoPreco');
+  const inputProdutoCategoria = document.getElementById('produtoCategoria');
+  const inputProdutoImagem = document.getElementById('produtoImagem');
+  
+  const botoesDiv = document.querySelector('.botoes-acoes');
+
 
   btnFechar.addEventListener('click', () => {
     modal.style.display = 'none';
@@ -14,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+
+  //cadastro de categoria
   formCategoria.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -34,6 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await response.json();
       console.log('Resposta do cadastro:', data);
+          // Adiciona evento para abrir o modal de produto
+          const btnAddProduto = botoesDiv.querySelector('#btnAddProduto');
+          btnAddProduto.addEventListener('click', () => {
+            modalProduto.style.display = 'block';
+          });
 
       if (response.ok) {
         alert('Categoria cadastrada com sucesso!');
@@ -48,6 +70,77 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Erro ao cadastrar categoria.');
     }
   });
+
+  //Cadastro de produto
+  formProduto.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const nomeProduto = inputProdutoNome.value.trim();
+    if (!nomeProduto) {
+      alert('Informe o nome do produto!');
+      return;
+    }
+
+    const descricaoProduto = inputProdutoDescricao.value.trim();
+    if (!descricaoProduto) {
+      alert('Informe a descrição do produto!');
+      return;
+    }
+
+    const precoProduto = parseFloat(inputProdutoPreco.value);
+    if (isNaN(precoProduto) || precoProduto <= 0) {
+      alert('Informe um preço válido para o produto!');
+      return;
+    }
+
+    const categoriaProduto = inputProdutoCategoria.value.trim();
+    if (!categoriaProduto) {
+      alert('Informe a categoria do produto!');
+      return;
+    }
+
+    const imagemProduto = inputProdutoImagem.files[0];
+    if (!imagemProduto) {
+      alert('Selecione uma imagem para o produto!');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('nome', nomeProduto);
+    formData.append('descricao', descricaoProduto);
+    formData.append('preco', precoProduto);
+    formData.append('categoria', categoriaProduto);
+    formData.append('imagem', imagemProduto);
+    formData.append('imagem', categoriaProduto);
+
+    try {
+      const response = await fetch('/api/produtos/inserir', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      console.log('Resposta do cadastro:', data);
+
+      if (response.ok) {
+        alert('Produto cadastrado com sucesso!');
+        modalProduto.style.display = 'none';
+        inputProdutoNome.value = '';
+        inputProdutoDescricao.value = '';
+        inputProdutoPreco.value = '';
+        inputProdutoCategoria.value = '';
+        inputProdutoImagem.value = '';
+        location.reload();
+      } else {
+        alert(data.mensagem || 'Erro ao cadastrar produto.');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao cadastrar produto.');
+    }
+
+  });
+
 
   // Carregar dados do cardápio dinamicamente
   fetch('/api/cardapio/mostrarCardapio')
