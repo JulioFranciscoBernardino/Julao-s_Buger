@@ -134,13 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // <select> do formulário
         const option = document.createElement('option');
-        option.value = categoria.id; // use `categoria.nome` se preferir
+        option.value = categoria.id; 
         option.textContent = categoria.nome;
         inputProdutoCategoria.appendChild(option);
 
         // Evento ao clicar na categoria
         div.addEventListener('click', () => {
           detalhes.innerHTML = '';
+          console.log('Categoria clicada:', categoria);
 
           const botoesDiv = document.createElement('div');
           botoesDiv.className = 'botoes-acoes';
@@ -151,27 +152,49 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
           detalhes.appendChild(botoesDiv);
 
+          // Container para os produtos
+          let produtosLista = document.getElementById('produtosLista');
+          if (!produtosLista) {
+            produtosLista = document.createElement('div');
+            produtosLista.id = 'produtosLista';
+            detalhes.appendChild(produtosLista);
+          } else {
+            produtosLista.innerHTML = '';
+            detalhes.appendChild(produtosLista);
+          }
+
           // Evento botão adicionar produto
           botoesDiv.querySelector('#btnAddProduto').addEventListener('click', () => {
             modalProduto.style.display = 'block';
           });
 
-          if (categoria.produtos.length === 0) {
+          if (!categoria.produtos || categoria.produtos.length === 0) {
+            produtosLista.innerHTML = '';
             const aviso = document.createElement('p');
             aviso.textContent = 'Nenhum produto nesta categoria.';
-            detalhes.appendChild(aviso);
+            produtosLista.appendChild(aviso);
             return;
           }
 
+          produtosLista.innerHTML = '';
           categoria.produtos.forEach(produto => {
+            console.log('Produto:', produto);
             const prodDiv = document.createElement('div');
             prodDiv.className = 'produto-item';
+            let precoFormatado = '--';
+            if (typeof produto.preco === 'number') {
+              precoFormatado = produto.preco.toFixed(2);
+            } else if (produto.preco && !isNaN(Number(produto.preco))) {
+              precoFormatado = Number(produto.preco).toFixed(2);
+            }
             prodDiv.innerHTML = `
-              <h3>${produto.nome}</h3>
-              <p>${produto.descricao}</p>
-              <p>Preço: R$ ${produto.preco.toFixed(2)}</p>
+              <div style="border:1px solid #ccc; margin:8px 0; padding:8px; border-radius:6px; background:#fff;">
+                <h3 style="margin:0 0 4px 0;">${produto.nome}</h3>
+                <p style="margin:0 0 4px 0;">${produto.descricao}</p>
+                <p style="margin:0; font-weight:bold;">Preço: R$ ${precoFormatado}</p>
+              </div>
             `;
-            detalhes.appendChild(prodDiv);
+            produtosLista.appendChild(prodDiv);
           });
         });
 

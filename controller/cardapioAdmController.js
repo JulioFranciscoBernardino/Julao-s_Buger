@@ -20,7 +20,8 @@ exports.mostrarCardapio = async (req, res) => {
           id: item.idproduto,
           nome: item.produto_nome,
           descricao: item.descricao,
-          preco: item.preco
+          preco: item.preco,
+          imagemUrl: item.imagem
         });
       }
     });
