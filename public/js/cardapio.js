@@ -146,13 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
           const botoesDiv = document.createElement('div');
           botoesDiv.className = 'botoes-acoes';
           botoesDiv.innerHTML = `
-            <button class="btn-adicionar" id="btnAddProduto">+ NOVO PRODUTO</button>
-            <button class="btn-acao editar" title="Editar categoria"><i class="fas fa-pen"></i></button>
-            <button class="btn-acao excluir" title="Excluir categoria"><i class="fas fa-trash"></i></button>
-          `;
+    <button class="btn-adicionar" id="btnAddProduto">+ NOVO PRODUTO</button>
+    <button class="btn-acao editar" title="Editar categoria"><i class="fas fa-pen"></i></button>
+    <button class="btn-acao excluir" title="Excluir categoria"><i class="fas fa-trash"></i></button>
+  `;
           detalhes.appendChild(botoesDiv);
 
-          // Container para os produtos
           let produtosLista = document.getElementById('produtosLista');
           if (!produtosLista) {
             produtosLista = document.createElement('div');
@@ -180,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
           categoria.produtos.forEach(produto => {
             const prodDiv = document.createElement('div');
             prodDiv.className = 'produto-item';
+
             let precoFormatado = '--';
             if (typeof produto.preco === 'number') {
               precoFormatado = produto.preco.toFixed(2);
@@ -187,62 +187,52 @@ document.addEventListener('DOMContentLoaded', () => {
               precoFormatado = Number(produto.preco).toFixed(2);
             }
 
-            // Debug imagem
-            console.log('Imagem produto:', produto.imagem, (produto.imagem && produto.imagem.startsWith('/imgs/')) ? produto.imagem : '/imgs/' + produto.imagem);
-
-            // Corrigir src da imagem
             let srcImg = produto.imagem || '';
             if (srcImg && !srcImg.startsWith('/imgs/')) {
               srcImg = '/imgs/' + srcImg;
             }
 
-            prodDiv.className = 'produto-box'; // define a classe aqui fora
+            prodDiv.className = 'produto-box';
             prodDiv.dataset.id = produto.id;
 
             prodDiv.innerHTML = `
-              <div class="produto-handle" title="Arrastar para reordenar">
-                <i class="fas fa-bars"></i>
-              </div>
+      <div class="produto-handle" title="Arrastar para reordenar">
+        <i class="fas fa-bars"></i>
+      </div>
 
-              <div class="produto-conteudo">
-                <div class="produto-img">
-                  <img src="${srcImg}" alt="Imagem do produto">
-                </div>
+      <div class="produto-conteudo">
+        <div class="produto-img">
+          <img src="${srcImg}" alt="Imagem do produto">
+        </div>
 
-                <div class="produto-info">
-                  <h4>${produto.nome}</h4>
-                  <p>${produto.descricao}</p>
-                  <span class="produto-preco">R$ ${precoFormatado}</span>
-                </div>
-              </div>
+        <div class="produto-info">
+          <h4>${produto.nome}</h4>
+          <p>${produto.descricao}</p>
+          <span class="produto-preco">R$ ${precoFormatado}</span>
+        </div>
+      </div>
 
-              <div class="produto-botoes">
-                <button title="Editar"><i class="fas fa-pen"></i></button>
-                <button title="Opcionais"><i class="fas fa-martini-glass"></i></button>
-                <button title="Excluir" class="btn-excluir"><i class="fas fa-trash"></i></button>
-              </div>
-            `;
+      <div class="produto-botoes">
+        <button title="Editar"><i class="fas fa-pen"></i></button>
+        <button title="Opcionais"><i class="fas fa-martini-glass"></i></button>
+        <button title="Excluir" class="btn-excluir"><i class="fas fa-trash"></i></button>
+      </div>
+    `;
 
             produtosLista.appendChild(prodDiv);
-            
           });
 
-        });
-
-        lista.appendChild(div);
-      });
-
-      setTimeout(() => {
-        const listaProdutos = document.getElementById('produtosLista');
-        if (listaProdutos) {
-          Sortable.create(listaProdutos, {
+          // Ativa o Sortable depois que todos os produtos foram renderizados
+          Sortable.create(produtosLista, {
             handle: '.produto-handle',
             animation: 150,
             ghostClass: 'drag-ghost'
           });
-        }
-      }, 200); // pequena espera para garantir que os produtos foram renderizados
+        });
 
+
+        lista.appendChild(div);
+      });
 
       // Botão dinâmico de nova categoria
       const btnNova = document.createElement('button');
