@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+
   // Carregar cardápio
   fetch('/api/cardapio/mostrarCardapio')
     .then(response => response.json())
@@ -118,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const categorias = data.categorias;
       const lista = document.getElementById('listaCategorias');
       const detalhes = document.getElementById('detalhesCategoria');
+
 
       lista.innerHTML = '';
       inputProdutoCategoria.innerHTML = '';
@@ -146,10 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const botoesDiv = document.createElement('div');
           botoesDiv.className = 'botoes-acoes';
           botoesDiv.innerHTML = `
-    <button class="btn-adicionar" id="btnAddProduto">+ NOVO PRODUTO</button>
-    <button class="btn-acao editar" title="Editar categoria"><i class="fas fa-pen"></i></button>
-    <button class="btn-acao excluir" title="Excluir categoria"><i class="fas fa-trash"></i></button>
-  `;
+            <button class="btn-adicionar" id="btnAddProduto">+ NOVO PRODUTO</button>
+            <button class="btn-acao editar" title="Editar categoria"><i class="fas fa-pen"></i></button>
+            <button class="btn-acao excluir" title="Excluir categoria"><i class="fas fa-trash"></i></button>
+          `;
           detalhes.appendChild(botoesDiv);
 
           let produtosLista = document.getElementById('produtosLista');
@@ -196,33 +198,33 @@ document.addEventListener('DOMContentLoaded', () => {
             prodDiv.dataset.id = produto.id;
 
             prodDiv.innerHTML = `
-      <div class="produto-handle" title="Arrastar para reordenar">
-        <i class="fas fa-bars"></i>
-      </div>
+              <div class="produto-handle" title="Arrastar para reordenar">
+                <i class="fas fa-bars"></i>
+              </div>
 
-      <div class="produto-conteudo">
-        <div class="produto-img">
-          <img src="${srcImg}" alt="Imagem do produto">
-        </div>
+              <div class="produto-conteudo">
+                <div class="produto-img">
+                  <img src="${srcImg}" alt="Imagem do produto">
+                </div>
 
-        <div class="produto-info">
-          <h4>${produto.nome}</h4>
-          <p>${produto.descricao}</p>
-          <span class="produto-preco">R$ ${precoFormatado}</span>
-        </div>
-      </div>
+                <div class="produto-info">
+                  <h4>${produto.nome}</h4>
+                  <p>${produto.descricao}</p>
+                  <span class="produto-preco">R$ ${precoFormatado}</span>
+                </div>
+              </div>
 
-      <div class="produto-botoes">
-        <button title="Editar"><i class="fas fa-pen"></i></button>
-        <button title="Opcionais"><i class="fas fa-martini-glass"></i></button>
-        <button title="Excluir" class="btn-excluir"><i class="fas fa-trash"></i></button>
-      </div>
-    `;
+              <div class="produto-botoes">
+                <button title="Editar"><i class="fas fa-pen"></i></button>
+                <button title="Opcionais"><i class="fas fa-martini-glass"></i></button>
+                <button title="Excluir" class="btn-excluir"><i class="fas fa-trash"></i></button>
+              </div>
+            `;
 
             produtosLista.appendChild(prodDiv);
           });
 
-          // Ativa o Sortable depois que todos os produtos foram renderizados
+          // Ativa o Sortable
           Sortable.create(produtosLista, {
             handle: '.produto-handle',
             animation: 150,
