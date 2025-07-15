@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // <select> do formulário
         const option = document.createElement('option');
-        option.value = categoria.id; 
+        option.value = categoria.id;
         option.textContent = categoria.nome;
         inputProdutoCategoria.appendChild(option);
 
@@ -178,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
           produtosLista.innerHTML = '';
           categoria.produtos.forEach(produto => {
-            console.log('Produto:', produto);
             const prodDiv = document.createElement('div');
             prodDiv.className = 'produto-item';
             let precoFormatado = '--';
@@ -187,19 +186,63 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (produto.preco && !isNaN(Number(produto.preco))) {
               precoFormatado = Number(produto.preco).toFixed(2);
             }
+
+            // Debug imagem
+            console.log('Imagem produto:', produto.imagem, (produto.imagem && produto.imagem.startsWith('/imgs/')) ? produto.imagem : '/imgs/' + produto.imagem);
+
+            // Corrigir src da imagem
+            let srcImg = produto.imagem || '';
+            if (srcImg && !srcImg.startsWith('/imgs/')) {
+              srcImg = '/imgs/' + srcImg;
+            }
+
+            prodDiv.className = 'produto-box'; // define a classe aqui fora
+            prodDiv.dataset.id = produto.id;
+
             prodDiv.innerHTML = `
-              <div style="border:1px solid #ccc; margin:8px 0; padding:8px; border-radius:6px; background:#fff;">
-                <h3 style="margin:0 0 4px 0;">${produto.nome}</h3>
-                <p style="margin:0 0 4px 0;">${produto.descricao}</p>
-                <p style="margin:0; font-weight:bold;">Preço: R$ ${precoFormatado}</p>
+              <div class="produto-handle" title="Arrastar para reordenar">
+                <i class="fas fa-bars"></i>
+              </div>
+
+              <div class="produto-conteudo">
+                <div class="produto-img">
+                  <img src="${srcImg}" alt="Imagem do produto">
+                </div>
+
+                <div class="produto-info">
+                  <h4>${produto.nome}</h4>
+                  <p>${produto.descricao}</p>
+                  <span class="produto-preco">R$ ${precoFormatado}</span>
+                </div>
+              </div>
+
+              <div class="produto-botoes">
+                <button title="Editar"><i class="fas fa-pen"></i></button>
+                <button title="Opcionais"><i class="fas fa-martini-glass"></i></button>
+                <button title="Excluir" class="btn-excluir"><i class="fas fa-trash"></i></button>
               </div>
             `;
+
             produtosLista.appendChild(prodDiv);
+            
           });
+
         });
 
         lista.appendChild(div);
       });
+
+      setTimeout(() => {
+        const listaProdutos = document.getElementById('produtosLista');
+        if (listaProdutos) {
+          Sortable.create(listaProdutos, {
+            handle: '.produto-handle',
+            animation: 150,
+            ghostClass: 'drag-ghost'
+          });
+        }
+      }, 200); // pequena espera para garantir que os produtos foram renderizados
+
 
       // Botão dinâmico de nova categoria
       const btnNova = document.createElement('button');

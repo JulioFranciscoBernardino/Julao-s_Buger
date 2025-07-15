@@ -15,15 +15,15 @@ exports.mostrarCardapio = async (req, res) => {
           produtos: []
         };
       }
-      if (item.idproduto) {
-        categorias[id].produtos.push({
-          id: item.idproduto,
-          nome: item.produto_nome,
-          descricao: item.descricao,
-          preco: item.preco,
-          imagemUrl: item.imagem
-        });
-      }
+        if (item.idproduto) {
+          categorias[id].produtos.push({
+            id: item.idproduto,
+            nome: item.produto_nome,
+            descricao: item.descricao,
+            preco: item.preco,
+            imagem: item.imagem
+          });
+        }
     });
 
     const categoriasArray = Object.values(categorias);
