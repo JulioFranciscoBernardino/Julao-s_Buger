@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputProdutoCategoria = document.getElementById('produtoCategoria');
   const inputProdutoImagem = document.getElementById('produtoImagem');
 
+
   const btnAddProdutoEstatico = document.getElementById('btnAddProdutoEstatico');
   if (btnAddProdutoEstatico) {
     btnAddProdutoEstatico.addEventListener('click', () => {
@@ -108,6 +109,37 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Erro:', error);
       alert('Erro ao cadastrar produto.');
+    }
+  });
+
+
+  //Deletar produto
+  document.addEventListener('click', async (event) => {
+    if (event.target.classList.contains('btn-excluir')) {
+      const produtoBox = event.target.closest('.produto-box');
+      const idProduto = produtoBox.dataset.id;
+
+      if (!idProduto) return alert('ID do produto não encontrado!');
+
+      if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+
+      try {
+        const response = await fetch(`/api/produtos/deletar/${idProduto}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert('Produto excluído com sucesso!');
+          produtoBox.remove();
+        } else {
+          alert(data.mensagem || 'Erro ao excluir produto.');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao excluir produto.');
+      }
     }
   });
 
@@ -217,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="produto-botoes">
                 <button title="Editar"><i class="fas fa-pen"></i></button>
                 <button title="Opcionais"><i class="fas fa-martini-glass"></i></button>
-                <button title="Excluir" class="btn-excluir"><i class="fas fa-trash"></i></button>
+                <button title="Excluir" id="btnDeletProduto" class="btn-excluir"><i class="fas fa-trash"></i></button>
               </div>
             `;
 

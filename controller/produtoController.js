@@ -1,13 +1,16 @@
 const Produto = require('../models/produtoModel');
 const Categoria = require('../models/categoriaModel');
 const SaborBebida = require('../models/saborBebidaModel');
+const fs = require('fs');
+const path = require('path');
+const db = require('../config/bd');
 
 const produtoController = {
   listarProdutos: async (req, res) => {
     try {
       const produtos = await Produto.getAll();
       const categorias = await Categoria.getAll();
-      const sabores = await SaborBebida.getAll(); // <- Aqui você busca os sabores
+      const sabores = await SaborBebida.getAll();
 
       // ✅ Renderiza passando todos os dados necessários
       res.render('index', { produtos, categorias, sabores });
@@ -29,9 +32,18 @@ const produtoController = {
       console.error('Erro ao cadastrar produto:', error);
       res.status(500).json({ error: 'Erro ao cadastrar produto' });
     }
-  }
-  
-  
+  },
+
+  deleteProduto: async (req, res) => {   
+    try {
+      await Produto.deletarProduto({ idproduto: req.params.idproduto });
+      res.json({ mensagem: 'Produto deletado com sucesso!' });
+    } catch (err) {
+      res.status(500).json({ mensagem: 'Erro ao deletar produto.' });
+    }
+
+  },
+
 };
 
 module.exports = produtoController;
