@@ -36,7 +36,7 @@ const Produto = {
     const fs = require('fs');
     const path = require('path');
     try {
-      // Buscar nome da imagem
+      console.log('ID para deletar:', idproduto); // debug
       const [rows] = await db.query('SELECT imagem FROM Produto WHERE idproduto = ?', [idproduto]);
       if (rows.length > 0 && rows[0].imagem) {
         let nomeArquivo = rows[0].imagem;
@@ -48,11 +48,8 @@ const Produto = {
           fs.unlinkSync(imgPath);
         }
       }
-      // Deletar produto do banco
-      await db.query(
-        'DELETE FROM Produto WHERE idproduto = ?',
-        [idproduto]
-      );
+      const [result] = await db.query('DELETE FROM Produto WHERE idproduto = ?', [idproduto]);
+      console.log('Resultado delete:', result); // debug
     } catch (err) {
       throw err;
     }
