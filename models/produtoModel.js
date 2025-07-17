@@ -33,27 +33,22 @@ const Produto = {
   },
 
   deletarProduto: async (idproduto) => {
-    const fs = require('fs');
-    const path = require('path');
-    try {
-      console.log('ID para deletar:', idproduto); // debug
-      const [rows] = await db.query('SELECT imagem FROM Produto WHERE idproduto = ?', [idproduto]);
-      if (rows.length > 0 && rows[0].imagem) {
-        let nomeArquivo = rows[0].imagem;
-        if (nomeArquivo.startsWith('/imgs/')) {
-          nomeArquivo = nomeArquivo.replace('/imgs/', '');
-        }
-        const imgPath = path.join(__dirname, '../public/imgs/', nomeArquivo);
-        if (fs.existsSync(imgPath)) {
-          fs.unlinkSync(imgPath);
-        }
-      }
-      const [result] = await db.query('DELETE FROM Produto WHERE idproduto = ?', [idproduto]);
-      console.log('Resultado delete:', result); // debug
-    } catch (err) {
-      throw err;
-    }
-  },
+  try {
+    console.log('ID para marcar como excluído:', idproduto); 
+
+
+    const [result] = await db.query(`
+      UPDATE Produto
+      SET excluido = 1, ativo = 0
+      WHERE idproduto = ?
+    `, [idproduto]);
+
+    console.log('Produto marcado como excluído:', result);
+  } catch (err) {
+    throw err;
+  }
+},
+
 
   atualizarProduto: async (idproduto, { nome, descricao, preco, imagem, idcategoria }) => {
     try {

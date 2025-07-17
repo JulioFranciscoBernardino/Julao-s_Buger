@@ -34,11 +34,13 @@ const produtoController = {
   deleteProduto: async (req, res) => {
     try {
       await Produto.deletarProduto(req.params.idproduto);
-      res.json({ mensagem: 'Produto deletado com sucesso!' });
+      res.json({ mensagem: 'Produto marcado como excluído com sucesso!' });
     } catch (err) {
-      res.status(500).json({ mensagem: 'Erro ao deletar produto.' });
+      console.error(err);
+      res.status(500).json({ mensagem: 'Erro ao marcar produto como excluído.' });
     }
   },
+
 
 };
 

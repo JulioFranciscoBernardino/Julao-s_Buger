@@ -113,13 +113,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  //Deletar produto
+  // Deletar produto (soft delete)
   document.addEventListener('click', async (event) => {
     if (event.target.classList.contains('btn-excluir')) {
       const produtoBox = event.target.closest('.produto-box');
-      const idProduto = produtoBox.dataset.id;
+      const idProduto = produtoBox?.dataset.id;
 
-      if (!idProduto) return alert('ID do produto não encontrado!');
+      if (!idProduto) {
+        alert('ID do produto não encontrado!');
+        return;
+      }
 
       if (!confirm('Tem certeza que deseja excluir este produto?')) return;
 
@@ -132,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (response.ok) {
           alert('Produto excluído com sucesso!');
-          produtoBox.remove();
+
         } else {
           alert(data.mensagem || 'Erro ao excluir produto.');
         }
@@ -144,27 +147,29 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
+
   // Carregar cardápio
   fetch('/api/cardapio/mostrarCardapio')
     .then(response => response.json())
     .then(data => {
-      const categorias = data.categorias;
+      const categorias = data.categorias || [];
       const lista = document.getElementById('listaCategorias');
       const detalhes = document.getElementById('detalhesCategoria');
-
 
       lista.innerHTML = '';
       inputProdutoCategoria.innerHTML = '';
 
-      categorias.forEach((categoria, index) => {
-        // Sidebar: exibir categorias
+      
+      const categoriasAtivas = categorias.filter(categoria => !categoria.excluido);
+
+      categoriasAtivas.forEach((categoria, index) => {
         const div = document.createElement('div');
         div.className = 'grupo-item';
         div.dataset.index = index;
         div.innerHTML = `
-          <span class="grupo-nome">${categoria.nome}</span><br>
-          <span class="grupo-tag verde"><button>Ativo/Inativo</button></span><br>
-        `;
+        <span class="grupo-nome">${categoria.nome}</span><br>
+        <span class="grupo-tag verde"><button>Ativo/Inativo</button></span><br>
+      `;
 
         // <select> do formulário
         const option = document.createElement('option');
@@ -180,10 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const botoesDiv = document.createElement('div');
           botoesDiv.className = 'botoes-acoes';
           botoesDiv.innerHTML = `
-            <button class="btn-adicionar" id="btnAddProduto">+ NOVO PRODUTO</button>
-            <button class="btn-acao editar" title="Editar categoria"><i class="fas fa-pen"></i></button>
-            <button class="btn-acao excluir" title="Excluir categoria"><i class="fas fa-trash"></i></button>
-          `;
+          <button class="btn-adicionar" id="btnAddProduto">+ NOVO PRODUTO</button>
+          <button class="btn-acao editar" title="Editar categoria"><i class="fas fa-pen"></i></button>
+          <button class="btn-acao excluir" title="Excluir categoria"><i class="fas fa-trash"></i></button>
+        `;
           detalhes.appendChild(botoesDiv);
 
           let produtosLista = document.getElementById('produtosLista');
@@ -201,18 +206,22 @@ document.addEventListener('DOMContentLoaded', () => {
             modalProduto.style.display = 'block';
           });
 
-          if (!categoria.produtos || categoria.produtos.length === 0) {
+          // Filtra produtos que não estão excluídos
+          const produtosAtivos = (categoria.produtos || []).filter(produto => !produto.excluido);
+
+          if (produtosAtivos.length === 0) {
             produtosLista.innerHTML = '';
             const aviso = document.createElement('p');
-            aviso.textContent = 'Nenhum produto nesta categoria.';
+            aviso.textContent = 'Nenhum produto ativo nesta categoria.';
             produtosLista.appendChild(aviso);
             return;
           }
 
           produtosLista.innerHTML = '';
-          categoria.produtos.forEach(produto => {
+          produtosAtivos.forEach(produto => {
             const prodDiv = document.createElement('div');
-            prodDiv.className = 'produto-item';
+            prodDiv.className = 'produto-box';
+            prodDiv.dataset.id = produto.id;
 
             let precoFormatado = '--';
             if (typeof produto.preco === 'number') {
@@ -226,32 +235,29 @@ document.addEventListener('DOMContentLoaded', () => {
               srcImg = '/imgs/' + srcImg;
             }
 
-            prodDiv.className = 'produto-box';
-            prodDiv.dataset.id = produto.id;
-
             prodDiv.innerHTML = `
-              <div class="produto-handle" title="Arrastar para reordenar">
-                <i class="fas fa-bars"></i>
+            <div class="produto-handle" title="Arrastar para reordenar">
+              <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="produto-conteudo">
+              <div class="produto-img">
+                <img src="${srcImg}" alt="Imagem do produto">
               </div>
 
-              <div class="produto-conteudo">
-                <div class="produto-img">
-                  <img src="${srcImg}" alt="Imagem do produto">
-                </div>
-
-                <div class="produto-info">
-                  <h4>${produto.nome}</h4>
-                  <p>${produto.descricao}</p>
-                  <span class="produto-preco">R$ ${precoFormatado}</span>
-                </div>
+              <div class="produto-info">
+                <h4>${produto.nome}</h4>
+                <p>${produto.descricao}</p>
+                <span class="produto-preco">R$ ${precoFormatado}</span>
               </div>
+            </div>
 
-              <div class="produto-botoes">
-                <button title="Editar"><i class="fas fa-pen"></i></button>
-                <button title="Opcionais"><i class="fas fa-martini-glass"></i></button>
-                <button title="Excluir" id="btnDeletProduto" class="btn-excluir"><i class="fas fa-trash"></i></button>
-              </div>
-            `;
+            <div class="produto-botoes">
+              <button title="Editar"><i class="fas fa-pen"></i></button>
+              <button title="Opcionais"><i class="fas fa-martini-glass"></i></button>
+              <button title="Excluir" id="btnDeletProduto" class="btn-excluir"><i class="fas fa-trash"></i></button>
+            </div>
+          `;
 
             produtosLista.appendChild(prodDiv);
           });
@@ -264,20 +270,24 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
 
-
         lista.appendChild(div);
       });
-
-      // Botão dinâmico de nova categoria
-      const btnNova = document.createElement('button');
-      btnNova.className = 'btn-novo-grupo';
-      btnNova.textContent = '+ NOVA CATEGORIA';
-      btnNova.addEventListener('click', () => {
-        modal.style.display = 'block';
-      });
-      lista.appendChild(btnNova);
     })
-    .catch(error => {
-      console.error('Erro ao carregar o cardápio:', error);
+    .catch(err => {
+      console.error('Erro ao carregar cardápio:', err);
     });
-});
+
+
+  // Botão dinâmico de nova categoria
+  const btnNova = document.createElement('button');
+  btnNova.className = 'btn-novo-grupo';
+  btnNova.textContent = '+ NOVA CATEGORIA';
+  btnNova.addEventListener('click', () => {
+    modal.style.display = 'block';
+  });
+  lista.appendChild(btnNova);
+})
+  .catch(error => {
+    console.error('Erro ao carregar o cardápio:', error);
+  });
+
