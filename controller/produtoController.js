@@ -1,9 +1,6 @@
 const Produto = require('../models/produtoModel');
 const Categoria = require('../models/categoriaModel');
 const SaborBebida = require('../models/saborBebidaModel');
-const fs = require('fs');
-const path = require('path');
-const db = require('../config/bd');
 
 const produtoController = {
   listarProdutos: async (req, res) => {

@@ -11,7 +11,7 @@ class Usuario {
         const senhaHash = await argon2.hash(senha);
         await pool.query(
             'INSERT INTO Usuario ( nome, email, senha, tipo) VALUES (?, ?, ?, ?)',
-            [ nome, email, senhaHash, tipo || 'admin']
+            [ nome, email, senhaHash, tipo || 'cliente' ]
         );
     }
 }
