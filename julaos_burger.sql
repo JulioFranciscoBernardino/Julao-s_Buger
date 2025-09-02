@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 11, 2025 at 06:58 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Tempo de geração: 31/08/2025 às 21:50
+-- Versão do servidor: 10.4.32-MariaDB
+-- Versão do PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,32 +18,35 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `julaos_burger`
+-- Banco de dados: `julaos_burger`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `categoria`
+-- Estrutura para tabela `categoria`
 --
 
 CREATE TABLE `categoria` (
   `idcategoria` int(11) NOT NULL,
   `nome` varchar(255) NOT NULL,
-  `ativo` tinyint(1) NOT NULL DEFAULT 1
+  `ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `excluido` tinyint(1) NOT NULL DEFAULT 0,
+  `posicao` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `categoria`
+-- Despejando dados para a tabela `categoria`
 --
 
-INSERT INTO `categoria` (`idcategoria`, `nome`, `ativo`) VALUES
-(1, 'CLASSICOS 140G', 1);
+INSERT INTO `categoria` (`idcategoria`, `nome`, `ativo`, `excluido`, `posicao`) VALUES
+(1, 'CLASSICOS 140G', 1, 0, 1),
+(2, 'CLASSICOS C/ BACON', 1, 0, 2);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `opcional`
+-- Estrutura para tabela `opcional`
 --
 
 CREATE TABLE `opcional` (
@@ -51,13 +54,15 @@ CREATE TABLE `opcional` (
   `nome` varchar(100) NOT NULL,
   `tipo` enum('adicionar','remover') NOT NULL,
   `preco` decimal(10,2) DEFAULT 0.00,
-  `ativo` tinyint(1) NOT NULL DEFAULT 1
+  `ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `excluido` tinyint(1) NOT NULL DEFAULT 0,
+  `posicao` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pedido`
+-- Estrutura para tabela `pedido`
 --
 
 CREATE TABLE `pedido` (
@@ -65,13 +70,14 @@ CREATE TABLE `pedido` (
   `idusuario` int(11) NOT NULL,
   `data_pedido` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` varchar(20) NOT NULL,
-  `ativo` tinyint(1) NOT NULL DEFAULT 1
+  `ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `excluido` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pedidoproduto`
+-- Estrutura para tabela `pedidoproduto`
 --
 
 CREATE TABLE `pedidoproduto` (
@@ -84,7 +90,7 @@ CREATE TABLE `pedidoproduto` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pedidoprodutoopcional`
+-- Estrutura para tabela `pedidoprodutoopcional`
 --
 
 CREATE TABLE `pedidoprodutoopcional` (
@@ -96,7 +102,7 @@ CREATE TABLE `pedidoprodutoopcional` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `produto`
+-- Estrutura para tabela `produto`
 --
 
 CREATE TABLE `produto` (
@@ -106,13 +112,24 @@ CREATE TABLE `produto` (
   `preco` decimal(10,2) NOT NULL,
   `imagem` varchar(500) DEFAULT NULL,
   `idcategoria` int(11) NOT NULL,
-  `ativo` tinyint(1) NOT NULL DEFAULT 1
+  `ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `excluido` tinyint(1) NOT NULL DEFAULT 0,
+  `posicao` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `produto`
+--
+
+INSERT INTO `produto` (`idproduto`, `nome`, `descricao`, `preco`, `imagem`, `idcategoria`, `ativo`, `excluido`, `posicao`) VALUES
+(6, 'CHEESE BURGER 140G', 'BURGER 100% CARNE BOVINA ARTESANAL SELECIONADA 140G, QUEIJO DERRETIDO, CEBOLA, PICLES,\r\nMOSTARDA, KETCHUP, MOLHO CLASSICO JULÃOS, PÃO BURGER MACIO.', 28.90, '/imgs/1752670734881.jpg', 1, 1, 0, 3),
+(7, 'CHEESE SALADA 140G', 'BURGER 100% CARNE BOVINA ARTESANAL SELECIONADA 140G, QUEIJO DERRETIDO, ALFACE\r\nSELECIONADA, TOMATE RODELAS, MOLHO CLASSICO JULÃOS, PICLES, CEBOLA ROXA, PÃO BURGER\r\nMACIO.', 28.90, '/imgs/1752670791530.jpg', 1, 1, 0, 2),
+(8, 'KING STAR`S', 'BURGER 100% CARNE BOVINA ARTESANAL SELECIONADA 140G, QUEIJO DERRETIDO, ALFACE\r\nSELECIONADA, TOMATE RODELA, MOLHO CLASSICO JULÃOS, CEBOLA, PICLE, MOSTARDA, KETCHUP,\r\nPÃO PARMESÃO MACIO.', 29.90, '/imgs/1752670982240.jpg', 1, 0, 1, 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `produtoopcional`
+-- Estrutura para tabela `produtoopcional`
 --
 
 CREATE TABLE `produtoopcional` (
@@ -123,7 +140,7 @@ CREATE TABLE `produtoopcional` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `usuario`
+-- Estrutura para tabela `usuario`
 --
 
 CREATE TABLE `usuario` (
@@ -133,41 +150,42 @@ CREATE TABLE `usuario` (
   `senha` varchar(255) NOT NULL,
   `tipo` varchar(10) NOT NULL,
   `pontos` int(11) DEFAULT 0,
-  `ativo` tinyint(1) NOT NULL DEFAULT 1
+  `ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `excluido` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `usuario`
+-- Despejando dados para a tabela `usuario`
 --
 
-INSERT INTO `usuario` (`idusuario`, `nome`, `email`, `senha`, `tipo`, `pontos`, `ativo`) VALUES
-(1, 'Julio', 'julio@gmail.com', '$argon2id$v=19$m=65536,t=3,p=4$gd/zqW+4JqIk66BgS7UJ7g$WAg4/m2PvXX5yEk/MEPU9ACZ8+Dengy3y2eVbruJmA4', 'admin', 0, 1);
+INSERT INTO `usuario` (`idusuario`, `nome`, `email`, `senha`, `tipo`, `pontos`, `ativo`, `excluido`) VALUES
+(1, 'Julio', 'julio@gmail.com', '$argon2id$v=19$m=65536,t=3,p=4$gd/zqW+4JqIk66BgS7UJ7g$WAg4/m2PvXX5yEk/MEPU9ACZ8+Dengy3y2eVbruJmA4', 'admin', 0, 1, 0);
 
 --
--- Indexes for dumped tables
+-- Índices para tabelas despejadas
 --
 
 --
--- Indexes for table `categoria`
+-- Índices de tabela `categoria`
 --
 ALTER TABLE `categoria`
   ADD PRIMARY KEY (`idcategoria`);
 
 --
--- Indexes for table `opcional`
+-- Índices de tabela `opcional`
 --
 ALTER TABLE `opcional`
   ADD PRIMARY KEY (`idopcional`);
 
 --
--- Indexes for table `pedido`
+-- Índices de tabela `pedido`
 --
 ALTER TABLE `pedido`
   ADD PRIMARY KEY (`idpedido`),
   ADD KEY `fk_pedido_usuario` (`idusuario`);
 
 --
--- Indexes for table `pedidoproduto`
+-- Índices de tabela `pedidoproduto`
 --
 ALTER TABLE `pedidoproduto`
   ADD PRIMARY KEY (`idpedidoproduto`),
@@ -175,105 +193,105 @@ ALTER TABLE `pedidoproduto`
   ADD KEY `fk_pp_produto` (`idproduto`);
 
 --
--- Indexes for table `pedidoprodutoopcional`
+-- Índices de tabela `pedidoprodutoopcional`
 --
 ALTER TABLE `pedidoprodutoopcional`
   ADD PRIMARY KEY (`idpedidoproduto`,`idopcional`),
   ADD KEY `fk_pedprodop_opcional` (`idopcional`);
 
 --
--- Indexes for table `produto`
+-- Índices de tabela `produto`
 --
 ALTER TABLE `produto`
   ADD PRIMARY KEY (`idproduto`),
   ADD KEY `fk_produto_categoria` (`idcategoria`);
 
 --
--- Indexes for table `produtoopcional`
+-- Índices de tabela `produtoopcional`
 --
 ALTER TABLE `produtoopcional`
   ADD PRIMARY KEY (`idproduto`,`idopcional`),
   ADD KEY `fk_prodop_opcional` (`idopcional`);
 
 --
--- Indexes for table `usuario`
+-- Índices de tabela `usuario`
 --
 ALTER TABLE `usuario`
   ADD PRIMARY KEY (`idusuario`),
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT para tabelas despejadas
 --
 
 --
--- AUTO_INCREMENT for table `categoria`
+-- AUTO_INCREMENT de tabela `categoria`
 --
 ALTER TABLE `categoria`
-  MODIFY `idcategoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `idcategoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `opcional`
+-- AUTO_INCREMENT de tabela `opcional`
 --
 ALTER TABLE `opcional`
   MODIFY `idopcional` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `pedido`
+-- AUTO_INCREMENT de tabela `pedido`
 --
 ALTER TABLE `pedido`
   MODIFY `idpedido` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `pedidoproduto`
+-- AUTO_INCREMENT de tabela `pedidoproduto`
 --
 ALTER TABLE `pedidoproduto`
   MODIFY `idpedidoproduto` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `produto`
+-- AUTO_INCREMENT de tabela `produto`
 --
 ALTER TABLE `produto`
-  MODIFY `idproduto` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `idproduto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
--- AUTO_INCREMENT for table `usuario`
+-- AUTO_INCREMENT de tabela `usuario`
 --
 ALTER TABLE `usuario`
   MODIFY `idusuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- Constraints for dumped tables
+-- Restrições para tabelas despejadas
 --
 
 --
--- Constraints for table `pedido`
+-- Restrições para tabelas `pedido`
 --
 ALTER TABLE `pedido`
   ADD CONSTRAINT `fk_pedido_usuario` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`idusuario`) ON DELETE CASCADE;
 
 --
--- Constraints for table `pedidoproduto`
+-- Restrições para tabelas `pedidoproduto`
 --
 ALTER TABLE `pedidoproduto`
   ADD CONSTRAINT `fk_pp_pedido` FOREIGN KEY (`idpedido`) REFERENCES `pedido` (`idpedido`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_pp_produto` FOREIGN KEY (`idproduto`) REFERENCES `produto` (`idproduto`) ON DELETE CASCADE;
 
 --
--- Constraints for table `pedidoprodutoopcional`
+-- Restrições para tabelas `pedidoprodutoopcional`
 --
 ALTER TABLE `pedidoprodutoopcional`
   ADD CONSTRAINT `fk_pedprodop_opcional` FOREIGN KEY (`idopcional`) REFERENCES `opcional` (`idopcional`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_pedprodop_pp` FOREIGN KEY (`idpedidoproduto`) REFERENCES `pedidoproduto` (`idpedidoproduto`) ON DELETE CASCADE;
 
 --
--- Constraints for table `produto`
+-- Restrições para tabelas `produto`
 --
 ALTER TABLE `produto`
   ADD CONSTRAINT `fk_produto_categoria` FOREIGN KEY (`idcategoria`) REFERENCES `categoria` (`idcategoria`) ON DELETE CASCADE;
 
 --
--- Constraints for table `produtoopcional`
+-- Restrições para tabelas `produtoopcional`
 --
 ALTER TABLE `produtoopcional`
   ADD CONSTRAINT `fk_prodop_opcional` FOREIGN KEY (`idopcional`) REFERENCES `opcional` (`idopcional`) ON DELETE CASCADE,
