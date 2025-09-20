@@ -32,5 +32,4 @@ router.get('/pedidos', (req, res) => {
     res.sendFile(path.join(__dirname, '../view/pedidos.html'));
 });
 
-
 module.exports = router;

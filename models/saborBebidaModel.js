@@ -1,13 +1,14 @@
 const db = require('../config/bd');
 
 const SaborBebida = {
-  getAll: () => {
-    return new Promise((resolve, reject) => {
-      db.query('SELECT * FROM SaborBebida', (err, results) => {
-        if (err) return reject(err);
-        resolve(results);
-      });
-    });
+  getAll: async () => {
+    try {
+      // Tabela SaborBebida não existe, retornando array vazio
+      // Se precisar desta funcionalidade, criar a tabela no banco
+      return [];
+    } catch (err) {
+      throw err;
+    }
   }
 };
 

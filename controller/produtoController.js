@@ -6,20 +6,20 @@ const produtoController = {
   listarProdutos: async (req, res) => {
     try {
       const produtos = await Produto.getAll();
-      const categorias = await Categoria.getAll();
-      const sabores = await SaborBebida.getAll();
-
-      // ✅ Renderiza passando todos os dados necessários
-      res.render('index', { produtos, categorias, sabores });
+      res.json(produtos);
     } catch (err) {
-      console.error('Erro ao buscar produtos, categorias ou sabores:', err);
-      res.status(500).send('Erro interno do servidor');
+      console.error('Erro ao buscar produtos:', err);
+      res.status(500).json({ error: 'Erro interno do servidor' });
     }
   },
 
   inserirProduto: async (req, res) => {
     try {
       const { nome, descricao, preco, categoria } = req.body;
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'Imagem é obrigatória' });
+      }
 
       const imagemUrl = `/imgs/${req.file.filename}`;
 

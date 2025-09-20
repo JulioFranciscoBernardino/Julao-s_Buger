@@ -16,6 +16,7 @@ const viewRoutes = require('./routes/viewRoutes');
 // Inicialização do app
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IP = process.env.IP || '';
 
 
 // Middlewares globais
@@ -36,6 +37,7 @@ app.use('/', rotas);
 app.use('/', viewRoutes);
 
 // Inicialização do servidor
-app.listen(PORT, () => {
+app.listen(PORT, IP,() => {
     console.log(`Servidor rodando na porta ${PORT} 🚀`);
+    console.log(`🌐 Abra no navegador: http://localhost:${PORT}`);
 });

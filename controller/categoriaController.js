@@ -4,9 +4,10 @@ const categoriaController = {
   listarCategorias: async (req, res) => {
     try {
       const categorias = await Categoria.getAll();
-      res.render('categorias', { categorias });
+      res.json(categorias);
     } catch (err) {
-      res.status(500).send('Erro ao buscar categorias.');
+      console.error('Erro ao buscar categorias:', err);
+      res.status(500).json({ error: 'Erro ao buscar categorias.' });
     }
   },
 

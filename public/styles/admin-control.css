@@ -1,0 +1,85 @@
+/* Estilos para controle de visibilidade de admin */
+
+/* Elementos de admin ocultos por padrão */
+.admin-only {
+    display: none !important;
+}
+
+/* Elementos de admin visíveis quando usuário é admin */
+.admin-only.admin-visible {
+    display: block !important;
+}
+
+/* Garantir que elementos li sejam tratados corretamente */
+li.admin-only {
+    display: none !important;
+}
+
+li.admin-only.admin-visible {
+    display: block !important;
+}
+
+/* Estilo especial para links de admin */
+.admin-only.admin-visible a {
+    background-color: #dc3545;
+    color: white !important;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.admin-only.admin-visible a:hover {
+    background-color: #c82333;
+    color: white !important;
+}
+
+/* Botão de logout */
+#logoutBtn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+#logoutBtn:hover {
+    background-color: #5a6268;
+}
+
+/* Indicador de usuário logado */
+.user-indicator {
+    background-color: #28a745;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Animação para elementos que aparecem/desaparecem */
+.admin-only {
+    transition: opacity 0.3s ease, display 0.3s ease;
+}
+
+/* Estilo para navegação de admin */
+.navbar-nav .admin-only.admin-visible {
+    display: inline-block !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .admin-only.admin-visible a {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+    
+    #logoutBtn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+}

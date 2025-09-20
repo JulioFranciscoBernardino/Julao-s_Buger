@@ -4,9 +4,11 @@ const Produto = {
   getAll: async () => {
     try {
       const [rows] = await db.query(`
-        SELECT Produto.*, Categoria.nome AS categoria_nome
-        FROM Produto
-        JOIN Categoria ON Produto.idcategoria = Categoria.idcategoria
+        SELECT produto.*, categoria.nome AS categoria_nome
+        FROM produto
+        JOIN categoria ON produto.idcategoria = categoria.idcategoria
+        WHERE produto.excluido = 0 AND produto.ativo = 1
+        ORDER BY produto.posicao ASC, produto.nome ASC
       `);
 
       // Converter preço para número
@@ -24,7 +26,7 @@ const Produto = {
   cadastrarProduto: async ({ nome, descricao, preco, imagem, idcategoria }) => {
     try {
       await db.query(
-        'INSERT INTO Produto (nome, descricao, preco, imagem, idcategoria) VALUES (?,?,?,?,?)',
+        'INSERT INTO produto (nome, descricao, preco, imagem, idcategoria) VALUES (?,?,?,?,?)',
         [nome, descricao, preco, imagem, idcategoria]
       );
     } catch (err) {
@@ -38,7 +40,7 @@ const Produto = {
 
 
     const [result] = await db.query(`
-      UPDATE Produto
+      UPDATE produto
       SET excluido = 1, ativo = 0
       WHERE idproduto = ?
     `, [idproduto]);
@@ -53,7 +55,7 @@ const Produto = {
   atualizarProduto: async (idproduto, { nome, descricao, preco, imagem, idcategoria }) => {
     try {
       await db.query(
-        'UPDATE Produto SET nome = ?, descricao = ?, preco = ?, imagem = ?, idcategoria = ? WHERE idproduto = ?',
+        'UPDATE produto SET nome = ?, descricao = ?, preco = ?, imagem = ?, idcategoria = ? WHERE idproduto = ?',
         [nome, descricao, preco, imagem, idcategoria, idproduto]
       );
     } catch (err) {
