@@ -21,9 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="grupo-acoes">
             <button class="btn">+ Novo produto</button>
-            <button class="btn icone"><i class="fas fa-edit"></i></button>
+            <button class="btn icone btn-editar-categoria" data-id="${categoria.idcategoria}"><i class="fas fa-edit"></i></button>
             <button class="btn icone"><i class="fas fa-eye"></i></button>
-            <button class="btn icone btn-excluir"><i class="fas fa-trash-alt"></i></button>
+            <button class="btn icone btn-excluir-categoria" data-id="${categoria.idcategoria}"><i class="fas fa-trash-alt"></i></button>
           </div>
         </div>
       `;
@@ -49,6 +49,90 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       detalhesContainer.innerHTML = html;
+      
+      // Adicionar event listeners para os botões de categoria
+      adicionarEventListenersCategoria();
     });
   });
 });
+
+// Função para adicionar event listeners aos botões de categoria
+function adicionarEventListenersCategoria() {
+  // Botões de excluir categoria
+  document.querySelectorAll('.btn-excluir-categoria').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const idCategoria = btn.getAttribute('data-id');
+      excluirCategoria(idCategoria);
+    });
+  });
+
+  // Botões de editar categoria
+  document.querySelectorAll('.btn-editar-categoria').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const idCategoria = btn.getAttribute('data-id');
+      editarCategoria(idCategoria);
+    });
+  });
+}
+
+// Função para excluir categoria
+async function excluirCategoria(idCategoria) {
+  if (!confirm('Tem certeza que deseja excluir esta categoria? Todos os produtos desta categoria também serão excluídos.')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/categorias/deletar/${idCategoria}`, {
+      method: 'DELETE'
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      alert('Categoria excluída com sucesso!');
+      // Recarregar a página para atualizar a lista
+      location.reload();
+    } else {
+      alert('Erro ao excluir categoria: ' + result.error);
+    }
+  } catch (error) {
+    console.error('Erro ao excluir categoria:', error);
+    alert('Erro ao excluir categoria!');
+  }
+}
+
+// Função para editar categoria
+async function editarCategoria(idCategoria) {
+  const novoNome = prompt('Digite o novo nome da categoria:');
+  
+  if (!novoNome || novoNome.trim() === '') {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/categorias/atualizar/${idCategoria}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        nome: novoNome.trim()
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      alert('Categoria atualizada com sucesso!');
+      // Recarregar a página para atualizar a lista
+      location.reload();
+    } else {
+      alert('Erro ao atualizar categoria: ' + result.error);
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar categoria:', error);
+    alert('Erro ao atualizar categoria!');
+  }
+}

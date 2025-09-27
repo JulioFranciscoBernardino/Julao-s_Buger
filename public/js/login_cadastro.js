@@ -14,22 +14,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Função para alternar entre os formulários    
     function toggleForms() {
-        container.classList.toggle('active');
+        if (container) {
+            container.classList.toggle('active');
+        }
     }
 
-    loginBtn.addEventListener('click', function () {
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function () {
         // Exibe o formulário de login e esconde o de cadastro
         registerForm.style.display = 'none';
         loginForm.style.display = 'flex';
         toggleForms();  // Ativa a animação de transição
-    });
+        });
+    }
 
-    registerBtn.addEventListener('click', function () {
+    if (registerBtn) {
+        registerBtn.addEventListener('click', function () {
         // Exibe o formulário de cadastro e esconde o de login
         loginForm.style.display = 'none';
         registerForm.style.display = 'flex';
         toggleForms();  // Ativa a animação de transição
-    });
+        });
+    }
 
 
 
@@ -155,15 +161,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // Atribuindo funções de submit aos botões
-    document.querySelector('.form-box.login form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        login();
-    });
+    const loginFormElement = document.querySelector('.form-box.login form');
+    const registerFormElement = document.querySelector('.form-box.register form');
+    
+    if (loginFormElement) {
+        loginFormElement.addEventListener('submit', function (event) {
+            event.preventDefault();
+            login();
+        });
+    }
 
-    document.querySelector('.form-box.register form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        cadastro();
-    });
+    if (registerFormElement) {
+        registerFormElement.addEventListener('submit', function (event) {
+            event.preventDefault();
+            cadastro();
+        });
+    }
 });
 
 function logout() {

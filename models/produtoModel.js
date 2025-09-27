@@ -52,12 +52,57 @@ const Produto = {
 },
 
 
-  atualizarProduto: async (idproduto, { nome, descricao, preco, imagem, idcategoria }) => {
+  atualizarProduto: async (idproduto, updateData) => {
     try {
-      await db.query(
-        'UPDATE produto SET nome = ?, descricao = ?, preco = ?, imagem = ?, idcategoria = ? WHERE idproduto = ?',
-        [nome, descricao, preco, imagem, idcategoria, idproduto]
-      );
+      const updateFields = [];
+      const values = [];
+      
+      if (updateData.nome !== undefined) {
+        updateFields.push('nome = ?');
+        values.push(updateData.nome);
+      }
+      if (updateData.descricao !== undefined) {
+        updateFields.push('descricao = ?');
+        values.push(updateData.descricao);
+      }
+      if (updateData.preco !== undefined) {
+        updateFields.push('preco = ?');
+        values.push(updateData.preco);
+      }
+      if (updateData.imagem !== undefined && updateData.imagem !== null) {
+        updateFields.push('imagem = ?');
+        values.push(updateData.imagem);
+      }
+      if (updateData.idcategoria !== undefined) {
+        updateFields.push('idcategoria = ?');
+        values.push(updateData.idcategoria);
+      }
+      
+      values.push(idproduto);
+      
+      const query = `UPDATE produto SET ${updateFields.join(', ')} WHERE idproduto = ?`;
+      await db.query(query, values);
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  getById: async (idproduto) => {
+    try {
+      const [rows] = await db.query(`
+        SELECT produto.*, categoria.nome AS categoria_nome
+        FROM produto
+        JOIN categoria ON produto.idcategoria = categoria.idcategoria
+        WHERE produto.idproduto = ? AND produto.excluido = 0
+      `, [idproduto]);
+      
+      if (rows.length === 0) {
+        return null;
+      }
+      
+      const produto = rows[0];
+      produto.preco = Number(produto.preco);
+      return produto;
     } catch (err) {
       throw err;
     }

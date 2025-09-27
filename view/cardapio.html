@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Julão's Burger - Meu Cardápio</title>
   <link rel="shortcut icon" href="/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <link rel="stylesheet" href="/styles/cardapio.css">
   <link rel="stylesheet" href="/styles/navbar.css" />
   <link rel="stylesheet" href="/styles/formCardapio.css" />
@@ -68,13 +67,57 @@
     </div>
   </div>
 
+  <!-- MODAL DE OPCIONAL -->
+  <div id="modalOpcional" class="modal">
+    <div class="modal-content">
+      <span class="close" id="fecharOpcional">&times;</span>
+      <h2>Novo Opcional</h2>
+      <form id="formOpcional">
+        <label for="nomeOpcional">Nome</label><br>
+        <input type="text" id="nomeOpcional" class="texto" placeholder="Ex: Bacon Extra..." required /><br>
+        <div id="grupoOpcionalContainer">
+          <label for="grupoOpcional">Grupo</label><br>
+          <select id="grupoOpcional" class="texto" required>
+            <option value="">Selecione um grupo</option>
+          </select><br>
+        </div>
+        <label for="tipoOpcional">Tipo</label><br>
+        <select id="tipoOpcional" class="texto" required>
+          <option value="">Selecione o tipo</option>
+          <option value="adicionar">Adicionar</option>
+          <option value="remover">Remover</option>
+        </select><br>
+        <label for="precoOpcional">Preço</label><br>
+        <input type="number" id="precoOpcional" class="texto" placeholder="Ex: 3,50..." step="0.01" min="0" value="0"><br>
+        <button type="submit" id="concluirOpcional">Concluir</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE GRUPO DE OPCIONAL -->
+  <div id="modalGrupoOpcional" class="modal">
+    <div class="modal-content">
+      <span class="close" id="fecharGrupoOpcional">&times;</span>
+      <h2>Novo Grupo de Opcionais</h2>
+      <form id="formGrupoOpcional">
+        <label for="nomeGrupoOpcional">Nome do Grupo</label><br>
+        <input type="text" id="nomeGrupoOpcional" class="texto" placeholder="Ex: Bebidas, Acompanhamentos..." required /><br>
+        <label for="descricaoGrupoOpcional">Descrição</label><br>
+        <textarea id="descricaoGrupoOpcional" class="texto" placeholder="Ex: Refrigerantes, sucos e bebidas em geral..."></textarea><br>
+        <label for="posicaoGrupoOpcional">Posição</label><br>
+        <input type="number" id="posicaoGrupoOpcional" class="texto" placeholder="Ex: 1, 2, 3..." min="0" value="0"><br>
+        <button type="submit" id="concluirGrupoOpcional">Concluir</button>
+      </form>
+    </div>
+  </div>
+
   <!-- CARDÁPIO ADMINISTRATIVO -->
   <section class="menu-admin">
     <div class="menu-header">
       <h2>Cardápio Principal</h2>
-      <ul class="menu-tabs">
-        <li class="active">Cardápio Principal</li>
-        <li>Opcionais</li>
+      <ul class="menu-tabs" id="menuTabs">
+        <li class="active" data-tab="0">Cardápio Principal</li>
+        <li data-tab="1">Opcionais</li>
       </ul>
     </div>
 
@@ -82,7 +125,6 @@
       <!-- SIDEBAR DE CATEGORIAS -->
       <div class="grupo-sidebar" id="listaCategorias">
         <!-- Categorias serão carregadas aqui -->
-        <button class="btn-novo-grupo">+ NOVA CATEGORIA</button>
       </div>
 
       <!-- DETALHES DA CATEGORIA ESCOLHIDA -->
@@ -95,8 +137,25 @@
           <button id="btnDeletProduto" class="btn-acao excluir"><i class="fas fa-trash"></i></button>
         </div>
 
-
         <div id="produtosLista"></div>
+      </div>
+
+      <!-- SEÇÃO DE OPCIONAIS (OCULTA POR PADRÃO) -->
+      <div class="grupo-detalhes" id="detalhesOpcionais" style="display: none;">
+        <div class="opcionais-header">
+          <h3>Gerenciar Grupos de Opcionais</h3>
+          <div class="opcionais-botoes">
+            <button class="btn-adicionar" id="btnAddGrupo">+ Novo Grupo</button>
+          </div>
+        </div>
+        
+        <!-- GRUPOS DE OPCIONAIS -->
+        <div class="grupos-opcionais-container">
+          <h4>Grupos de Opcionais</h4>
+          <div class="grupos-opcionais-lista" id="listaGruposOpcionais">
+            <!-- Grupos de opcionais serão carregados aqui -->
+          </div>
+        </div>
       </div>
 
     </div>
