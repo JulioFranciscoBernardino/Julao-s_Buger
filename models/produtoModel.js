@@ -106,6 +106,56 @@ const Produto = {
     } catch (err) {
       throw err;
     }
+  },
+
+  reordenarProdutos: async (produtos) => {
+    try {
+      if (!produtos || produtos.length === 0) {
+        throw new Error('Lista de produtos vazia');
+      }
+
+      // Usar transação para garantir consistência
+      await db.query('START TRANSACTION');
+      
+      // Primeiro, obter a categoria do primeiro produto para garantir que todos são da mesma categoria
+      const [categoriaCheck] = await db.query(
+        'SELECT idcategoria FROM produto WHERE idproduto = ?',
+        [produtos[0].idproduto]
+      );
+      
+      if (categoriaCheck.length === 0) {
+        throw new Error('Produto não encontrado');
+      }
+      
+      const idCategoria = categoriaCheck[0].idcategoria;
+      
+      // Verificar se todos os produtos são da mesma categoria
+      for (const produto of produtos) {
+        const [produtoCheck] = await db.query(
+          'SELECT idcategoria FROM produto WHERE idproduto = ?',
+          [produto.idproduto]
+        );
+        
+        if (produtoCheck.length === 0 || produtoCheck[0].idcategoria !== idCategoria) {
+          throw new Error('Todos os produtos devem ser da mesma categoria');
+        }
+      }
+      
+      // Atualizar as posições sequencialmente
+      for (let i = 0; i < produtos.length; i++) {
+        const produto = produtos[i];
+        await db.query(
+          'UPDATE produto SET posicao = ? WHERE idproduto = ?',
+          [i + 1, produto.idproduto]
+        );
+      }
+      
+      await db.query('COMMIT');
+      
+    } catch (err) {
+      await db.query('ROLLBACK');
+      throw err;
+    }
   }
 };
 

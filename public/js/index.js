@@ -19,5 +19,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
-
-
+// Menu mobile toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const navbarToggle = document.querySelector('.navbar-toggle');
+    const navbarCenter = document.querySelector('.navbar-center');
+    
+    if (navbarToggle && navbarCenter) {
+        navbarToggle.addEventListener('click', () => {
+            navbarToggle.classList.toggle('active');
+            navbarCenter.classList.toggle('active');
+        });
+    }
+});

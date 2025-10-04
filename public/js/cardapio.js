@@ -1,6 +1,96 @@
 // Variáveis globais
 let lista = null;
 let modal = null;
+let ordenacaoAlterada = false; // Rastreia se a ordenação foi alterada
+let sortableInstance = null; // Instância do Sortable
+
+// Funções de loading
+function showLoading(message = 'Carregando...') {
+  const overlay = document.getElementById('loadingOverlay');
+  const text = overlay.querySelector('.loading-text');
+  text.textContent = message;
+  overlay.style.display = 'flex';
+}
+
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.style.display = 'none';
+}
+
+// Funções para gerenciar imagens no formulário de produto
+function handleImageChange() {
+  const fileInput = document.getElementById('produtoImagem');
+  const file = fileInput.files[0];
+  
+  if (file) {
+    // Mostrar seção de nome da imagem
+    showNewImageSection();
+    hideExistingImageSection();
+    
+    // Gerar nome sugerido baseado no nome do produto
+    const nomeProduto = document.getElementById('nomeProduto').value;
+    if (nomeProduto) {
+      const nomeSugerido = nomeProduto.toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      document.getElementById('nomeImagem').value = nomeSugerido;
+    }
+    
+    // Mostrar preview da imagem
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const previewImg = document.getElementById('previewImg');
+      previewImg.src = e.target.result;
+      document.getElementById('imagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    hideNewImageSection();
+  }
+}
+
+function showNewImageSection() {
+  document.getElementById('imageNameSection').style.display = 'block';
+}
+
+function hideNewImageSection() {
+  document.getElementById('imageNameSection').style.display = 'none';
+  document.getElementById('imagePreview').style.display = 'none';
+  document.getElementById('produtoImagem').value = '';
+  document.getElementById('nomeImagem').value = '';
+}
+
+function showExistingImage(imageUrl, imageName) {
+  const existingSection = document.getElementById('existingImageSection');
+  const currentImg = document.getElementById('currentImg');
+  const currentImageName = document.getElementById('currentImageName');
+  
+  currentImg.src = imageUrl;
+  // Extrair apenas o nome do arquivo da URL
+  const fileName = imageUrl.split('/').pop();
+  currentImageName.textContent = `Arquivo: ${fileName}`;
+  existingSection.style.display = 'block';
+}
+
+function hideExistingImageSection() {
+  document.getElementById('existingImageSection').style.display = 'none';
+}
+
+function toggleImageUpdate() {
+  hideExistingImageSection();
+  showNewImageSection();
+  
+  // Limpar campos
+  document.getElementById('produtoImagem').value = '';
+  document.getElementById('nomeImagem').value = '';
+  document.getElementById('imagePreview').style.display = 'none';
+}
+
+function removeImage() {
+  hideNewImageSection();
+  document.getElementById('produtoImagem').value = '';
+}
 let modalProduto = null;
 let modalOpcional = null;
 
@@ -25,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const btnAddProdutoEstatico = document.getElementById('btnAddProdutoEstatico');
   const btnAddOpcional = document.getElementById('btnAddOpcional');
   const btnAddGrupo = document.getElementById('btnAddGrupo');
+  const btnSalvarOrdenacao = document.getElementById('btnSalvarOrdenacao');
   
   // Botões de ação na área principal
   const btnEditarCategoria = document.querySelector('.btn-acao.editar');
@@ -58,6 +149,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const formProduto = document.getElementById('formProduto');
       formProduto.dataset.modo = 'inserir';
       delete formProduto.dataset.idProduto;
+      
+      // Limpar campos e esconder seções de imagem
+      document.getElementById('nomeProduto').value = '';
+      document.getElementById('descricaoProduto').value = '';
+      document.getElementById('precoProduto').value = '';
+      document.getElementById('produtoCategoria').value = '';
+      hideNewImageSection();
+      hideExistingImageSection();
       
       // Mostrar modal
       modalProduto.style.display = 'block';
@@ -94,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formCategoria.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const nomeCategoria = document.getElementById('nomeCategoria').value.trim();
+      const nomeCategoria = document.getElementById('NovaCategoria').value.trim();
       
       if (!nomeCategoria) {
         alert('Por favor, preencha o nome da categoria!');
@@ -105,6 +204,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const idCategoria = formCategoria.dataset.idCategoria;
       
       try {
+        showLoading(modo === 'editar' ? 'Atualizando categoria...' : 'Criando categoria...');
+        
         let url, method;
         
         if (modo === 'editar') {
@@ -128,17 +229,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
         
         if (response.ok) {
+          hideLoading();
           alert(modo === 'editar' ? 'Categoria atualizada com sucesso!' : 'Categoria cadastrada com sucesso!');
           modalCategoria.style.display = 'none';
           // Recarregar a página para atualizar a lista
           location.reload();
         } else {
+          hideLoading();
           alert('Erro: ' + result.error);
         }
       } catch (error) {
-        console.error('Erro ao salvar categoria:', error);
+        hideLoading();
         alert('Erro ao salvar categoria!');
       }
+    });
+  }
+
+  // Menu mobile toggle
+  const navbarToggle = document.querySelector('.navbar-toggle');
+  const navbarCenter = document.querySelector('.navbar-center');
+  
+  if (navbarToggle && navbarCenter) {
+    navbarToggle.addEventListener('click', () => {
+      navbarToggle.classList.toggle('active');
+      navbarCenter.classList.toggle('active');
     });
   }
 
@@ -186,6 +300,13 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Mostrar modal
       modalGrupoOpcional.style.display = 'block';
+    });
+  }
+
+  // Botão de salvar ordenação
+  if (btnSalvarOrdenacao) {
+    btnSalvarOrdenacao.addEventListener('click', () => {
+      salvarOrdenacao();
     });
   }
 
@@ -267,7 +388,20 @@ document.addEventListener('DOMContentLoaded', function() {
       const idProduto = formProduto.dataset.idProduto;
       
       try {
+        showLoading(modo === 'editar' ? 'Atualizando produto...' : 'Criando produto...');
+        
         let url, method, body;
+        
+        // Verificar se há imagem para upload
+        const fileInput = document.getElementById('produtoImagem');
+        const nomeImagem = document.getElementById('nomeImagem').value.trim();
+        const temImagem = fileInput.files.length > 0;
+        
+        if (temImagem && !nomeImagem) {
+          hideLoading();
+          alert('Por favor, informe o nome da imagem!');
+          return;
+        }
         
         if (modo === 'editar') {
           url = `/api/produtos/atualizar/${idProduto}`;
@@ -277,32 +411,51 @@ document.addEventListener('DOMContentLoaded', function() {
           method = 'POST';
         }
         
-        body = JSON.stringify({
-          nome: nome,
-          descricao: descricao,
-          preco: parseFloat(preco),
-          categoria: parseInt(categoria)
-        });
-        
-        const response = await fetch(url, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: body
-        });
+        // Se há imagem, usar FormData, senão usar JSON
+        let response;
+        if (temImagem) {
+          body = new FormData();
+          body.append('nome', nome);
+          body.append('descricao', descricao);
+          body.append('preco', parseFloat(preco));
+          body.append('categoria', parseInt(categoria));
+          body.append('imagem', fileInput.files[0]);
+          body.append('nomeImagem', nomeImagem);
+          
+          response = await fetch(url, {
+            method: method,
+            body: body
+          });
+        } else {
+          body = JSON.stringify({
+            nome: nome,
+            descricao: descricao,
+            preco: parseFloat(preco),
+            categoria: parseInt(categoria)
+          });
+          
+          response = await fetch(url, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: body
+          });
+        }
         
         const result = await response.json();
 
       if (response.ok) {
+          hideLoading();
           alert(modo === 'editar' ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
         modalProduto.style.display = 'none';
           location.reload(); // Recarregar página
       } else {
+          hideLoading();
           alert('Erro: ' + result.error);
       }
     } catch (error) {
-        console.error('Erro ao salvar produto:', error);
+        hideLoading();
         alert('Erro ao salvar produto!');
       }
     });
@@ -381,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
   btnNova.textContent = '+ NOVA CATEGORIA';
   btnNova.addEventListener('click', () => {
     // Limpar formulário
-    document.getElementById('nomeCategoria').value = '';
+    document.getElementById('NovaCategoria').value = '';
     
     // Alterar título do modal
     document.querySelector('#modalCategoria h2').textContent = 'Nova Categoria';
@@ -464,7 +617,7 @@ async function editarCategoria(idCategoria) {
     }
     
     // Preencher formulário do modal
-    document.getElementById('nomeCategoria').value = categoria.nome;
+    document.getElementById('NovaCategoria').value = categoria.nome;
     
     // Alterar título do modal
     document.querySelector('#modalCategoria h2').textContent = 'Editar Categoria';
@@ -489,6 +642,8 @@ async function excluirCategoria(idCategoria) {
   }
   
   try {
+    showLoading('Excluindo categoria...');
+    
     const response = await fetch(`/api/categorias/deletar/${idCategoria}`, {
       method: 'DELETE'
     });
@@ -496,14 +651,16 @@ async function excluirCategoria(idCategoria) {
     const result = await response.json();
     
     if (response.ok) {
+      hideLoading();
       alert('Categoria excluída com sucesso!');
       // Recarregar a página para atualizar a lista
       location.reload();
     } else {
+      hideLoading();
       alert('Erro ao excluir categoria: ' + result.error);
     }
   } catch (error) {
-    console.error('Erro ao excluir categoria:', error);
+    hideLoading();
     alert('Erro ao excluir categoria!');
   }
 }
@@ -548,8 +705,12 @@ function carregarProdutosCategoria(categoria) {
     return;
   }
 
+  // Esconder botão de salvar ao carregar nova categoria
+  esconderBotaoSalvar();
+
           // Filtra produtos que não estão excluídos
           const produtosAtivos = (categoria.produtos || []).filter(produto => !produto.excluido);
+          
   
   produtosLista.innerHTML = '';
 
@@ -584,7 +745,10 @@ function carregarProdutosCategoria(categoria) {
 
             <div class="produto-conteudo">
               <div class="produto-img">
-                <img src="${srcImg}" alt="Imagem do produto">
+                ${srcImg ? 
+                  `<img src="${srcImg}" alt="Imagem do produto">` : 
+                  `<div class="placeholder-img"><i class="fas fa-image"></i><span>Sem imagem</span></div>`
+                }
               </div>
 
               <div class="produto-info">
@@ -607,12 +771,157 @@ function carregarProdutosCategoria(categoria) {
   // Adicionar event listeners para os botões dos produtos
   adicionarEventListenersProdutos();
 
+          // Destruir instância anterior do Sortable se existir
+          if (sortableInstance) {
+            sortableInstance.destroy();
+          }
+
           // Ativa o Sortable
-          Sortable.create(produtosLista, {
+          sortableInstance = Sortable.create(produtosLista, {
             handle: '.produto-handle',
             animation: 150,
-            ghostClass: 'drag-ghost'
+            ghostClass: 'drag-ghost',
+            onEnd: function(evt) {
+              // Marcar que a ordenação foi alterada e mostrar botão de salvar
+              ordenacaoAlterada = true;
+              mostrarBotaoSalvar();
+            }
   });
+}
+
+// Função para reordenar produtos no backend
+async function reordenarProdutos() {
+  try {
+    const produtosLista = document.getElementById('produtosLista');
+    const produtos = Array.from(produtosLista.children).map((elemento, index) => {
+      const idProduto = elemento.getAttribute('data-id');
+      return { idproduto: parseInt(idProduto) };
+    });
+
+    const response = await fetch('/api/produtos/reordenar', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ produtos })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log('Produtos reordenados com sucesso!');
+      
+      // Recarregar a categoria atual para mostrar a nova ordem
+      const categoriaAtiva = document.querySelector('.grupo-item.ativo');
+      if (categoriaAtiva) {
+        const idCategoria = categoriaAtiva.dataset.id;
+        await recarregarCategoria(idCategoria);
+      }
+    } else {
+      console.error('Erro ao reordenar produtos:', result.error);
+      alert('Erro ao reordenar produtos: ' + result.error);
+    }
+  } catch (error) {
+    console.error('Erro ao reordenar produtos:', error);
+    alert('Erro ao reordenar produtos!');
+  }
+}
+
+// Função para mostrar o botão de salvar ordenação
+function mostrarBotaoSalvar() {
+  const btnSalvar = document.getElementById('btnSalvarOrdenacao');
+  if (btnSalvar) {
+    btnSalvar.style.display = 'inline-block';
+  }
+}
+
+// Função para esconder o botão de salvar ordenação
+function esconderBotaoSalvar() {
+  const btnSalvar = document.getElementById('btnSalvarOrdenacao');
+  if (btnSalvar) {
+    btnSalvar.style.display = 'none';
+  }
+  ordenacaoAlterada = false;
+}
+
+// Função para salvar a ordenação atual
+async function salvarOrdenacao() {
+  if (!ordenacaoAlterada) return;
+  
+  try {
+    showLoading('Salvando ordenação...');
+    
+    const produtosLista = document.getElementById('produtosLista');
+    const produtos = Array.from(produtosLista.children).map((elemento, index) => {
+      const idProduto = elemento.getAttribute('data-id');
+      return { idproduto: parseInt(idProduto) };
+    });
+
+    const response = await fetch('/api/produtos/reordenar', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ produtos })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      // Esconder o botão de salvar
+      esconderBotaoSalvar();
+      
+      // Aguardar um pouco para garantir que o banco foi atualizado
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Recarregar a página para garantir que os dados mais recentes sejam carregados
+      window.location.reload();
+    } else {
+      hideLoading();
+      alert('Erro ao reordenar produtos: ' + result.error);
+    }
+  } catch (error) {
+    hideLoading();
+    alert('Erro ao reordenar produtos!');
+  }
+}
+
+// Função para recarregar uma categoria específica com retry
+async function recarregarCategoria(idCategoria, tentativas = 0) {
+  const maxTentativas = 3;
+  
+  try {
+    const response = await fetch('/api/cardapio/mostrarCardapio', {
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    const data = await response.json();
+    
+    if (response.ok && data.categorias) {
+      const categoria = data.categorias.find(cat => cat.idcategoria == idCategoria);
+      if (categoria && categoria.produtos && categoria.produtos.length > 0) {
+        carregarProdutosCategoria(categoria);
+        return; // Sucesso, sair da função
+      } else if (categoria && (!categoria.produtos || categoria.produtos.length === 0)) {
+        if (tentativas < maxTentativas) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (tentativas + 1))); // Delay progressivo
+          return recarregarCategoria(idCategoria, tentativas + 1);
+        }
+      }
+    } else {
+      if (tentativas < maxTentativas) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (tentativas + 1)));
+        return recarregarCategoria(idCategoria, tentativas + 1);
+      }
+    }
+  } catch (error) {
+    if (tentativas < maxTentativas) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * (tentativas + 1)));
+      return recarregarCategoria(idCategoria, tentativas + 1);
+    }
+  }
 }
 
 // Função para adicionar event listeners aos botões dos produtos
@@ -672,6 +981,15 @@ async function editarProduto(idProduto) {
     const formProduto = document.getElementById('formProduto');
     formProduto.dataset.modo = 'editar';
     formProduto.dataset.idProduto = idProduto;
+    
+    // Configurar seção de imagem existente
+    if (produto.imagemUrl) {
+      showExistingImage(produto.imagemUrl);
+      hideNewImageSection();
+    } else {
+      hideExistingImageSection();
+      hideNewImageSection();
+    }
     
     // Mostrar modal
     modalProduto.style.display = 'block';
@@ -1003,6 +1321,8 @@ async function excluirProduto(idProduto) {
   }
   
   try {
+    showLoading('Excluindo produto...');
+    
     const response = await fetch(`/api/produtos/deletar/${idProduto}`, {
       method: 'DELETE'
     });
@@ -1010,13 +1330,15 @@ async function excluirProduto(idProduto) {
     const result = await response.json();
     
     if (response.ok) {
+      hideLoading();
       alert('Produto excluído com sucesso!');
       location.reload(); // Recarregar página
     } else {
+      hideLoading();
       alert('Erro ao excluir produto: ' + result.error);
     }
   } catch (error) {
-    console.error('Erro ao excluir produto:', error);
+    hideLoading();
     alert('Erro ao excluir produto!');
   }
 }

@@ -12,6 +12,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const registerForm = document.querySelector('.form-box.register');
     const container = document.querySelector('.container');
 
+    // Funções de loading
+    function showLoading(message = 'Carregando...') {
+        const overlay = document.getElementById('loadingOverlay');
+        const text = overlay.querySelector('.loading-text');
+        text.textContent = message;
+        overlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.style.display = 'none';
+    }
+
     // Função para alternar entre os formulários    
     function toggleForms() {
         if (container) {
@@ -80,6 +93,8 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log('Tentando login com:', { email, senha });
 
         try {
+            showLoading('Fazendo login...');
+            
             const response = await fetch('/api/usuarios/login', {
                 method: 'POST',
                 headers: {
@@ -89,9 +104,9 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             const data = await response.json();
-            console.log('Resposta do login:', data);
 
             if (data.token) {
+                hideLoading();
                 alert('Login bem-sucedido!');
                 localStorage.setItem('token', data.token);
 
@@ -110,6 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
             } else {
+                hideLoading();
                 alert('Erro no login: ' + data.error);
             }
         } catch (error) {
@@ -134,6 +150,8 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log('Tentando cadastrar com:', { nome, email, senha });
 
         try {
+            showLoading('Criando conta...');
+            
             const response = await fetch('/api/usuarios/cadastro', {
                 method: 'POST',
                 headers: {
@@ -143,19 +161,20 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             const data = await response.json();
-            console.log('Resposta do cadastro:', data);
 
             if (data.message) {
+                hideLoading();
                 // Esconde o formulário de cadastro e mostra o de login
                 document.querySelector('.form-box.register').style.display = 'none';
                 document.querySelector('.form-box.login').style.display = 'flex';
                 toggleForms()
             } else {
+                hideLoading();
                 alert('Erro no cadastro: ' + data.error);
             }
         } catch (error) {
-            console.error('Erro ao tentar fazer o cadastro:', error);
-            alert('Erro ao cadastrar. Verifique o console.');
+            hideLoading();
+            alert('Erro ao cadastrar. Tente novamente.');
         }
     }
 

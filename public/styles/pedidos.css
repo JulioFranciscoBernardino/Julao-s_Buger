@@ -1,0 +1,453 @@
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Fonte Apple-style */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+}
+
+/* PEDIDOS MAIN */
+.pedidos-main {
+    padding: 40px 20px;
+    min-height: calc(100vh - 44px);
+}
+
+.pedidos-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* PEDIDOS HEADER */
+.pedidos-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.pedidos-header h1 {
+    font-size: 42px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+}
+
+.pedidos-header p {
+    font-size: 19px;
+    font-weight: 400;
+    color: #86868b;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.4;
+}
+
+/* FILTROS SECTION */
+.filtros-section {
+    margin-bottom: 40px;
+}
+
+.filtros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.filtro-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.filtro-card label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1d1d1f;
+    margin-bottom: 8px;
+}
+
+.filtro-select,
+.filtro-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #1d1d1f;
+    transition: all 0.2s ease;
+}
+
+.filtro-select:focus,
+.filtro-input:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.filtro-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: #007aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.filtro-btn:hover {
+    background: #0056cc;
+    transform: translateY(-1px);
+}
+
+/* STATS SECTION */
+.stats-section {
+    margin-bottom: 40px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: #FFCC00;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-icon i {
+    font-size: 20px;
+    color: #1d1d1f;
+}
+
+.stat-content h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: #86868b;
+    margin-bottom: 4px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d1d1f;
+}
+
+/* PEDIDOS SECTION */
+.pedidos-section {
+    margin-bottom: 40px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.section-header h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1d1d1f;
+    letter-spacing: -0.01em;
+}
+
+.refresh-btn {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 12px 20px;
+    color: #1d1d1f;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.refresh-btn:hover {
+    background: #007aff;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* PEDIDOS LIST */
+.pedidos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pedido-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+}
+
+.pedido-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* PEDIDO HEADER */
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.pedido-info h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 8px;
+}
+
+.pedido-info p {
+    font-size: 14px;
+    color: #86868b;
+    margin-bottom: 4px;
+}
+
+/* STATUS BADGE */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pendente {
+    background: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.status-preparando {
+    background: rgba(0, 123, 255, 0.2);
+    color: #004085;
+}
+
+.status-pronto {
+    background: rgba(40, 167, 69, 0.2);
+    color: #155724;
+}
+
+.status-entregue {
+    background: rgba(108, 117, 125, 0.2);
+    color: #495057;
+}
+
+.status-cancelado {
+    background: rgba(220, 53, 69, 0.2);
+    color: #721c24;
+}
+
+/* PEDIDO ITEMS */
+.pedido-items {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+}
+
+.item-pedido {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.item-pedido:last-child {
+    border-bottom: none;
+}
+
+.item-nome {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1d1d1f;
+    flex: 1;
+}
+
+.item-qtd {
+    font-size: 14px;
+    color: #86868b;
+    margin: 0 16px;
+}
+
+.item-preco {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1d1d1f;
+}
+
+/* PEDIDO FOOTER */
+.pedido-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pedido-total {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d1d1f;
+}
+
+.pedido-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.action-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-preparar {
+    background: #007aff;
+    color: white;
+}
+
+.btn-preparar:hover {
+    background: #0056cc;
+    transform: translateY(-1px);
+}
+
+.btn-cancelar {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.btn-cancelar:hover {
+    background: #dc3545;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .pedidos-main {
+        padding: 24px 16px;
+    }
+    
+    .pedidos-header h1 {
+        font-size: 32px;
+    }
+    
+    .pedidos-header p {
+        font-size: 16px;
+    }
+    
+    .filtros-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .pedido-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .pedido-footer {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .pedido-actions {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .pedido-card {
+        padding: 20px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .action-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}

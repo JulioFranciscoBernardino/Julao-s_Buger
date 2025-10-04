@@ -7,37 +7,117 @@
     <link rel="shortcut icon" href="/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="/styles/navbar.css" />
+    <link rel="stylesheet" href="/styles/dashboard.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
 
-<nav class="navbar-mainbg">
-    <div class="container">
-        <a class="navbar-logo" href="#">Logo</a>
-
-        <button class="navbar-toggler" type="button" aria-label="Toggle navigation">
-            <i class="fas fa-bars">&#9776;</i>
+  <!-- NAVBAR APPLE-STYLE -->
+  <nav class="apple-navbar">
+    <div class="navbar-container">
+      <div class="navbar-left">
+        <a href="#" class="navbar-logo">
+          <img src="/imgs/Logo Julãos Burguinho.png" alt="Julão's Burguinho" class="logo-img">
+          <span class="logo-text">Julão's Burguinho</span>
+        </a>
+      </div>
+      
+      <div class="navbar-center">
+        <ul class="navbar-menu">
+          <li><a href="admin_dashboard" class="nav-link active">Home</a></li>
+          <li><a href="cardapio" class="nav-link">Cardápio</a></li>
+          <li><a href="pedidos" class="nav-link">Pedidos</a></li>
+        </ul>
+      </div>
+      
+      <div class="navbar-right">
+        <button id="logoutBtn" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
         </button>
-
-        <div class="navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav">
-                <li><a href="admin_dashboard" class="nav-link">Home</a></li>
-                <li><a href="cardapio" class="nav-link">Cardápio</a></li>
-                <li><a href="pedidos" class="nav-link">Pedidos</a></li>
-                <li><button id="logoutBtn">Sair</button></li>
-            </ul>
-            <!-- Elemento para animação do item ativo -->
-            <div class="hori-selector"></div>
-        </div>
+      </div>
+      
+      <button class="navbar-toggle" type="button" aria-label="Toggle navigation">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
     </div>
-</nav>
+  </nav>
 
+  <!-- DASHBOARD CONTENT -->
+  <main class="dashboard-main">
+    <div class="dashboard-container">
+      <div class="dashboard-header">
+        <h1>Dashboard Admin</h1>
+        <p>Bem-vindo ao painel administrativo do Julão's Burguinho</p>
+      </div>
+      
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <div class="card-icon">
+            <i class="fas fa-utensils"></i>
+          </div>
+          <div class="card-content">
+            <h3>Cardápio</h3>
+            <p>Gerencie categorias e produtos</p>
+            <a href="cardapio" class="card-link">Acessar</a>
+          </div>
+        </div>
+        
+        <div class="dashboard-card">
+          <div class="card-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <div class="card-content">
+            <h3>Pedidos</h3>
+            <p>Visualize e gerencie pedidos</p>
+            <a href="pedidos" class="card-link">Acessar</a>
+          </div>
+        </div>
+        
+        <div class="dashboard-card">
+          <div class="card-icon">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <div class="card-content">
+            <h3>Relatórios</h3>
+            <p>Estatísticas e vendas</p>
+            <a href="#" class="card-link">Em breve</a>
+          </div>
+        </div>
+        
+        <div class="dashboard-card">
+          <div class="card-icon">
+            <i class="fas fa-cog"></i>
+          </div>
+          <div class="card-content">
+            <h3>Configurações</h3>
+            <p>Configurações do sistema</p>
+            <a href="#" class="card-link">Em breve</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
-<script src=""></script>
 <script src="/js/login_cadastro.js"></script>
 <script src="/js/admin-check.js"></script>
+<script>
+// Menu mobile toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const navbarToggle = document.querySelector('.navbar-toggle');
+    const navbarCenter = document.querySelector('.navbar-center');
+    
+    if (navbarToggle && navbarCenter) {
+        navbarToggle.addEventListener('click', () => {
+            navbarToggle.classList.toggle('active');
+            navbarCenter.classList.toggle('active');
+        });
+    }
+});
+</script>
 
 </body>
 </html>

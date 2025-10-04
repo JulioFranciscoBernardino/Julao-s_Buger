@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Fonte Apple-style */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+}
+
+/* DASHBOARD MAIN */
+.dashboard-main {
+    padding: 40px 20px;
+    min-height: calc(100vh - 44px);
+}
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* DASHBOARD HEADER */
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.dashboard-header h1 {
+    font-size: 48px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+}
+
+.dashboard-header p {
+    font-size: 21px;
+    font-weight: 400;
+    color: #86868b;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.4;
+}
+
+/* DASHBOARD GRID */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* DASHBOARD CARDS */
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 18px;
+    padding: 32px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 122, 255, 0.3);
+}
+
+.dashboard-card:hover .card-icon {
+    transform: scale(1.1);
+    color: #007aff;
+}
+
+/* CARD ICON */
+.card-icon {
+    width: 64px;
+    height: 64px;
+    background: #FFCC00;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+}
+
+.card-icon i {
+    font-size: 28px;
+    color: #1d1d1f;
+    transition: all 0.3s ease;
+}
+
+/* CARD CONTENT */
+.card-content h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.card-content p {
+    font-size: 17px;
+    font-weight: 400;
+    color: #86868b;
+    margin-bottom: 24px;
+    line-height: 1.4;
+}
+
+/* CARD LINK */
+.card-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 17px;
+    font-weight: 500;
+    color: #007aff;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.card-link::after {
+    content: '→';
+    margin-left: 8px;
+    transition: transform 0.2s ease;
+}
+
+.card-link:hover::after {
+    transform: translateX(4px);
+}
+
+.card-link:hover {
+    color: #0056cc;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .dashboard-main {
+        padding: 24px 16px;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 36px;
+    }
+    
+    .dashboard-header p {
+        font-size: 18px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .dashboard-card {
+        padding: 24px;
+    }
+    
+    .card-icon {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 20px;
+    }
+    
+    .card-icon i {
+        font-size: 24px;
+    }
+    
+    .card-content h3 {
+        font-size: 20px;
+    }
+    
+    .card-content p {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-header h1 {
+        font-size: 28px;
+    }
+    
+    .dashboard-header p {
+        font-size: 16px;
+    }
+    
+    .dashboard-card {
+        padding: 20px;
+    }
+    
+    .card-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+    }
+    
+    .card-icon i {
+        font-size: 20px;
+    }
+    
+    .card-content h3 {
+        font-size: 18px;
+    }
+    
+    .card-content p {
+        font-size: 15px;
+    }
+}

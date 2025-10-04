@@ -15,22 +15,35 @@
 </head>
 
 <body>
-  <!-- NAVBAR -->
-  <nav class="navbar-mainbg">
-    <div class="container">
-      <a class="navbar-logo" href="#">Logo</a>
-      <button class="navbar-toggler" type="button" aria-label="Toggle navigation">
-        <i class="fas fa-bars">&#9776;</i>
-      </button>
-      <div class="navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav">
-          <li><a href="admin_dashboard" class="nav-link">Home</a></li>
-          <li><a href="cardapio" class="nav-link">Cardápio</a></li>
-          <li><a href="pedidos" class="nav-link">Pedidos</a></li>
-          <li><button id="logoutBtn">Sair</button></li>
-        </ul>
-        <div class="hori-selector"></div>
+  <!-- NAVBAR APPLE-STYLE -->
+  <nav class="apple-navbar">
+    <div class="navbar-container">
+      <div class="navbar-left">
+        <a href="#" class="navbar-logo">
+          <img src="/imgs/Logo Julãos Burguinho.png" alt="Julão's Burger" class="logo-img">
+          <span class="logo-text">Julão's Burguinho</span>
+        </a>
       </div>
+      
+      <div class="navbar-center">
+        <ul class="navbar-menu">
+          <li><a href="admin_dashboard" class="nav-link">Home</a></li>
+          <li><a href="cardapio" class="nav-link active">Cardápio</a></li>
+          <li><a href="pedidos" class="nav-link">Pedidos</a></li>
+        </ul>
+      </div>
+      
+      <div class="navbar-right">
+        <button id="logoutBtn" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+      
+      <button class="navbar-toggle" type="button" aria-label="Toggle navigation">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
     </div>
   </nav>
 
@@ -61,7 +74,35 @@
         <label for="produtoCategoria">Categoria</label><br>
         <select id="produtoCategoria" class="texto" required></select><br>
         <label for="produtoImagem">Imagem</label><br>
-        <input type="file" id="produtoImagem" multiple accept="image/*"><br>
+        <input type="file" id="produtoImagem" accept="image/*" onchange="handleImageChange()"><br>
+        
+        <!-- Seção para nome da imagem -->
+        <div id="imageNameSection" style="display: none;">
+          <label for="nomeImagem">Nome da Imagem</label><br>
+          <input type="text" id="nomeImagem" class="texto" placeholder="Ex: cheese-burger-principal" /><br>
+          <small style="color: #666; font-size: 12px;">Nome será usado para salvar a imagem (sem espaços, use hífens)</small><br>
+          
+          <!-- Preview da imagem -->
+          <div id="imagePreview" style="margin-top: 10px; display: none;">
+            <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid #ddd;">
+            <button type="button" onclick="removeImage()" style="margin-left: 10px; padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Remover</button>
+          </div>
+        </div>
+        
+        <!-- Seção para imagem existente (modo edição) -->
+        <div id="existingImageSection" style="display: none;">
+          <label>Imagem Atual</label><br>
+          <div id="currentImagePreview" style="margin-bottom: 10px;">
+            <img id="currentImg" src="" alt="Imagem atual" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid #ddd;">
+            <div style="margin-top: 5px;">
+              <span id="currentImageName" style="font-size: 12px; color: #666;"></span>
+            </div>
+          </div>
+          <button type="button" onclick="toggleImageUpdate()" style="padding: 8px 16px; background: #007aff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+            <i class="fas fa-edit"></i> Alterar Imagem
+          </button>
+        </div>
+        
         <button type="submit" id="Concluir">Concluir</button>
       </form>
     </div>
@@ -135,6 +176,9 @@
           <button id="btnAddProdutoEstatico" class="btn-adicionar">+ NOVO PRODUTO</button>
           <button class="btn-acao editar"><i class="fas fa-pen"></i></button>
           <button id="btnDeletProduto" class="btn-acao excluir"><i class="fas fa-trash"></i></button>
+          <button id="btnSalvarOrdenacao" class="btn-salvar" style="display: none;">
+            <i class="fas fa-save"></i> SALVAR ORDENAÇÃO
+          </button>
         </div>
 
         <div id="produtosLista"></div>
@@ -151,7 +195,6 @@
         
         <!-- GRUPOS DE OPCIONAIS -->
         <div class="grupos-opcionais-container">
-          <h4>Grupos de Opcionais</h4>
           <div class="grupos-opcionais-lista" id="listaGruposOpcionais">
             <!-- Grupos de opcionais serão carregados aqui -->
           </div>
@@ -160,6 +203,14 @@
 
     </div>
   </section>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p class="loading-text">Carregando...</p>
+    </div>
+  </div>
 
   <script src="/js/cardapio.js"></script>
   <script src="/js/login_cadastro.js"></script>

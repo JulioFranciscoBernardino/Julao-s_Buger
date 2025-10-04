@@ -12,9 +12,9 @@ async function getCategoriasComProdutos() {
   // Para cada categoria, busca produtos ativos
   for (const categoria of categorias) {
     const [produtos] = await db.query(`
-      SELECT idproduto, nome, descricao, preco, imagem
+      SELECT idproduto, nome, descricao, preco, imagem, posicao
       FROM produto
-      WHERE idcategoria = ? AND excluido = 0
+      WHERE idcategoria = ? AND excluido = 0 AND ativo = 1
       ORDER BY posicao ASC, nome ASC;
     `, [categoria.idcategoria]);
 

@@ -17,13 +17,19 @@ const produtoController = {
     try {
       const { nome, descricao, preco, categoria } = req.body;
 
-      if (!req.file) {
-        return res.status(400).json({ error: 'Imagem é obrigatória' });
+      let imagemUrl = null;
+      if (req.file) {
+        imagemUrl = `/imgs/${req.file.filename}`;
       }
 
-      const imagemUrl = `/imgs/${req.file.filename}`;
-
-      await Produto.cadastrarProduto({ nome, descricao, preco: parseFloat(preco), imagem: imagemUrl, idcategoria: parseInt(categoria) });
+      await Produto.cadastrarProduto({ 
+        nome, 
+        descricao, 
+        preco: parseFloat(preco), 
+        imagem: imagemUrl, 
+        idcategoria: parseInt(categoria) 
+      });
+      
       res.json({ message: 'Produto cadastrado com sucesso!', imagem: imagemUrl });
     } catch (error) {
       console.error('Erro ao cadastrar produto:', error);
@@ -45,7 +51,6 @@ const produtoController = {
     try {
       const { nome, descricao, preco, categoria } = req.body;
       const idproduto = req.params.idproduto;
-      
       
       const updateData = { 
         nome, 
@@ -78,6 +83,21 @@ const produtoController = {
     }
   },
 
+  reordenarProdutos: async (req, res) => {
+    try {
+      const { produtos } = req.body;
+      
+      if (!produtos || !Array.isArray(produtos)) {
+        return res.status(400).json({ error: 'Lista de produtos é obrigatória' });
+      }
+
+      await Produto.reordenarProdutos(produtos);
+      res.json({ message: 'Produtos reordenados com sucesso!' });
+    } catch (error) {
+      console.error('Erro ao reordenar produtos:', error);
+      res.status(500).json({ error: 'Erro ao reordenar produtos' });
+    }
+  }
 
 };
 
