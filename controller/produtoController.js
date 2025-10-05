@@ -1,6 +1,7 @@
 const Produto = require('../models/produtoModel');
 const Categoria = require('../models/categoriaModel');
 const SaborBebida = require('../models/saborBebidaModel');
+const ProdutoGrupoOpcional = require('../models/produtoGrupoOpcionalModel');
 
 const produtoController = {
   listarProdutos: async (req, res) => {
@@ -9,6 +10,17 @@ const produtoController = {
       res.json(produtos);
     } catch (err) {
       console.error('Erro ao buscar produtos:', err);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  },
+
+  listarProdutosPorCategoria: async (req, res) => {
+    try {
+      const { idcategoria } = req.params;
+      const produtos = await Produto.getByCategoria(idcategoria);
+      res.json(produtos);
+    } catch (err) {
+      console.error('Erro ao buscar produtos por categoria:', err);
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   },
@@ -96,6 +108,34 @@ const produtoController = {
     } catch (error) {
       console.error('Erro ao reordenar produtos:', error);
       res.status(500).json({ error: 'Erro ao reordenar produtos' });
+    }
+  },
+
+  buscarOpcionaisDoProduto: async (req, res) => {
+    try {
+      const { idproduto } = req.params;
+      const opcionais = await Produto.getOpcionaisDoProduto(idproduto);
+      res.json(opcionais);
+    } catch (error) {
+      console.error('Erro ao buscar opcionais do produto:', error);
+      res.status(500).json({ error: 'Erro ao buscar opcionais do produto' });
+    }
+  },
+
+  buscarGruposOpcionaisDoProduto: async (req, res) => {
+    try {
+      const { idproduto } = req.params;
+      const grupos = await ProdutoGrupoOpcional.getGruposByProduto(idproduto);
+      
+      // Para cada grupo, buscar os opcionais
+      for (let grupo of grupos) {
+        grupo.opcionais = await ProdutoGrupoOpcional.getOpcionaisDoGrupoNoProduto(idproduto, grupo.idgrupo_opcional);
+      }
+      
+      res.json(grupos);
+    } catch (error) {
+      console.error('Erro ao buscar grupos de opcionais do produto:', error);
+      res.status(500).json({ error: 'Erro ao buscar grupos de opcionais do produto' });
     }
   }
 

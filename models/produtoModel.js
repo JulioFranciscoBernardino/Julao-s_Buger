@@ -23,6 +23,28 @@ const Produto = {
     }
   },
 
+  getByCategoria: async (idcategoria) => {
+    try {
+      const [rows] = await db.query(`
+        SELECT produto.*, categoria.nome AS categoria_nome
+        FROM produto
+        JOIN categoria ON produto.idcategoria = categoria.idcategoria
+        WHERE produto.idcategoria = ? AND produto.excluido = 0 AND produto.ativo = 1
+        ORDER BY produto.posicao ASC, produto.nome ASC
+      `, [idcategoria]);
+
+      // Converter preço para número
+      const produtosFormatados = rows.map(produto => ({
+        ...produto,
+        preco: Number(produto.preco)
+      }));
+
+      return produtosFormatados;
+    } catch (err) {
+      throw err;
+    }
+  },
+
   cadastrarProduto: async ({ nome, descricao, preco, imagem, idcategoria }) => {
     try {
       await db.query(
@@ -154,6 +176,28 @@ const Produto = {
       
     } catch (err) {
       await db.query('ROLLBACK');
+      throw err;
+    }
+  },
+
+  getOpcionaisDoProduto: async (idproduto) => {
+    try {
+      const [rows] = await db.query(`
+        SELECT o.idopcional, o.nome, o.tipo, o.preco, o.posicao
+        FROM opcional o
+        INNER JOIN produtoopcional po ON o.idopcional = po.idopcional
+        WHERE po.idproduto = ? AND o.ativo = 1 AND o.excluido = 0
+        ORDER BY o.tipo ASC, o.posicao ASC, o.nome ASC
+      `, [idproduto]);
+      
+      // Converter preço para número
+      const opcionaisFormatados = rows.map(opcional => ({
+        ...opcional,
+        preco: Number(opcional.preco)
+      }));
+      
+      return opcionaisFormatados;
+    } catch (err) {
       throw err;
     }
   }

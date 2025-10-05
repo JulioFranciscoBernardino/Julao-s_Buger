@@ -24,7 +24,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 router.get('/', produtoController.listarProdutos);
+router.get('/categoria/:idcategoria', produtoController.listarProdutosPorCategoria);
 router.get('/:idproduto', produtoController.buscarProdutoPorId);
+router.get('/:idproduto/opcionais', produtoController.buscarOpcionaisDoProduto);
+router.get('/:idproduto/grupos-opcionais', produtoController.buscarGruposOpcionaisDoProduto);
 router.post('/inserir', upload.single('imagem'), produtoController.inserirProduto);
 router.put('/atualizar/:idproduto', upload.single('imagem'), produtoController.atualizarProduto);
 router.put('/reordenar', produtoController.reordenarProdutos);
