@@ -1,7 +1,7 @@
 const Usuario = require('../models/usuarioModel');
 const jwt = require('jsonwebtoken');
 const argon2 = require('argon2');
-const SECRET_KEY = process.env.KEY;  
+const SECRET_KEY = process.env.KEY || 'chave_jwt_fixa_para_teste';  
 
 exports.login = async (req, res) => {
     const { email, senha } = req.body;
@@ -57,6 +57,127 @@ exports.logout = async (req, res) => {
     } catch (error) {
         console.error('Erro no logout:', error);
         res.status(500).json({ error: 'Erro ao fazer logout' });
+    }
+};
+
+// Buscar dados do perfil
+exports.perfil = async (req, res) => {
+    try {
+        // Verificar se o usuário está autenticado (JWT ou sessão)
+        let idusuario;
+        
+        if (req.usuario) {
+            // JWT authentication
+            idusuario = req.usuario.id;
+        } else if (req.session && req.session.usuario) {
+            // Session authentication
+            idusuario = req.session.usuario.idusuario;
+        } else {
+            return res.status(401).json({ erro: 'Usuário não autenticado' });
+        }
+        
+        const usuario = await Usuario.buscarPorId(idusuario);
+        
+        if (!usuario) {
+            return res.status(404).json({ erro: 'Usuário não encontrado' });
+        }
+        
+        // Remover senha antes de enviar
+        delete usuario.senha;
+        
+        res.json(usuario);
+        
+    } catch (error) {
+        console.error('Erro ao buscar perfil:', error);
+        res.status(500).json({ erro: 'Erro ao buscar perfil' });
+    }
+};
+
+// Atualizar dados do perfil
+exports.atualizarPerfil = async (req, res) => {
+    try {
+        // Verificar se o usuário está autenticado
+        if (!req.session || !req.session.usuario) {
+            return res.status(401).json({ erro: 'Usuário não autenticado' });
+        }
+        
+        const idusuario = req.session.usuario.idusuario;
+        const { nome } = req.body;
+        
+        if (!nome || nome.trim() === '') {
+            return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        
+        const atualizado = await Usuario.atualizarNome(idusuario, nome);
+        
+        if (!atualizado) {
+            return res.status(400).json({ erro: 'Erro ao atualizar perfil' });
+        }
+        
+        // Atualizar sessão
+        req.session.usuario.nome = nome;
+        
+        // Buscar usuário atualizado
+        const usuario = await Usuario.buscarPorId(idusuario);
+        delete usuario.senha;
+        
+        res.json(usuario);
+        
+    } catch (error) {
+        console.error('Erro ao atualizar perfil:', error);
+        res.status(500).json({ erro: 'Erro ao atualizar perfil' });
+    }
+};
+
+// Alterar senha
+exports.alterarSenha = async (req, res) => {
+    try {
+        // Verificar se o usuário está autenticado
+        if (!req.session || !req.session.usuario) {
+            return res.status(401).json({ erro: 'Usuário não autenticado' });
+        }
+        
+        const idusuario = req.session.usuario.idusuario;
+        const { senhaAtual, novaSenha } = req.body;
+        
+        // Validações
+        if (!senhaAtual || !novaSenha) {
+            return res.status(400).json({ erro: 'Preencha todos os campos' });
+        }
+        
+        if (novaSenha.length < 6) {
+            return res.status(400).json({ erro: 'A nova senha deve ter no mínimo 6 caracteres' });
+        }
+        
+        // Buscar usuário
+        const usuario = await Usuario.buscarPorId(idusuario);
+        
+        if (!usuario) {
+            return res.status(404).json({ erro: 'Usuário não encontrado' });
+        }
+        
+        // Verificar senha atual
+        const senhaValida = await argon2.verify(usuario.senha, senhaAtual);
+        
+        if (!senhaValida) {
+            return res.status(401).json({ erro: 'Senha atual incorreta' });
+        }
+        
+        // Criptografar nova senha
+        const novaSenhaHash = await argon2.hash(novaSenha);
+        
+        // Atualizar senha
+        const atualizado = await Usuario.atualizarSenha(idusuario, novaSenhaHash);
+        
+        if (!atualizado) {
+            return res.status(400).json({ erro: 'Erro ao alterar senha' });
+        }
+        
+        res.json({ mensagem: 'Senha alterada com sucesso' });
+        
+    } catch (error) {
+        console.error('Erro ao alterar senha:', error);
+        res.status(500).json({ erro: 'Erro ao alterar senha' });
     }
 };
 

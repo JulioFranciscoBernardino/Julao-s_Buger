@@ -5,6 +5,9 @@ document.addEventListener("DOMContentLoaded", function () {
         logoutBtn.addEventListener('click', logout);
     }
 
+    // Verificar se o usuário está logado e mostrar/ocultar elementos
+    verificarAutenticacao();
+
     // Botões de Toggle (Login / Cadastro)
     const loginBtn = document.querySelector('.login-btn');
     const registerBtn = document.querySelector('.register-btn');
@@ -203,5 +206,73 @@ function logout() {
     alert('Logout realizado com sucesso!');
     window.location.href = '/login_cadastro.html';
 }
+
+// Função para verificar autenticação e mostrar/ocultar elementos
+function verificarAutenticacao() {
+    const token = localStorage.getItem('token');
+    const loginLink = document.getElementById('loginLink');
+    const contaLink = document.getElementById('contaLink');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const perfilBtn = document.getElementById('perfilBtn');
+    
+    if (token) {
+        try {
+            // Decodificar token para verificar se é válido
+            const payloadBase64 = token.split('.')[1];
+            const payloadJson = atob(payloadBase64);
+            const payload = JSON.parse(payloadJson);
+            
+            // Verificar se o token não expirou
+            const agora = Date.now() / 1000;
+            if (payload.exp && payload.exp < agora) {
+                // Token expirado
+                localStorage.removeItem('token');
+                throw new Error('Token expirado');
+            }
+            
+            // Usuário está logado
+            if (loginLink) loginLink.style.display = 'none';
+            if (contaLink) contaLink.style.display = 'block';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+            if (perfilBtn) perfilBtn.style.display = 'flex';
+            
+        } catch (error) {
+            console.error('Erro ao verificar token:', error);
+            localStorage.removeItem('token');
+            mostrarElementosDeslogado();
+        }
+    } else {
+        mostrarElementosDeslogado();
+    }
+}
+
+function mostrarElementosDeslogado() {
+    const loginLink = document.getElementById('loginLink');
+    const contaLink = document.getElementById('contaLink');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const perfilBtn = document.getElementById('perfilBtn');
+    
+    if (loginLink) loginLink.style.display = 'block';
+    if (contaLink) contaLink.style.display = 'none';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    if (perfilBtn) perfilBtn.style.display = 'none';
+}
+
+
+// Função para ir para a página de conta com token
+function irParaConta() {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+        const url = `/conta?token=${encodeURIComponent(token)}`;
+        window.location.href = url;
+    } else {
+        alert('Você precisa estar logado para acessar sua conta.');
+        window.location.href = '/login_cadastro.html';
+    }
+}
+
+// Expor função globalmente
+window.irParaConta = irParaConta;
 
 

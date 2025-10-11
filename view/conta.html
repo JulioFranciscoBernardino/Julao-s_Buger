@@ -3,14 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Julão's Burguinho - Conta</title>
+    <title>Meu Perfil - Julão's Burger</title>
     <link rel="shortcut icon" href="/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/styles/index.css">
+    <link rel="stylesheet" href="/styles/perfil.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-    
+    <!-- NAVBAR -->
+    <nav class="apple-navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <a href="/" class="navbar-logo">
+                    <img src="/imgs/Logo Julãos Burguinho.png" alt="Julão's Burguinho" class="logo-img">
+                    <span class="logo-text">Julão's Burguinho</span>
+                </a>
+            </div>
+            
+            <div class="navbar-center">
+                <ul class="navbar-menu">
+                    <li><a href="/" class="nav-link">Home</a></li>
+                    <li><a href="/pedidos" class="nav-link">Meus Pedidos</a></li>
+                    <li><a href="#" class="nav-link active" onclick="return false;">Perfil</a></li>
+                </ul>
+            </div>
+            
+            <div class="navbar-right">
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTAINER PRINCIPAL -->
+    <div class="perfil-container">
+        <!-- SIDEBAR -->
+        <aside class="perfil-sidebar">
+            <div class="perfil-sidebar-header">
+                <div class="perfil-avatar" id="perfilAvatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 id="perfilNome">Carregando...</h3>
+                <p id="perfilEmail">-</p>
+            </div>
+            
+            <nav class="perfil-menu">
+                <button class="perfil-menu-item active" data-tab="dados">
+                    <i class="fas fa-user"></i>
+                    <span>Meus Dados</span>
+                </button>
+                <button class="perfil-menu-item" data-tab="enderecos">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Endereços</span>
+                </button>
+                <button class="perfil-menu-item" data-tab="senha">
+                    <i class="fas fa-lock"></i>
+                    <span>Alterar Senha</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- CONTEÚDO -->
+        <main class="perfil-content">
+            
+            <!-- ABA MEUS DADOS -->
+            <section class="perfil-tab active" id="tab-dados">
+                <div class="perfil-header">
+                    <h2>Meus Dados</h2>
+                    <p>Gerencie suas informações pessoais</p>
+                </div>
+
+                <form class="perfil-form" id="formDados">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nome">
+                                <i class="fas fa-user"></i>
+                                Nome Completo
+                            </label>
+                            <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">
+                                <i class="fas fa-envelope"></i>
+                                E-mail
+                            </label>
+                            <input type="email" id="email" name="email" placeholder="seu@email.com" required readonly>
+                            <small class="form-help">O e-mail não pode ser alterado</small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- ABA ENDEREÇOS -->
+            <section class="perfil-tab" id="tab-enderecos">
+                <div class="perfil-header">
+                    <h2>Meus Endereços</h2>
+                    <p>Gerencie seus endereços de entrega</p>
+                    <button class="btn-primary btn-add" id="btnNovoEndereco">
+                        <i class="fas fa-plus"></i>
+                        Novo Endereço
+                    </button>
+                </div>
+
+                <div class="enderecos-lista" id="enderecosLista">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Carregando endereços...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA ALTERAR SENHA -->
+            <section class="perfil-tab" id="tab-senha">
+                <div class="perfil-header">
+                    <h2>Alterar Senha</h2>
+                    <p>Mantenha sua conta segura</p>
+                </div>
+
+                <form class="perfil-form" id="formSenha">
+                    <div class="form-group">
+                        <label for="senhaAtual">
+                            <i class="fas fa-lock"></i>
+                            Senha Atual
+                        </label>
+                        <input type="password" id="senhaAtual" name="senhaAtual" placeholder="Digite sua senha atual" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="novaSenha">
+                            <i class="fas fa-key"></i>
+                            Nova Senha
+                        </label>
+                        <input type="password" id="novaSenha" name="novaSenha" placeholder="Digite a nova senha" required>
+                        <small class="form-help">Mínimo de 6 caracteres</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmarSenha">
+                            <i class="fas fa-check"></i>
+                            Confirmar Nova Senha
+                        </label>
+                        <input type="password" id="confirmarSenha" name="confirmarSenha" placeholder="Confirme a nova senha" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            Alterar Senha
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL DE ENDEREÇO -->
+    <div class="modal" id="modalEndereco">
+        <div class="modal-content modal-endereco">
+            <div class="modal-header">
+                <h3 id="modalEnderecoTitulo">Novo Endereço</h3>
+                <button class="modal-close" id="fecharModalEndereco">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form class="perfil-form" id="formEndereco">
+                <input type="hidden" id="enderecoId" name="id">
+
+                <div class="form-group">
+                    <label for="enderecoApelido">
+                        <i class="fas fa-tag"></i>
+                        Apelido do Endereço
+                    </label>
+                    <input type="text" id="enderecoApelido" name="apelido" placeholder="Ex: Casa, Trabalho..." required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-group-small">
+                        <label for="enderecoCep">
+                            <i class="fas fa-map-pin"></i>
+                            CEP
+                        </label>
+                        <input type="text" id="enderecoCep" name="cep" placeholder="00000-000" maxlength="9" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn-secondary btn-buscar-cep" id="btnBuscarCep">
+                            <i class="fas fa-search"></i>
+                            Buscar CEP
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="enderecoLogradouro">
+                            <i class="fas fa-road"></i>
+                            Logradouro
+                        </label>
+                        <input type="text" id="enderecoLogradouro" name="logradouro" placeholder="Rua, Avenida..." required>
+                    </div>
+                    <div class="form-group form-group-small">
+                        <label for="enderecoNumero">
+                            <i class="fas fa-hashtag"></i>
+                            Número
+                        </label>
+                        <input type="text" id="enderecoNumero" name="numero" placeholder="123" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="enderecoComplemento">
+                        <i class="fas fa-building"></i>
+                        Complemento
+                    </label>
+                    <input type="text" id="enderecoComplemento" name="complemento" placeholder="Apto, Bloco, Casa...">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="enderecoBairro">
+                            <i class="fas fa-map"></i>
+                            Bairro
+                        </label>
+                        <input type="text" id="enderecoBairro" name="bairro" placeholder="Nome do bairro" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="enderecoCidade">
+                            <i class="fas fa-city"></i>
+                            Cidade
+                        </label>
+                        <input type="text" id="enderecoCidade" name="cidade" placeholder="Nome da cidade" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="enderecoEstado">
+                        <i class="fas fa-flag"></i>
+                        Estado
+                    </label>
+                    <select id="enderecoEstado" name="estado" required>
+                        <option value="">Selecione...</option>
+                        <option value="AC">Acre</option>
+                        <option value="AL">Alagoas</option>
+                        <option value="AP">Amapá</option>
+                        <option value="AM">Amazonas</option>
+                        <option value="BA">Bahia</option>
+                        <option value="CE">Ceará</option>
+                        <option value="DF">Distrito Federal</option>
+                        <option value="ES">Espírito Santo</option>
+                        <option value="GO">Goiás</option>
+                        <option value="MA">Maranhão</option>
+                        <option value="MT">Mato Grosso</option>
+                        <option value="MS">Mato Grosso do Sul</option>
+                        <option value="MG">Minas Gerais</option>
+                        <option value="PA">Pará</option>
+                        <option value="PB">Paraíba</option>
+                        <option value="PR">Paraná</option>
+                        <option value="PE">Pernambuco</option>
+                        <option value="PI">Piauí</option>
+                        <option value="RJ">Rio de Janeiro</option>
+                        <option value="RN">Rio Grande do Norte</option>
+                        <option value="RS">Rio Grande do Sul</option>
+                        <option value="RO">Rondônia</option>
+                        <option value="RR">Roraima</option>
+                        <option value="SC">Santa Catarina</option>
+                        <option value="SP">São Paulo</option>
+                        <option value="SE">Sergipe</option>
+                        <option value="TO">Tocantins</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="enderecoReferencia">
+                        <i class="fas fa-info-circle"></i>
+                        Ponto de Referência
+                    </label>
+                    <textarea id="enderecoReferencia" name="referencia" placeholder="Ex: Próximo ao mercado..." rows="2"></textarea>
+                </div>
+
+                <div class="form-checkbox">
+                    <input type="checkbox" id="enderecoPrincipal" name="principal">
+                    <label for="enderecoPrincipal">Definir como endereço principal</label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelarEndereco">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        Salvar Endereço
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOTIFICAÇÃO -->
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle"></i>
+            <span id="toastMessage">Ação realizada com sucesso!</span>
+        </div>
+    </div>
+
+    <script src="/js/perfil.js"></script>
+    <script src="/js/login_cadastro.js"></script>
 </body>
 </html>

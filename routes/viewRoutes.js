@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
+const { authJWTQuery } = require('../middleware/auth');
 
 
 router.get('/index', (req, res) => {
@@ -15,11 +16,6 @@ router.get('/login_cadastro', (req, res) => {
     res.sendFile(path.join(__dirname, '../view/login_cadastro.html'));
 });
 
-
-router.get('/conta', (req, res) => {
-    res.sendFile(path.join(__dirname, '../view/conta.html'));
-});
-
 router.get('/admin_dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, '../view/admin_dashboard.html'));
 });
@@ -30,6 +26,11 @@ router.get('/cardapio', (req, res) => {
 
 router.get('/pedidos', (req, res) => {
     res.sendFile(path.join(__dirname, '../view/pedidos.html'));
+});
+
+// Rota protegida - deve ficar por último
+router.get('/conta', authJWTQuery, (req, res) => {
+    res.sendFile(path.join(__dirname, '../view/conta.html'));
 });
 
 module.exports = router;

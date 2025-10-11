@@ -673,6 +673,31 @@ function mostrarMensagemValidacao(gruposInvalidos) {
     }
 }
 
+// ==================== SISTEMA DE CARRINHO ====================
+
+// Estrutura do carrinho (armazenada no localStorage)
+let carrinho = [];
+
+// Inicializar carrinho do localStorage
+function inicializarCarrinho() {
+    const carrinhoSalvo = localStorage.getItem('julaosBurger_carrinho');
+    if (carrinhoSalvo) {
+        try {
+            carrinho = JSON.parse(carrinhoSalvo);
+        } catch (error) {
+            console.error('Erro ao carregar carrinho:', error);
+            carrinho = [];
+        }
+    }
+    atualizarCarrinho();
+}
+
+// Salvar carrinho no localStorage
+function salvarCarrinho() {
+    localStorage.setItem('julaosBurger_carrinho', JSON.stringify(carrinho));
+    atualizarCarrinho();
+}
+
 // Adicionar ao carrinho com opcionais
 function adicionarAoCarrinhoComOpcionais(idproduto) {
     const validacao = validarGruposObrigatorios();
@@ -680,23 +705,304 @@ function adicionarAoCarrinhoComOpcionais(idproduto) {
     // Verificar se todos os mínimos obrigatórios foram atendidos
     if (!validacao.valido) {
         mostrarMensagemValidacao(validacao.gruposInvalidos);
-        return; // Não permite adicionar ao carrinho
+        return;
     }
     
     const opcionaisSelecionados = window.opcionaisSelecionados || [];
     
-    // Aqui você pode implementar a lógica para adicionar ao carrinho
-    // incluindo os opcionais selecionados
-    
-    // Por enquanto, apenas mostrar um alerta
+    // Obter informações do produto
     const produtoNome = document.querySelector('.modal-product-title').textContent;
-    const precoFinal = document.getElementById('precoFinal').textContent;
+    const precoBaseElement = document.getElementById('precoBase');
+    const precoFinalElement = document.getElementById('precoFinal');
     
-    alert(`${produtoNome} adicionado ao carrinho por ${precoFinal}`);
+    // Extrair valores numéricos dos preços
+    const precoBase = precoBaseElement ? 
+        parseFloat(precoBaseElement.textContent.replace('R$', '').replace(',', '.').trim()) : 
+        window.precoBaseProduto;
+    
+    const precoFinal = precoFinalElement ? 
+        parseFloat(precoFinalElement.textContent.replace('R$', '').replace(',', '.').trim()) : 
+        window.precoBaseProduto;
+    
+    // Obter imagem do produto
+    const imagemElement = document.querySelector('.modal-product-image img');
+    const imagemProduto = imagemElement ? imagemElement.src : null;
+    
+    // Criar item do carrinho
+    const itemCarrinho = {
+        id: Date.now(), // ID único para o item
+        produtoId: idproduto,
+        nome: produtoNome,
+        precoBase: precoBase,
+        precoFinal: precoFinal,
+        quantidade: 1,
+        opcionais: opcionaisSelecionados.map(opcional => ({
+            id: opcional.id,
+            tipo: opcional.tipo,
+            preco: opcional.preco,
+            quantidade: opcional.quantidade,
+            nome: obterNomeOpcional(opcional.id)
+        })),
+        imagem: imagemProduto
+    };
+    
+    // Adicionar ao carrinho
+    carrinho.push(itemCarrinho);
+    salvarCarrinho();
+    
+    // Mostrar feedback visual
+    mostrarNotificacaoCarrinho(produtoNome);
     
     // Fechar modal
     fecharModal();
 }
+
+// Obter nome do opcional
+function obterNomeOpcional(opcionalId) {
+    const opcionalElement = document.querySelector(`#modal_qty_${opcionalId}`);
+    if (opcionalElement) {
+        const container = opcionalElement.closest('.modal-opcional-item');
+        const nomeElement = container.querySelector('.modal-opcional-nome');
+        return nomeElement ? nomeElement.textContent : 'Opcional';
+    }
+    return 'Opcional';
+}
+
+// Mostrar notificação ao adicionar item
+function mostrarNotificacaoCarrinho(nomeProduto) {
+    // Criar notificação
+    const notificacao = document.createElement('div');
+    notificacao.className = 'cart-notification';
+    notificacao.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${nomeProduto} adicionado ao carrinho!</span>
+    `;
+    
+    document.body.appendChild(notificacao);
+    
+    // Animar entrada
+    setTimeout(() => {
+        notificacao.classList.add('show');
+    }, 10);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+        notificacao.classList.remove('show');
+        setTimeout(() => {
+            notificacao.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Atualizar exibição do carrinho
+function atualizarCarrinho() {
+    const cartItems = document.querySelector('.cart-items');
+    const cartFooter = document.querySelector('.cart-footer');
+    
+    if (!cartItems) return;
+    
+    // Atualizar badge do carrinho
+    atualizarBadgeCarrinho();
+    
+    // Se carrinho vazio
+    if (carrinho.length === 0) {
+        cartItems.innerHTML = `
+            <div class="cart-empty">
+                <i class="fas fa-shopping-cart"></i>
+                <p>Seu carrinho está vazio</p>
+                <small>Adicione produtos para começar seu pedido!</small>
+            </div>
+        `;
+        
+        if (cartFooter) {
+            cartFooter.innerHTML = `
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span class="total-value">R$ 0,00</span>
+                </div>
+                <button class="btn-checkout" disabled>Finalizar Compra</button>
+            `;
+        }
+        return;
+    }
+    
+    // Renderizar itens do carrinho
+    let htmlItens = '';
+    carrinho.forEach((item, index) => {
+        htmlItens += `
+            <div class="cart-item" data-item-id="${item.id}">
+                <div class="cart-item-image">
+                    ${item.imagem ? 
+                        `<img src="${item.imagem}" alt="${item.nome}">` :
+                        `<i class="fas fa-utensils"></i>`
+                    }
+                </div>
+                <div class="cart-item-info">
+                    <h4 class="cart-item-name">${item.nome}</h4>
+                    ${item.opcionais && item.opcionais.length > 0 ? `
+                        <div class="cart-item-opcionais">
+                            ${item.opcionais.map(op => `
+                                <small>${op.quantidade}x ${op.nome}${op.preco > 0 ? ` (+R$ ${formatarPreco(op.preco)})` : ''}</small>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="cart-item-price">R$ ${formatarPreco(item.precoFinal)}</div>
+                </div>
+                <div class="cart-item-actions">
+                    <div class="cart-quantity-selector">
+                        <button class="cart-qty-btn minus" onclick="alterarQuantidadeCarrinho(${item.id}, -1)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="cart-qty-value">${item.quantidade}</span>
+                        <button class="cart-qty-btn plus" onclick="alterarQuantidadeCarrinho(${item.id}, 1)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <button class="cart-remove-btn" onclick="removerItemCarrinho(${item.id})" title="Remover item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    cartItems.innerHTML = htmlItens;
+    
+    // Calcular e exibir total
+    const total = calcularTotalCarrinho();
+    
+    if (cartFooter) {
+        cartFooter.innerHTML = `
+            <div class="cart-summary">
+                <div class="cart-subtotal">
+                    <span>Subtotal:</span>
+                    <span>R$ ${formatarPreco(total)}</span>
+                </div>
+                ${total >= 200 ? `
+                    <div class="cart-free-delivery">
+                        <i class="fas fa-truck"></i>
+                        <span>Entrega Grátis!</span>
+                    </div>
+                ` : `
+                    <div class="cart-delivery-info">
+                        <small>Faltam R$ ${formatarPreco(200 - total)} para entrega grátis</small>
+                    </div>
+                `}
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span class="total-value">R$ ${formatarPreco(total)}</span>
+                </div>
+            </div>
+            <button class="btn-checkout" onclick="finalizarCompra()">
+                <i class="fas fa-check"></i>
+                Finalizar Compra
+            </button>
+            <button class="btn-clear-cart" onclick="limparCarrinho()">
+                <i class="fas fa-trash"></i>
+                Limpar Carrinho
+            </button>
+        `;
+    }
+}
+
+// Atualizar badge do carrinho
+function atualizarBadgeCarrinho() {
+    const cartBtn = document.getElementById('openCart');
+    if (!cartBtn) return;
+    
+    // Remover badge existente
+    const badgeExistente = cartBtn.querySelector('.cart-badge');
+    if (badgeExistente) {
+        badgeExistente.remove();
+    }
+    
+    // Calcular total de itens
+    const totalItens = carrinho.reduce((total, item) => total + item.quantidade, 0);
+    
+    // Adicionar badge se houver itens
+    if (totalItens > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'cart-badge';
+        badge.textContent = totalItens;
+        cartBtn.appendChild(badge);
+    }
+}
+
+// Alterar quantidade de item no carrinho
+function alterarQuantidadeCarrinho(itemId, delta) {
+    const itemIndex = carrinho.findIndex(item => item.id === itemId);
+    
+    if (itemIndex !== -1) {
+        carrinho[itemIndex].quantidade += delta;
+        
+        // Remover item se quantidade for 0
+        if (carrinho[itemIndex].quantidade <= 0) {
+            carrinho.splice(itemIndex, 1);
+        }
+        
+        salvarCarrinho();
+    }
+}
+
+// Remover item do carrinho
+function removerItemCarrinho(itemId) {
+    const itemIndex = carrinho.findIndex(item => item.id === itemId);
+    
+    if (itemIndex !== -1) {
+        const item = carrinho[itemIndex];
+        
+        // Confirmar remoção
+        if (confirm(`Deseja remover "${item.nome}" do carrinho?`)) {
+            carrinho.splice(itemIndex, 1);
+            salvarCarrinho();
+        }
+    }
+}
+
+// Limpar carrinho
+function limparCarrinho() {
+    if (carrinho.length === 0) return;
+    
+    if (confirm('Deseja limpar todos os itens do carrinho?')) {
+        carrinho = [];
+        salvarCarrinho();
+    }
+}
+
+// Calcular total do carrinho
+function calcularTotalCarrinho() {
+    return carrinho.reduce((total, item) => {
+        return total + (item.precoFinal * item.quantidade);
+    }, 0);
+}
+
+// Finalizar compra
+function finalizarCompra() {
+    if (carrinho.length === 0) {
+        alert('Seu carrinho está vazio!');
+        return;
+    }
+    
+    const total = calcularTotalCarrinho();
+    
+    // Verificar pedido mínimo
+    if (total < 25) {
+        alert(`O pedido mínimo é de R$ 25,00. Adicione mais R$ ${formatarPreco(25 - total)} ao carrinho.`);
+        return;
+    }
+    
+    // Aqui você pode implementar a lógica de finalização
+    // Por exemplo, redirecionar para página de checkout ou abrir modal de pedido
+    
+    alert(`Pedido de R$ ${formatarPreco(total)} pronto para finalização!\n\nEm breve você será redirecionado para a página de checkout.`);
+    
+    // TODO: Implementar integração com sistema de pedidos
+}
+
+// Inicializar carrinho ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarCarrinho();
+});
 
 
 // Funções de estado
@@ -1177,3 +1483,11 @@ window.fecharModal = fecharModal;
 window.abrirBusca = abrirBusca;
 window.executarBusca = executarBusca;
 window.compartilharProduto = compartilharProduto;
+
+// Exportar funções do carrinho
+window.adicionarAoCarrinhoComOpcionais = adicionarAoCarrinhoComOpcionais;
+window.alterarQuantidadeCarrinho = alterarQuantidadeCarrinho;
+window.removerItemCarrinho = removerItemCarrinho;
+window.limparCarrinho = limparCarrinho;
+window.finalizarCompra = finalizarCompra;
+window.atualizarCarrinho = atualizarCarrinho;
