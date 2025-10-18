@@ -27,7 +27,6 @@
         <ul class="navbar-menu">
           <li><a href="/sobre_nos.html" class="nav-link">Sobre nós</a></li>
           <li><a href="/login_cadastro.html" class="nav-link" id="loginLink">Login</a></li>
-          <li><a href="/conta.html" class="nav-link" id="contaLink" style="display: none;">Conta</a></li>
           <li><button id="logoutBtn" class="logout-btn" style="display: none;">
             <i class="fas fa-sign-out-alt"></i>
           </button></li>
@@ -35,9 +34,15 @@
       </div>
       
       <div class="navbar-right">
-        <button id="openSearch" class="search-btn" onclick="abrirBusca()">
-          <i class="fas fa-search"></i>
-        </button>
+        <div class="search-container-inline">
+          <input type="text" id="searchInputInline" placeholder="Buscar produtos..." class="search-input-inline">
+          <button class="search-btn-inline" onclick="executarBuscaInline()">
+            <i class="fas fa-search"></i>
+          </button>
+          <div id="searchSuggestionsInline" class="search-suggestions-inline">
+            <!-- Sugestões serão exibidas aqui -->
+          </div>
+        </div>
         <a href="#" class="perfil-btn" id="perfilBtn" style="display: none;" title="Meu Perfil" onclick="irParaConta()">
           <i class="fas fa-user-circle"></i>
         </a>
@@ -91,7 +96,7 @@
           <h3>Suas vantagens <i class="fas fa-chevron-right"></i></h3>
           <div class="free-delivery-offer">
             <i class="fas fa-truck"></i>
-            <span>Entrega grátis em pedidos acima de R$ 200,00!</span>
+            <span>Acada 50 reais de compra, você ganha 1 ponto para trocar com qualquer produto!</span>
           </div>
         </div>
       </div>
@@ -145,25 +150,6 @@
     </div>
   </div>
 
-  <!-- MODAL DE BUSCA -->
-  <div id="searchModal" class="modal">
-    <div class="modal-content">
-      <span class="close" id="closeSearchModal">&times;</span>
-      <div class="modal-body">
-        <h2>Buscar Produtos</h2>
-        <div class="search-container">
-          <input type="text" id="searchInput" placeholder="Digite o nome do produto..." class="search-input">
-          <button onclick="executarBusca()" class="btn-search">
-            <i class="fas fa-search"></i>
-            Buscar
-          </button>
-        </div>
-        <div id="searchResults" class="search-results">
-          <!-- Resultados da busca serão exibidos aqui -->
-        </div>
-      </div>
-    </div>
-  </div>
 
   <footer>
     <!-- Conteúdo do rodapé -->

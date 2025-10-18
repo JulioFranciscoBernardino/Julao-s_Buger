@@ -70,16 +70,18 @@ function configurarEventListeners() {
     document.getElementById('fecharModalEndereco').addEventListener('click', fecharModalEndereco);
     document.getElementById('cancelarEndereco').addEventListener('click', fecharModalEndereco);
 
-    // Buscar CEP
-    document.getElementById('btnBuscarCep').addEventListener('click', buscarCEP);
-    
-    // Máscara de CEP
+    // Máscara de CEP e busca automática
     document.getElementById('enderecoCep').addEventListener('input', function(e) {
         let valor = e.target.value.replace(/\D/g, '');
         if (valor.length > 5) {
             valor = valor.substring(0, 5) + '-' + valor.substring(5, 8);
         }
         e.target.value = valor;
+        
+        // Buscar CEP automaticamente quando tiver 8 dígitos
+        if (valor.replace(/\D/g, '').length === 8) {
+            buscarCEP();
+        }
     });
 
     // Fechar modal ao clicar fora
@@ -162,9 +164,12 @@ async function salvarDados(event) {
     }
 
     try {
+        const token = localStorage.getItem('token');
+
         const response = await fetch('/api/usuarios/perfil', {
             method: 'PUT',
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
@@ -220,9 +225,12 @@ async function alterarSenha(event) {
     }
 
     try {
+        const token = localStorage.getItem('token');
+        
         const response = await fetch('/api/usuarios/alterar-senha', {
             method: 'PUT',
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
@@ -263,13 +271,22 @@ async function carregarEnderecos() {
     `;
 
     try {
+        const token = localStorage.getItem('token');
+        
         const response = await fetch('/api/enderecos', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
             credentials: 'include'
         });
 
         if (response.ok) {
             enderecos = await response.json();
             renderizarEnderecos();
+        } else if (response.status === 401) {
+            window.location.href = '/login_cadastro.html';
         } else {
             throw new Error('Erro ao carregar endereços');
         }
@@ -441,12 +458,14 @@ async function salvarEndereco(event) {
     }
 
     try {
+        const token = localStorage.getItem('token');
         const url = idendereco ? `/api/enderecos/${idendereco}` : '/api/enderecos';
         const method = idendereco ? 'PUT' : 'POST';
         
         const response = await fetch(url, {
             method: method,
             headers: {
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
@@ -481,8 +500,14 @@ async function definirEnderecoPrincipal(idendereco) {
     }
 
     try {
+        const token = localStorage.getItem('token');
+        
         const response = await fetch(`/api/enderecos/${idendereco}/principal`, {
             method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
             credentials: 'include'
         });
 
@@ -505,8 +530,14 @@ async function excluirEndereco(idendereco) {
     }
 
     try {
+        const token = localStorage.getItem('token');
+        
         const response = await fetch(`/api/enderecos/${idendereco}`, {
             method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
             credentials: 'include'
         });
 
@@ -531,13 +562,13 @@ async function buscarCEP() {
     const cep = document.getElementById('enderecoCep').value.replace(/\D/g, '');
     
     if (cep.length !== 8) {
-        mostrarToast('CEP inválido', 'error');
-        return;
+        return; // Não mostrar erro para CEP incompleto
     }
     
-    const btn = document.getElementById('btnBuscarCep');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+    // Mostrar indicador de carregamento no campo CEP
+    const campoCep = document.getElementById('enderecoCep');
+    campoCep.style.borderColor = '#007bff';
+    campoCep.placeholder = 'Buscando CEP...';
 
     try {
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -545,6 +576,7 @@ async function buscarCEP() {
         
         if (dados.erro) {
             mostrarToast('CEP não encontrado', 'error');
+            campoCep.style.borderColor = '#dc3545';
             return;
         }
         
@@ -555,17 +587,30 @@ async function buscarCEP() {
         document.getElementById('enderecoEstado').value = dados.uf || '';
         document.getElementById('enderecoComplemento').value = dados.complemento || '';
         
+        // Indicar sucesso visual
+        campoCep.style.borderColor = '#28a745';
+        campoCep.placeholder = 'CEP encontrado!';
+        
         // Focar no campo número
         document.getElementById('enderecoNumero').focus();
         
-        mostrarToast('CEP encontrado!', 'success');
+        // Resetar cor do campo após 2 segundos
+        setTimeout(() => {
+            campoCep.style.borderColor = '';
+            campoCep.placeholder = '';
+        }, 2000);
         
     } catch (error) {
         console.error('Erro ao buscar CEP:', error);
         mostrarToast('Erro ao buscar CEP', 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-search"></i> Buscar CEP';
+        campoCep.style.borderColor = '#dc3545';
+        campoCep.placeholder = 'Erro ao buscar CEP';
+        
+        // Resetar cor do campo após 2 segundos
+        setTimeout(() => {
+            campoCep.style.borderColor = '';
+            campoCep.placeholder = '';
+        }, 2000);
     }
 }
 

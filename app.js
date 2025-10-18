@@ -13,6 +13,7 @@ const grupoOpcionalRoutes = require('./routes/grupoOpcionalRoutes');
 const produtoGrupoOpcionalRoutes = require('./routes/produtoGrupoOpcionalRoutes');
 const cardapioRoutes = require('./routes/cardapioAdmRoutes');
 const enderecoRoutes = require('./routes/enderecoRoutes');
+const pedidoRoutes = require('./routes/pedidoRoutes');
 const rotas = require('./routes/index');
 const viewRoutes = require('./routes/viewRoutes');
 
@@ -60,6 +61,7 @@ app.use('/api/grupos-opcionais', grupoOpcionalRoutes);
 app.use('/api/produto-grupo-opcionais', produtoGrupoOpcionalRoutes);
 app.use('/api/cardapio', cardapioRoutes);
 app.use('/api/enderecos', enderecoRoutes);
+app.use('/api/pedidos', pedidoRoutes);
 app.use('/', rotas);
 app.use('/', viewRoutes);
 

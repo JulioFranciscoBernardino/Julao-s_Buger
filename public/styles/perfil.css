@@ -38,7 +38,7 @@
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    background: linear-gradient(135deg, #e8b705 0%, #d4a000 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -101,12 +101,12 @@
 
 .perfil-menu-item:hover {
     background: rgba(255, 107, 53, 0.08);
-    color: #ff6b35;
+    color: #e8b705;
     transform: translateX(4px);
 }
 
 .perfil-menu-item.active {
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    background: linear-gradient(135deg, #7b8692, #3b4452);
     color: white;
     box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
 }
@@ -208,7 +208,7 @@
 }
 
 .form-group label i {
-    color: #ff6b35;
+    color: #e8b705;
     font-size: 0.95rem;
 }
 
@@ -229,7 +229,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #ff6b35;
+    border-color: #e8b705;
     box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
 }
 
@@ -300,12 +300,12 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    background: linear-gradient(135deg, #7b8692, #3b4452);
     color: white;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #e55a2b 0%, #e0851a 100%);
+    background: linear-gradient(135deg, #0056cc, #004499);
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
 }
@@ -327,10 +327,6 @@
     border-color: #adb5bd;
 }
 
-.btn-buscar-cep {
-    width: 100%;
-    margin-top: 28px;
-}
 
 /* ========================================
    LISTA DE ENDEREÇOS
@@ -352,7 +348,7 @@
 }
 
 .endereco-card:hover {
-    border-color: #ff6b35;
+    border-color: #e8b705;
     box-shadow: 0 4px 15px rgba(255, 107, 53, 0.1);
     transform: translateY(-2px);
 }
@@ -387,7 +383,7 @@
     width: 45px;
     height: 45px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    background: linear-gradient(135deg, #e8b705 0%, #d4a000 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -421,7 +417,7 @@
 }
 
 .endereco-info-item i {
-    color: #ff6b35;
+    color: #e8b705;
     margin-top: 3px;
     font-size: 0.85rem;
 }
@@ -450,11 +446,11 @@
 
 .btn-editar {
     background: rgba(255, 107, 53, 0.1);
-    color: #ff6b35;
+    color: #e8b705;
 }
 
 .btn-editar:hover {
-    background: #ff6b35;
+    background: #e8b705;
     color: white;
 }
 
@@ -584,7 +580,7 @@
 
 .modal-close:hover {
     background: #f8f9fa;
-    color: #ff6b35;
+    color: #e8b705;
 }
 
 /* ========================================
@@ -791,7 +787,7 @@
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-    background: #ff6b35;
+    background: #e8b705;
     border-radius: 4px;
 }
 

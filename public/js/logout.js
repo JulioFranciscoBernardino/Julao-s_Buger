@@ -80,6 +80,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-console.log('Sistema de logout carregado!');
-console.log('Use: fazerLogout() para fazer logout');
-console.log('Use: verificarSeLogado() para verificar se está logado');

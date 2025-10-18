@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Julão's Burger - Meus Pedidos</title>
+    <link rel="shortcut icon" href="/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
+    <!-- Importa jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Link para o CSS -->
+    <link rel="stylesheet" href="/styles/navbar.css" />
+    <link rel="stylesheet" href="/styles/pedidos.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+
+  <!-- NAVBAR APPLE-STYLE -->
+  <nav class="apple-navbar">
+    <div class="navbar-container">
+      <div class="navbar-left">
+        <a href="/" class="navbar-logo">
+          <img src="/imgs/Logo Julãos Burguinho.png" alt="Julão's Burguinho" class="logo-img">
+          <span class="logo-text">Julão's Burguinho</span>
+        </a>
+      </div>
+      
+      <div class="navbar-center">
+        <ul class="navbar-menu">
+          <li><a href="/" class="nav-link">Cardápio</a></li>
+          <li><a href="/pedidos_cliente" class="nav-link active">Meus Pedidos</a></li>
+          <li><button id="logoutBtn" class="logout-btn" style="display: none;">
+            <i class="fas fa-sign-out-alt"></i>
+          </button></li>
+        </ul>
+      </div>
+      
+      <div class="navbar-right">
+        <button id="logoutBtn" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+      
+      <button class="navbar-toggle" type="button" aria-label="Toggle navigation">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- PEDIDOS CONTENT -->
+  <main class="pedidos-main">
+    <div class="pedidos-container">
+      <div class="pedidos-header">
+        <h1>Meus Pedidos</h1>
+        <p>Visualize seus pedidos anteriores e repita-os facilmente</p>
+      </div>
+      
+      <!-- FILTROS -->
+      <div class="filtros-section">
+        <div class="filtros-grid">
+          <div class="filtro-card">
+            <label for="status-filtro">Status</label>
+            <select id="status-filtro" class="filtro-select">
+              <option value="">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="preparando">Preparando</option>
+              <option value="pronto">Pronto</option>
+              <option value="entregue">Entregue</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+          
+          <div class="filtro-card">
+            <label for="data-filtro">Data</label>
+            <input type="date" id="data-filtro" class="filtro-input">
+          </div>
+          
+          <div class="filtro-card">
+            <button class="filtro-btn" onclick="aplicarFiltros()">
+              <i class="fas fa-search"></i>
+              Filtrar
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ESTATÍSTICAS -->
+      <div class="stats-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-receipt"></i>
+            </div>
+            <div class="stat-content">
+              <h3>Total de Pedidos</h3>
+              <p class="stat-number" id="totalPedidos">0</p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h3>Pedidos Entregues</h3>
+              <p class="stat-number" id="pedidosEntregues">0</p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-content">
+              <h3>Total Gasto</h3>
+              <p class="stat-number" id="totalGasto">R$ 0,00</p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-content">
+              <h3>Pedido Favorito</h3>
+              <p class="stat-number" id="pedidoFavorito">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- LISTA DE PEDIDOS -->
+      <div class="pedidos-section">
+        <div class="section-header">
+          <h2>Histórico de Pedidos</h2>
+          <button class="refresh-btn" onclick="carregarPedidos()">
+            <i class="fas fa-sync-alt"></i>
+            Atualizar
+          </button>
+        </div>
+        
+        <div class="pedidos-list" id="pedidosList">
+          <!-- Loading state -->
+          <div class="loading-state" id="loadingState">
+            <div class="loading-spinner"></div>
+            <p>Carregando seus pedidos...</p>
+          </div>
+          
+          <!-- Empty state -->
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">
+              <i class="fas fa-shopping-bag"></i>
+            </div>
+            <h3>Nenhum pedido encontrado</h3>
+            <p>Você ainda não fez nenhum pedido. Que tal começar agora?</p>
+            <a href="/" class="btn-primary">Ver Cardápio</a>
+          </div>
+          
+          <!-- Pedidos serão carregados aqui -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL DE DETALHES DO PEDIDO -->
+  <div class="modal" id="pedidoModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalPedidoTitulo">Detalhes do Pedido</h3>
+        <button class="modal-close" onclick="fecharModalPedido()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="modalPedidoBody">
+        <!-- Conteúdo do modal será preenchido aqui -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="fecharModalPedido()">Fechar</button>
+        <button class="btn-primary" id="btnRepetirPedido" onclick="repetirPedido()">
+          <i class="fas fa-redo"></i>
+          Repetir Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICAÇÃO -->
+  <div class="cart-notification" id="cartNotification" style="display: none;">
+    Pedido adicionado ao carrinho!
+  </div>
+
+<script src="/js/logout.js"></script>
+<script>
+// Variáveis globais
+let pedidosData = [];
+let pedidoSelecionado = null;
+
+// Verificar autenticação
+document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login_cadastro.html';
+        return;
+    }
+    
+    // Menu mobile toggle
+    const navbarToggle = document.querySelector('.navbar-toggle');
+    const navbarCenter = document.querySelector('.navbar-center');
+    
+    if (navbarToggle && navbarCenter) {
+        navbarToggle.addEventListener('click', () => {
+            navbarToggle.classList.toggle('active');
+            navbarCenter.classList.toggle('active');
+        });
+    }
+    
+    // Carregar dados iniciais
+    carregarPedidos();
+});
+
+// Carregar pedidos do usuário
+async function carregarPedidos() {
+    try {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            window.location.href = '/login_cadastro.html';
+            return;
+        }
+        
+        const response = await fetch('/api/pedidos', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar pedidos');
+        }
+        
+        pedidosData = await response.json();
+        exibirPedidos(pedidosData);
+        atualizarEstatisticas(pedidosData);
+        
+    } catch (error) {
+        console.error('Erro ao carregar pedidos:', error);
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+    }
+}
+
+// Exibir pedidos na interface
+function exibirPedidos(pedidos) {
+    const pedidosList = document.getElementById('pedidosList');
+    const loadingState = document.getElementById('loadingState');
+    const emptyState = document.getElementById('emptyState');
+    
+    loadingState.style.display = 'none';
+    
+    if (pedidos.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    
+    pedidosList.innerHTML = pedidos.map(pedido => `
+        <div class="pedido-card" onclick="verDetalhesPedido(${pedido.idpedido || 0})">
+            <div class="pedido-header">
+                <div class="pedido-info">
+                    <h3>Pedido #${(pedido.idpedido || 0).toString().padStart(3, '0')}</h3>
+                    <p>Data: ${formatarData(pedido.data_pedido || new Date())}</p>
+                    <p>Itens: ${pedido.itens ? pedido.itens.length : 0}</p>
+                </div>
+                <div class="pedido-status">
+                    <span class="status-badge status-${pedido.status || 'pendente'}">${formatarStatus(pedido.status || 'pendente')}</span>
+                </div>
+            </div>
+            
+            <div class="pedido-items">
+                ${pedido.itens ? pedido.itens.slice(0, 3).map(item => `
+                    <div class="item-pedido">
+                        <span class="item-nome">${item.nome}</span>
+                        <span class="item-qtd">x${item.quantidade}</span>
+                        <span class="item-preco">R$ ${parseFloat(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
+                    </div>
+                `).join('') : ''}
+                ${pedido.itens && pedido.itens.length > 3 ? `
+                    <div class="item-pedido">
+                        <span class="item-nome">... e mais ${pedido.itens.length - 3} item(s)</span>
+                        <span class="item-qtd"></span>
+                        <span class="item-preco"></span>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <div class="pedido-footer">
+                <div class="pedido-total">
+                    <strong>Total: R$ ${parseFloat(pedido.total || 0).toFixed(2).replace('.', ',')}</strong>
+                </div>
+                <div class="pedido-actions">
+                    <button class="action-btn btn-repetir" ${pedido.idpedido === 0 ? 'disabled' : ''} onclick="event.stopPropagation(); repetirPedido(${pedido.idpedido || 0})">
+                        <i class="fas fa-redo"></i>
+                        Repetir
+                    </button>
+                    <button class="action-btn btn-detalhes" ${pedido.idpedido === 0 ? 'disabled' : ''} onclick="event.stopPropagation(); verDetalhesPedido(${pedido.idpedido || 0})">
+                        <i class="fas fa-eye"></i>
+                        Detalhes
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Atualizar estatísticas
+function atualizarEstatisticas(pedidos) {
+    const totalPedidos = pedidos.length;
+    const pedidosEntregues = pedidos.filter(p => p.status === 'entregue').length;
+    const totalGasto = pedidos.reduce((total, pedido) => total + parseFloat(pedido.total || 0), 0);
+    
+    // Encontrar pedido favorito (mais repetido)
+    const pedidosFavoritos = {};
+    pedidos.forEach(pedido => {
+        const key = pedido.itens ? pedido.itens.map(item => item.idproduto).sort().join(',') : '';
+        if (key) {
+            pedidosFavoritos[key] = (pedidosFavoritos[key] || 0) + 1;
+        }
+    });
+    
+    const pedidoMaisRepetido = Object.keys(pedidosFavoritos).reduce((a, b) => 
+        pedidosFavoritos[a] > pedidosFavoritos[b] ? a : b, '');
+    
+    document.getElementById('totalPedidos').textContent = totalPedidos;
+    document.getElementById('pedidosEntregues').textContent = pedidosEntregues;
+    document.getElementById('totalGasto').textContent = `R$ ${totalGasto.toFixed(2).replace('.', ',')}`;
+    document.getElementById('pedidoFavorito').textContent = pedidosFavoritos[pedidoMaisRepetido] > 1 ? 
+        `${pedidosFavoritos[pedidoMaisRepetido]}x` : '-';
+}
+
+// Ver detalhes do pedido
+async function verDetalhesPedido(idPedido) {
+    try {
+        // Não permitir buscar detalhes de pedido com ID 0 ou inválido
+        if (!idPedido || idPedido === 0) {
+            console.log('ID de pedido inválido:', idPedido);
+            return;
+        }
+        
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/pedidos/${idPedido}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar detalhes do pedido');
+        }
+        
+        const pedido = await response.json();
+        pedidoSelecionado = pedido;
+        
+        // Preencher modal
+        document.getElementById('modalPedidoTitulo').textContent = `Pedido #${idPedido.toString().padStart(3, '0')}`;
+        
+        const modalBody = document.getElementById('modalPedidoBody');
+        modalBody.innerHTML = `
+            <div class="pedido-detalhes">
+                <div class="pedido-info-detalhes">
+                    <p><strong>Data:</strong> ${formatarData(pedido.data_pedido)}</p>
+                    <p><strong>Status:</strong> <span class="status-badge status-${pedido.status}">${formatarStatus(pedido.status)}</span></p>
+                </div>
+                
+                <div class="pedido-itens-detalhes">
+                    <h4>Itens do Pedido:</h4>
+                    ${pedido.itens ? pedido.itens.map(item => `
+                        <div class="item-detalhes">
+                            <div class="item-info">
+                                <h5>${item.nome}</h5>
+                                <p>Quantidade: ${item.quantidade}</p>
+                                ${item.opcionais && item.opcionais.length > 0 ? `
+                                    <p><strong>Opcionais:</strong></p>
+                                    <ul>
+                                        ${item.opcionais.map(opcional => `
+                                            <li>${opcional.nome} ${opcional.preco > 0 ? `(+R$ ${parseFloat(opcional.preco).toFixed(2).replace('.', ',')})` : ''}</li>
+                                        `).join('')}
+                                    </ul>
+                                ` : ''}
+                            </div>
+                            <div class="item-preco-detalhes">
+                                R$ ${parseFloat(item.preco * item.quantidade).toFixed(2).replace('.', ',')}
+                            </div>
+                        </div>
+                    `).join('') : ''}
+                </div>
+                
+                <div class="pedido-total-detalhes">
+                    <strong>Total: R$ ${parseFloat(pedido.total).toFixed(2).replace('.', ',')}</strong>
+                </div>
+            </div>
+        `;
+        
+        // Mostrar modal
+        document.getElementById('pedidoModal').style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Erro ao carregar detalhes do pedido:', error);
+        alert('Erro ao carregar detalhes do pedido');
+    }
+}
+
+// Fechar modal
+function fecharModalPedido() {
+    document.getElementById('pedidoModal').style.display = 'none';
+    pedidoSelecionado = null;
+}
+
+// Repetir pedido
+function repetirPedido(idPedido = null) {
+    // Não permitir repetir pedido com ID 0 ou inválido
+    if (idPedido === 0) {
+        console.log('ID de pedido inválido para repetir:', idPedido);
+        return;
+    }
+    
+    const pedido = idPedido ? pedidosData.find(p => p.idpedido === idPedido) : pedidoSelecionado;
+    
+    if (!pedido || !pedido.itens) {
+        alert('Pedido não encontrado ou sem itens');
+        return;
+    }
+    
+    // Preparar itens para o carrinho
+    const itensCarrinho = [];
+    
+    pedido.itens.forEach(item => {
+        const produto = {
+            id: item.idproduto,
+            nome: item.nome,
+            preco: parseFloat(item.preco),
+            imagem: item.imagem || '/imgs/placeholder.jpg',
+            quantidade: item.quantidade,
+            opcionais: item.opcionais || []
+        };
+        
+        itensCarrinho.push(produto);
+    });
+    
+    // Salvar no localStorage
+    localStorage.setItem('cart', JSON.stringify(itensCarrinho));
+    
+    // Mostrar notificação
+    mostrarNotificacao('Pedido adicionado ao carrinho!');
+    
+    // Fechar modal se estiver aberto
+    if (document.getElementById('pedidoModal').style.display === 'flex') {
+        fecharModalPedido();
+    }
+    
+    // Redirecionar para o cardápio
+    setTimeout(() => {
+        window.location.href = '/';
+    }, 1500);
+}
+
+// Aplicar filtros
+function aplicarFiltros() {
+    const statusFiltro = document.getElementById('status-filtro').value;
+    const dataFiltro = document.getElementById('data-filtro').value;
+    
+    let pedidosFiltrados = [...pedidosData];
+    
+    if (statusFiltro) {
+        pedidosFiltrados = pedidosFiltrados.filter(pedido => pedido.status === statusFiltro);
+    }
+    
+    if (dataFiltro) {
+        const dataSelecionada = new Date(dataFiltro);
+        pedidosFiltrados = pedidosFiltrados.filter(pedido => {
+            const dataPedido = new Date(pedido.data_pedido);
+            return dataPedido.toDateString() === dataSelecionada.toDateString();
+        });
+    }
+    
+    exibirPedidos(pedidosFiltrados);
+}
+
+// Funções auxiliares
+function formatarData(data) {
+    const date = new Date(data);
+    return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function formatarStatus(status) {
+    const statusMap = {
+        'pendente': 'Pendente',
+        'preparando': 'Preparando',
+        'pronto': 'Pronto',
+        'entregue': 'Entregue',
+        'cancelado': 'Cancelado'
+    };
+    return statusMap[status] || status;
+}
+
+function mostrarNotificacao(mensagem) {
+    const notification = document.getElementById('cartNotification');
+    notification.textContent = mensagem;
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
+}
+
+// Fechar modal ao clicar fora
+window.onclick = function(event) {
+    const modal = document.getElementById('pedidoModal');
+    if (event.target === modal) {
+        fecharModalPedido();
+    }
+}
+</script>
+
+</body>
+</html>

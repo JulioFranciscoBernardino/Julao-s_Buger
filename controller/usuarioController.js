@@ -25,7 +25,7 @@ exports.login = async (req, res) => {
         const token = jwt.sign(
             { id: usuario.idusuario, email: usuario.email, type: usuario.tipo },
             SECRET_KEY,
-            { expiresIn: '1h' }
+            { expiresIn: '30d' }
         );
 
         res.json({ token, type: usuario.tipo });
@@ -96,12 +96,12 @@ exports.perfil = async (req, res) => {
 // Atualizar dados do perfil
 exports.atualizarPerfil = async (req, res) => {
     try {
-        // Verificar se o usuário está autenticado
-        if (!req.session || !req.session.usuario) {
+        // Verificar se o usuário está autenticado via JWT
+        if (!req.usuario) {
             return res.status(401).json({ erro: 'Usuário não autenticado' });
         }
         
-        const idusuario = req.session.usuario.idusuario;
+        const idusuario = req.usuario.id;
         const { nome } = req.body;
         
         if (!nome || nome.trim() === '') {
@@ -114,8 +114,6 @@ exports.atualizarPerfil = async (req, res) => {
             return res.status(400).json({ erro: 'Erro ao atualizar perfil' });
         }
         
-        // Atualizar sessão
-        req.session.usuario.nome = nome;
         
         // Buscar usuário atualizado
         const usuario = await Usuario.buscarPorId(idusuario);
@@ -132,12 +130,12 @@ exports.atualizarPerfil = async (req, res) => {
 // Alterar senha
 exports.alterarSenha = async (req, res) => {
     try {
-        // Verificar se o usuário está autenticado
-        if (!req.session || !req.session.usuario) {
+        // Verificar se o usuário está autenticado via JWT
+        if (!req.usuario) {
             return res.status(401).json({ erro: 'Usuário não autenticado' });
         }
         
-        const idusuario = req.session.usuario.idusuario;
+        const idusuario = req.usuario.id;
         const { senhaAtual, novaSenha } = req.body;
         
         // Validações

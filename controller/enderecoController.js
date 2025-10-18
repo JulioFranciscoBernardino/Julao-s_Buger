@@ -9,12 +9,12 @@ const enderecoController = {
     // Listar endereços do usuário
     async listar(req, res) {
         try {
-            // Verificar se o usuário está autenticado
-            if (!req.session || !req.session.usuario) {
+            // Verificar se o usuário está autenticado via JWT
+            if (!req.usuario) {
                 return res.status(401).json({ erro: 'Usuário não autenticado' });
             }
             
-            const idusuario = req.session.usuario.idusuario;
+            const idusuario = req.usuario.id;
             
             const enderecos = await enderecoModel.buscarPorUsuario(idusuario);
             
@@ -29,12 +29,12 @@ const enderecoController = {
     // Buscar endereço por ID
     async buscarPorId(req, res) {
         try {
-            // Verificar se o usuário está autenticado
-            if (!req.session || !req.session.usuario) {
+            // Verificar se o usuário está autenticado via JWT
+            if (!req.usuario) {
                 return res.status(401).json({ erro: 'Usuário não autenticado' });
             }
             
-            const idusuario = req.session.usuario.idusuario;
+            const idusuario = req.usuario.id;
             const idendereco = parseInt(req.params.id);
             
             if (!idendereco) {
@@ -58,12 +58,12 @@ const enderecoController = {
     // Buscar endereço principal
     async buscarPrincipal(req, res) {
         try {
-            // Verificar se o usuário está autenticado
-            if (!req.session || !req.session.usuario) {
+            // Verificar se o usuário está autenticado via JWT
+            if (!req.usuario) {
                 return res.status(401).json({ erro: 'Usuário não autenticado' });
             }
             
-            const idusuario = req.session.usuario.idusuario;
+            const idusuario = req.usuario.id;
             
             const endereco = await enderecoModel.buscarPrincipal(idusuario);
             
@@ -82,12 +82,12 @@ const enderecoController = {
     // Criar novo endereço
     async criar(req, res) {
         try {
-            // Verificar se o usuário está autenticado
-            if (!req.session || !req.session.usuario) {
+            // Verificar se o usuário está autenticado via JWT
+            if (!req.usuario) {
                 return res.status(401).json({ erro: 'Usuário não autenticado' });
             }
             
-            const idusuario = req.session.usuario.idusuario;
+            const idusuario = req.usuario.id;
             const { apelido, cep, logradouro, numero, complemento, bairro, cidade, estado, referencia, principal } = req.body;
             
             // Validações
@@ -133,12 +133,12 @@ const enderecoController = {
     // Atualizar endereço
     async atualizar(req, res) {
         try {
-            // Verificar se o usuário está autenticado
-            if (!req.session || !req.session.usuario) {
+            // Verificar se o usuário está autenticado via JWT
+            if (!req.usuario) {
                 return res.status(401).json({ erro: 'Usuário não autenticado' });
             }
             
-            const idusuario = req.session.usuario.idusuario;
+            const idusuario = req.usuario.id;
             const idendereco = parseInt(req.params.id);
             const { apelido, cep, logradouro, numero, complemento, bairro, cidade, estado, referencia, principal } = req.body;
             
@@ -188,12 +188,12 @@ const enderecoController = {
     // Definir endereço como principal
     async definirPrincipal(req, res) {
         try {
-            // Verificar se o usuário está autenticado
-            if (!req.session || !req.session.usuario) {
+            // Verificar se o usuário está autenticado via JWT
+            if (!req.usuario) {
                 return res.status(401).json({ erro: 'Usuário não autenticado' });
             }
             
-            const idusuario = req.session.usuario.idusuario;
+            const idusuario = req.usuario.id;
             const idendereco = parseInt(req.params.id);
             
             if (!idendereco) {
@@ -224,12 +224,12 @@ const enderecoController = {
     // Excluir endereço
     async excluir(req, res) {
         try {
-            // Verificar se o usuário está autenticado
-            if (!req.session || !req.session.usuario) {
+            // Verificar se o usuário está autenticado via JWT
+            if (!req.usuario) {
                 return res.status(401).json({ erro: 'Usuário não autenticado' });
             }
             
-            const idusuario = req.session.usuario.idusuario;
+            const idusuario = req.usuario.id;
             const idendereco = parseInt(req.params.id);
             
             if (!idendereco) {

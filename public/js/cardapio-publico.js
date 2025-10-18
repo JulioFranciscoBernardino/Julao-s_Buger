@@ -1209,22 +1209,107 @@ function configurarLazyLoading() {
 // Configurar lazy loading quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', configurarLazyLoading);
 
-// Função para abrir modal de busca
-function abrirBusca() {
-    const searchModal = document.getElementById('searchModal');
-    const searchInput = document.getElementById('searchInput');
+// Função para executar busca inline
+function executarBuscaInline() {
+    const searchInput = document.getElementById('searchInputInline');
+    if (!searchInput) return;
     
-    if (searchModal) {
-        searchModal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        
-        // Focar no campo de busca
-        setTimeout(() => {
-            if (searchInput) {
-                searchInput.focus();
-            }
-        }, 100);
+    const termo = searchInput.value.trim();
+    
+    if (termo.length === 0) {
+        mostrarEstadoVazioInline();
+        return;
     }
+    
+    // Buscar produtos
+    const produtosEncontrados = buscarProdutosInterno(termo);
+    
+    if (produtosEncontrados.length === 0) {
+        mostrarEstadoNenhumResultadoInline(termo);
+        return;
+    }
+    
+    // Exibir resultados diretamente na página
+    mostrarResultadosNaPagina(produtosEncontrados, termo);
+    ocultarSugestoesInline();
+}
+
+// Função para mostrar estado vazio inline
+function mostrarEstadoVazioInline() {
+    // Voltar ao estado normal da página
+    if (window.location.hash.includes('#search')) {
+        window.location.hash = '';
+    }
+    
+    // Recarregar a categoria ativa
+    if (categoriaAtiva && categoriaAtiva.idcategoria !== 'search') {
+        carregarProdutosCategoria(categoriaAtiva.idcategoria);
+    }
+}
+
+// Função para mostrar estado nenhum resultado inline
+function mostrarEstadoNenhumResultadoInline(termo) {
+    mostrarResultadosNaPagina([], termo);
+}
+
+// Função para mostrar resultados na página principal
+function mostrarResultadosNaPagina(produtos, termo) {
+    // Atualizar categoria ativa
+    categoriaAtiva = { nome: `Resultados para "${termo}"`, idcategoria: 'search' };
+    
+    // Atualizar título da seção
+    const produtosSection = document.querySelector('.produtos-section h2');
+    if (produtosSection) {
+        produtosSection.textContent = `Resultados para "${termo}"`;
+    }
+    
+    // Limpar produtos atuais
+    const produtosContainer = document.getElementById('produtos');
+    if (!produtosContainer) return;
+    
+    if (produtos.length === 0) {
+        produtosContainer.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: #6c757d;">
+                <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                <h2>Nenhum produto encontrado</h2>
+                <p>Tente buscar com outros termos ou verifique a ortografia.</p>
+                <small style="color: #adb5bd; margin-top: 10px; display: block;">
+                    Buscando por: "${termo}"
+                </small>
+            </div>
+        `;
+        return;
+    }
+    
+    // Renderizar produtos encontrados
+    produtosContainer.innerHTML = produtos.map(produto => {
+        const preco = produto.preco.toLocaleString('pt-BR', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+        });
+        
+        return `
+            <div class="produto-card" onclick="abrirModalProduto(${produto.idproduto})">
+                <div class="produto-image">
+                    <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy">
+                    <div class="produto-overlay">
+                        <button class="btn-overlay" onclick="event.stopPropagation(); abrirModalProduto(${produto.idproduto})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="produto-info">
+                    <h3 class="produto-nome">${produto.nome}</h3>
+                    <p class="produto-descricao">${produto.descricao || 'Sem descrição disponível.'}</p>
+                    <div class="produto-preco">R$ ${preco}</div>
+                    <button class="btn-adicionar" onclick="event.stopPropagation(); adicionarAoCarrinho(${produto.idproduto})">
+                        <i class="fas fa-plus"></i>
+                        Adicionar
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Função para fechar modal de busca
@@ -1341,14 +1426,39 @@ function configurarEventListenersAdicionais() {
         });
     }
     
-    // Busca com Enter
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('keypress', (e) => {
+    // Busca inline com Enter e sugestões
+    const searchInputInline = document.getElementById('searchInputInline');
+    if (searchInputInline) {
+        searchInputInline.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                executarBusca();
+                executarBuscaInline();
+                ocultarSugestoesInline();
             }
         });
+        
+        // Mostrar sugestões quando o campo estiver vazio
+        searchInputInline.addEventListener('input', (e) => {
+            if (e.target.value.trim() === '') {
+                mostrarSugestoesInline();
+            } else {
+                ocultarSugestoesInline();
+            }
+        });
+        
+        // Mostrar sugestões ao focar no campo
+        searchInputInline.addEventListener('focus', () => {
+            if (searchInputInline.value.trim() === '') {
+                mostrarSugestoesInline();
+            }
+        });
+        
+        // Fechar sugestões ao clicar fora
+        searchInputInline.addEventListener('blur', () => {
+            setTimeout(ocultarSugestoesInline, 200);
+        });
+        
+        // Carregar sugestões iniciais
+        carregarSugestoesInline();
     }
 }
 
@@ -1475,13 +1585,163 @@ async function inicializarCardapio() {
     }
 }
 
+// Função para carregar sugestões inline
+function carregarSugestoesInline() {
+    const searchSuggestions = document.getElementById('searchSuggestionsInline');
+    if (!searchSuggestions) return;
+    
+    // Sugestões baseadas nos produtos mais populares
+    const sugestoes = [
+        { texto: 'X-Burger', icon: 'fas fa-hamburger' },
+        { texto: 'Batata Frita', icon: 'fas fa-french-fries' },
+        { texto: 'Coca-Cola', icon: 'fas fa-wine-bottle' },
+        { texto: 'X-Bacon', icon: 'fas fa-bacon' },
+        { texto: 'Milkshake', icon: 'fas fa-ice-cream' }
+    ];
+    
+    searchSuggestions.innerHTML = sugestoes.map(sugestao => `
+        <div class="search-suggestion-item-inline" onclick="usarSugestaoInline('${sugestao.texto}')">
+            <i class="${sugestao.icon}"></i>
+            <span>${sugestao.texto}</span>
+        </div>
+    `).join('');
+    
+    searchSuggestions.style.display = 'block';
+}
+
+// Função para usar sugestão inline
+function usarSugestaoInline(texto) {
+    const searchInput = document.getElementById('searchInputInline');
+    if (searchInput) {
+        searchInput.value = texto;
+        executarBuscaInline();
+        ocultarSugestoesInline();
+    }
+}
+
+// Função para ocultar sugestões inline
+function ocultarSugestoesInline() {
+    const searchSuggestions = document.getElementById('searchSuggestionsInline');
+    if (searchSuggestions) {
+        searchSuggestions.style.display = 'none';
+    }
+}
+
+// Função para mostrar sugestões inline
+function mostrarSugestoesInline() {
+    const searchSuggestions = document.getElementById('searchSuggestionsInline');
+    if (searchSuggestions) {
+        searchSuggestions.style.display = 'block';
+    }
+}
+
+// Função para usar sugestão (mantida para compatibilidade)
+function usarSugestao(texto) {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = texto;
+        executarBusca();
+        ocultarSugestoes();
+    }
+}
+
+// Função para ocultar sugestões
+function ocultarSugestoes() {
+    const searchSuggestions = document.getElementById('searchSuggestions');
+    if (searchSuggestions) {
+        searchSuggestions.style.display = 'none';
+    }
+}
+
+// Função para mostrar sugestões
+function mostrarSugestoes() {
+    const searchSuggestions = document.getElementById('searchSuggestions');
+    if (searchSuggestions) {
+        searchSuggestions.style.display = 'block';
+    }
+}
+
+// Função para alternar filtros
+function alternarFiltro(elemento) {
+    // Remover classe active de todos os filtros
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Adicionar classe active ao filtro clicado
+    elemento.classList.add('active');
+    
+    // Executar busca novamente se houver termo
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput && searchInput.value.trim()) {
+        executarBusca();
+    }
+}
+
+// Função para mostrar estado vazio
+function mostrarEstadoVazio() {
+    const searchResults = document.getElementById('searchResults');
+    if (searchResults) {
+        searchResults.innerHTML = `
+            <div class="search-empty">
+                <i class="fas fa-search"></i>
+                <h3>Busque por seus produtos favoritos</h3>
+                <p>Digite o nome do produto ou use os filtros acima</p>
+            </div>
+        `;
+    }
+}
+
+// Função para mostrar estado nenhum resultado
+function mostrarEstadoNenhumResultado(termo) {
+    const searchResults = document.getElementById('searchResults');
+    if (searchResults) {
+        searchResults.innerHTML = `
+            <div class="search-empty">
+                <i class="fas fa-search"></i>
+                <h3>Nenhum produto encontrado</h3>
+                <p>Tente buscar com outros termos ou verifique a ortografia.</p>
+                <small style="color: #adb5bd; margin-top: 10px; display: block;">
+                    Buscando por: "${termo}"
+                </small>
+            </div>
+        `;
+    }
+}
+
+// Função para mostrar resultados da busca
+function mostrarResultadosBusca(produtos) {
+    const searchResults = document.getElementById('searchResults');
+    if (searchResults) {
+        searchResults.innerHTML = produtos.map(produto => {
+            const preco = produto.preco.toLocaleString('pt-BR', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
+            
+            return `
+                <div class="search-result-item" onclick="selecionarProdutoDaBusca(${produto.idproduto})">
+                    <div class="search-result-image">
+                        <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy">
+                    </div>
+                    <div class="search-result-info">
+                        <div class="search-result-name">${produto.nome}</div>
+                        <div class="search-result-price">R$ ${preco}</div>
+                        <div class="search-result-description">${produto.descricao || 'Sem descrição disponível.'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
 // Exportar funções para uso global
 window.buscarProdutos = buscarProdutos;
 window.adicionarAoCarrinho = adicionarAoCarrinho;
 window.adicionarAosFavoritos = adicionarAosFavoritos;
 window.fecharModal = fecharModal;
-window.abrirBusca = abrirBusca;
-window.executarBusca = executarBusca;
+window.executarBuscaInline = executarBuscaInline;
+window.usarSugestaoInline = usarSugestaoInline;
 window.compartilharProduto = compartilharProduto;
 
 // Exportar funções do carrinho
