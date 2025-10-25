@@ -991,12 +991,8 @@ function finalizarCompra() {
         return;
     }
     
-    // Aqui você pode implementar a lógica de finalização
-    // Por exemplo, redirecionar para página de checkout ou abrir modal de pedido
-    
-    alert(`Pedido de R$ ${formatarPreco(total)} pronto para finalização!\n\nEm breve você será redirecionado para a página de checkout.`);
-    
-    // TODO: Implementar integração com sistema de pedidos
+    // Redirecionar para página de checkout
+    window.location.href = '/checkout.html';
 }
 
 // Inicializar carrinho ao carregar a página

@@ -170,10 +170,18 @@ class PedidoController {
                 return res.status(401).json({ erro: 'ID do usuário não encontrado' });
             }
 
-            const { itens, observacoes } = req.body;
+            const { itens, observacoes, idendereco, idforma_pagamento, valor_total, valor_entrega } = req.body;
 
             if (!itens || !Array.isArray(itens) || itens.length === 0) {
                 return res.status(400).json({ erro: 'Pedido deve conter pelo menos um item' });
+            }
+
+            if (!idendereco) {
+                return res.status(400).json({ erro: 'Endereço é obrigatório' });
+            }
+
+            if (!idforma_pagamento) {
+                return res.status(400).json({ erro: 'Forma de pagamento é obrigatória' });
             }
 
             // Iniciar transação
@@ -183,11 +191,18 @@ class PedidoController {
             try {
                 // Criar pedido
                 const pedidoQuery = `
-                    INSERT INTO pedido (idusuario, status) 
-                    VALUES (?, 'pendente')
+                    INSERT INTO pedido (idusuario, idendereco, idforma_pagamento, status, valor_total, valor_entrega, observacoes) 
+                    VALUES (?, ?, ?, 'pendente', ?, ?, ?)
                 `;
                 
-                const pedidoResult = await connection.execute(pedidoQuery, [userId]);
+                const pedidoResult = await connection.execute(pedidoQuery, [
+                    userId,
+                    idendereco,
+                    idforma_pagamento,
+                    valor_total || 0,
+                    valor_entrega || 0,
+                    observacoes || null
+                ]);
                 const pedidoId = pedidoResult.insertId;
 
                 let totalPedido = 0;

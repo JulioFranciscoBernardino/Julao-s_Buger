@@ -14,6 +14,7 @@ const produtoGrupoOpcionalRoutes = require('./routes/produtoGrupoOpcionalRoutes'
 const cardapioRoutes = require('./routes/cardapioAdmRoutes');
 const enderecoRoutes = require('./routes/enderecoRoutes');
 const pedidoRoutes = require('./routes/pedidoRoutes');
+const formaPagamentoRoutes = require('./routes/formaPagamentoRoutes');
 const rotas = require('./routes/index');
 const viewRoutes = require('./routes/viewRoutes');
 
@@ -62,6 +63,7 @@ app.use('/api/produto-grupo-opcionais', produtoGrupoOpcionalRoutes);
 app.use('/api/cardapio', cardapioRoutes);
 app.use('/api/enderecos', enderecoRoutes);
 app.use('/api/pedidos', pedidoRoutes);
+app.use('/api/formas-pagamento', formaPagamentoRoutes);
 app.use('/', rotas);
 app.use('/', viewRoutes);
 

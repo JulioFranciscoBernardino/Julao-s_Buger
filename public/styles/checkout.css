@@ -1,0 +1,610 @@
+/* CHECKOUT PAGE STYLES */
+.checkout-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.checkout-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.checkout-header h1 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.checkout-header p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* CONTEÚDO PRINCIPAL */
+.checkout-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+/* FORMULÁRIO LADO ESQUERDO */
+.checkout-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.checkout-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.section-header i {
+    font-size: 1.5rem;
+    color: #e8b705;
+}
+
+.section-header h2 {
+    font-size: 1.3rem;
+    color: #333;
+    margin: 0;
+}
+
+/* DADOS DO CLIENTE */
+.dados-cliente-container {
+    margin-bottom: 1rem;
+}
+
+.dados-cliente-exibicao {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.dado-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.dado-item i {
+    font-size: 1.2rem;
+    color: #e8b705;
+    width: 24px;
+    text-align: center;
+}
+
+.dado-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.dado-label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.dado-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-dados-cliente {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-dados-cliente label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* ENDEREÇO */
+.endereco-container {
+    margin-bottom: 1rem;
+}
+
+.endereco-option {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.endereco-option:hover {
+    border-color: #e8b705;
+    background: #fffef5;
+}
+
+.endereco-option.selected {
+    border-color: #e8b705;
+    background: #fffef5;
+}
+
+.endereco-option input[type="radio"] {
+    margin-right: 0.75rem;
+}
+
+.endereco-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.endereco-info {
+    flex: 1;
+}
+
+.endereco-nome {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.endereco-detalhes {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+.endereco-principal {
+    display: inline-block;
+    background: #e8b705;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+}
+
+/* FORMAS DE PAGAMENTO */
+.forma-pagamento-container {
+    margin-bottom: 1rem;
+}
+
+.forma-pagamento-option {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.forma-pagamento-option:hover {
+    border-color: #e8b705;
+    background: #fffef5;
+}
+
+.forma-pagamento-option.selected {
+    border-color: #e8b705;
+    background: #fffef5;
+}
+
+.forma-pagamento-option input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+.forma-pagamento-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex: 1;
+}
+
+.forma-pagamento-nome {
+    font-weight: 600;
+    color: #333;
+}
+
+.section-actions {
+    margin-top: 1rem;
+}
+
+.btn-secondary {
+    background: #f8f9fa;
+    color: #333;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
+    border-color: #ddd;
+}
+
+/* FORMULARIO */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #e8b705;
+}
+
+/* RESUMO LADO DIREITO */
+.checkout-summary-section {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.card-header i {
+    font-size: 1.5rem;
+    color: #e8b705;
+}
+
+.card-header h2 {
+    font-size: 1.3rem;
+    color: #333;
+    margin: 0;
+}
+
+/* ITENS DO RESUMO */
+.summary-items {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+}
+
+.summary-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-item-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.summary-item-info {
+    flex: 1;
+}
+
+.summary-item-nome {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.summary-item-detalhes {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.summary-item-qtd {
+    font-size: 0.85rem;
+    color: #999;
+}
+
+.summary-item-preco {
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+/* TOTAIS */
+.summary-totals {
+    margin-bottom: 1.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid #f0f0f0;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.summary-row:last-child {
+    margin-bottom: 0;
+}
+
+.summary-row.highlight {
+    font-size: 1.25rem;
+    font-weight: 700;
+    padding-top: 1rem;
+    border-top: 2px solid #f0f0f0;
+}
+
+.total-value {
+    color: #e8b705;
+}
+
+/* BOTÕES */
+.btn-confirmar {
+    width: 100%;
+    background: linear-gradient(135deg, #e8b705 0%, #d4a000 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.btn-confirmar:hover:not(:disabled) {
+    background: linear-gradient(135deg, #d4a000 0%, #c29900 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(232, 183, 5, 0.3);
+}
+
+.btn-confirmar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-voltar {
+    display: block;
+    text-align: center;
+    color: #666;
+    text-decoration: none;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-voltar:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+/* LOADING */
+.loading-enderecos,
+.loading-items {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.loading-enderecos i,
+.loading-items i {
+    font-size: 2rem;
+    color: #e8b705;
+    margin-bottom: 0.5rem;
+}
+
+/* RESPONSIVO */
+@media (max-width: 1024px) {
+    .checkout-content {
+        grid-template-columns: 1fr;
+    }
+
+    .checkout-summary-section {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .checkout-container {
+        padding: 1rem;
+    }
+
+    .checkout-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .checkout-section,
+    .summary-card {
+        padding: 1.5rem;
+    }
+
+    .section-header h2,
+    .card-header h2 {
+        font-size: 1.1rem;
+    }
+}
+
+/* MODAL NOVO ENDEREÇO */
+.modal-endereco {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.modal-endereco.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.modal-content-endereco {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-header h3 i {
+    color: #e8b705;
+}
+
+.btn-fechar-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.btn-fechar-modal:hover {
+    color: #333;
+}
+
+.form-novo-endereco {
+    padding: 1.5rem;
+}
+
+.form-novo-endereco .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #f0f0f0;
+}
+
+.btn-cancelar {
+    flex: 1;
+    background: #f8f9fa;
+    color: #333;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-cancelar:hover {
+    background: #e9ecef;
+    border-color: #ddd;
+}
+
+.btn-salvar {
+    flex: 1;
+    background: linear-gradient(135deg, #e8b705 0%, #d4a000 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-salvar:hover {
+    background: linear-gradient(135deg, #d4a000 0%, #c29900 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(232, 183, 5, 0.3);
+}
+
+/* RESPONSIVO MODAL */
+@media (max-width: 768px) {
+    .modal-endereco.active {
+        padding: 1rem;
+    }
+
+    .modal-content-endereco {
+        max-height: 95vh;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+}

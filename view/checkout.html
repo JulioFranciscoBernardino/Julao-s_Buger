@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Pedido - Julão's Burger</title>
+    <link rel="stylesheet" href="/styles/checkout.css">
+    <link rel="stylesheet" href="/styles/index.css">
+    <link rel="shortcut icon" href="/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="apple-navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <a href="/" class="navbar-logo">
+                    <img src="/imgs/Logo Julãos Burguinho.png" alt="Julão's Burguinho" class="logo-img">
+                    <span class="logo-text">Julão's Burger Mega Lanches</span>
+                </a>
+            </div>
+            
+            <div class="navbar-center">
+                <ul class="navbar-menu">
+                    <li><a href="/" class="nav-link">Cardápio</a></li>
+                    <li><a href="/sobre_nos.html" class="nav-link">Sobre nós</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="checkout-container">
+        <div class="checkout-header">
+            <h1><i class="fas fa-shopping-cart"></i> Confirmação de Pedido</h1>
+            <p>Revise seu pedido antes de finalizar</p>
+        </div>
+
+        <div class="checkout-content">
+            <!-- COLUNA ESQUERDA - FORMULÁRIO -->
+            <div class="checkout-form-section">
+                <!-- SEÇÃO: DADOS DO CLIENTE -->
+                <section class="checkout-section">
+                    <div class="section-header">
+                        <i class="fas fa-user"></i>
+                        <h2>Dados para Contato</h2>
+                    </div>
+                    
+                    <div id="dadosClienteContainer" class="dados-cliente-container">
+                        <!-- Dados do cliente serão carregados aqui -->
+                        <div class="loading-dados">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando dados...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEÇÃO: ENDEREÇO DE ENTREGA -->
+                <section class="checkout-section">
+                    <div class="section-header">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h2>Endereço de Entrega</h2>
+                    </div>
+                    
+                    <div id="enderecoContainer" class="endereco-container">
+                        <!-- Endereços serão carregados aqui -->
+                        <div class="loading-enderecos">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando endereços...</p>
+                        </div>
+                    </div>
+
+                    <div class="section-actions">
+                        <button id="btnNovoEndereco" class="btn-secondary">
+                            <i class="fas fa-plus"></i> Adicionar Novo Endereço
+                        </button>
+                    </div>
+                </section>
+
+                <!-- SEÇÃO: FORMA DE PAGAMENTO -->
+                <section class="checkout-section">
+                    <div class="section-header">
+                        <i class="fas fa-credit-card"></i>
+                        <h2>Forma de Pagamento</h2>
+                    </div>
+                    
+                    <div id="formaPagamentoContainer" class="forma-pagamento-container">
+                        <!-- Formas de pagamento serão carregadas aqui -->
+                        <div class="loading-formas">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando formas de pagamento...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEÇÃO: OBSERVAÇÕES -->
+                <section class="checkout-section">
+                    <div class="section-header">
+                        <i class="fas fa-comment-alt"></i>
+                        <h2>Observações do Pedido</h2>
+                    </div>
+                    
+                    <div class="form-group">
+                        <textarea 
+                            id="observacoesPedido" 
+                            class="form-control" 
+                            rows="4" 
+                            placeholder="Instruções especiais para entrega (opcional)..."
+                        ></textarea>
+                    </div>
+                </section>
+            </div>
+
+            <!-- COLUNA DIREITA - RESUMO DO PEDIDO -->
+            <div class="checkout-summary-section">
+                <div class="summary-card">
+                    <div class="card-header">
+                        <i class="fas fa-receipt"></i>
+                        <h2>Resumo do Pedido</h2>
+                    </div>
+
+                    <!-- ITENS DO PEDIDO -->
+                    <div id="resumoItens" class="summary-items">
+                        <!-- Itens serão renderizados aqui -->
+                        <div class="loading-items">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Carregando itens...</p>
+                        </div>
+                    </div>
+
+                    <!-- RESUMO FINANCEIRO -->
+                    <div class="summary-totals">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">R$ 0,00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Taxa de Entrega:</span>
+                            <span id="taxaEntrega">R$ 0,00</span>
+                        </div>
+                        <div class="summary-row highlight">
+                            <span>Total:</span>
+                            <span id="totalPedido" class="total-value">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <!-- BOTÃO DE CONFIRMAÇÃO -->
+                    <button id="btnConfirmarPedido" class="btn-confirmar">
+                        <i class="fas fa-check-circle"></i>
+                        Confirmar Pedido
+                    </button>
+
+                    <a href="/" class="btn-voltar">
+                        <i class="fas fa-arrow-left"></i>
+                        Voltar ao Cardápio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NOVO ENDEREÇO -->
+    <div id="modalNovoEndereco" class="modal-endereco">
+        <div class="modal-content-endereco">
+            <div class="modal-header">
+                <h3><i class="fas fa-map-marker-alt"></i> Adicionar Novo Endereço</h3>
+                <button class="btn-fechar-modal" onclick="fecharModalEndereco()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="formNovoEndereco" class="form-novo-endereco">
+                <div class="form-group">
+                    <label for="nomeEndereco">Nome do Endereço *</label>
+                    <input type="text" id="nomeEndereco" class="form-control" placeholder="Ex: Casa, Trabalho" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cepEndereco">CEP *</label>
+                    <input type="text" id="cepEndereco" class="form-control" placeholder="00000-000" maxlength="9" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label for="logradouroEndereco">Logradouro *</label>
+                        <input type="text" id="logradouroEndereco" class="form-control" placeholder="Rua, Avenida, etc" required>
+                    </div>
+
+                    <div class="form-group" style="flex: 1;">
+                        <label for="numeroEndereco">Número *</label>
+                        <input type="text" id="numeroEndereco" class="form-control" placeholder="123" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="complementoEndereco">Complemento</label>
+                    <input type="text" id="complementoEndereco" class="form-control" placeholder="Apto, Bloco, etc (opcional)">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label for="bairroEndereco">Bairro *</label>
+                        <input type="text" id="bairroEndereco" class="form-control" required>
+                    </div>
+
+                    <div class="form-group" style="flex: 2;">
+                        <label for="cidadeEndereco">Cidade *</label>
+                        <input type="text" id="cidadeEndereco" class="form-control" required>
+                    </div>
+
+                    <div class="form-group" style="flex: 1;">
+                        <label for="estadoEndereco">Estado *</label>
+                        <input type="text" id="estadoEndereco" class="form-control" placeholder="SP" maxlength="2" required>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalEndereco()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-salvar">
+                        <i class="fas fa-save"></i> Salvar Endereço
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="/js/logout.js"></script>
+    <script src="/js/checkout.js"></script>
+</body>
+</html>

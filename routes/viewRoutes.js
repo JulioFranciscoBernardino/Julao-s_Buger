@@ -32,6 +32,10 @@ router.get('/pedidos_cliente', (req, res) => {
     res.sendFile(path.join(__dirname, '../view/pedidos_cliente.html'));
 });
 
+router.get('/checkout', (req, res) => {
+    res.sendFile(path.join(__dirname, '../view/checkout.html'));
+});
+
 // Rota protegida - deve ficar por último
 router.get('/conta', authJWTQuery, (req, res) => {
     res.sendFile(path.join(__dirname, '../view/conta.html'));

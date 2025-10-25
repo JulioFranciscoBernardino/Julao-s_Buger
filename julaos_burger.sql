@@ -62,12 +62,35 @@ CREATE TABLE `opcional` (
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `forma_pagamento`
+--
+
+CREATE TABLE `forma_pagamento` (
+  `idforma_pagamento` int(11) NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `ativo` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `forma_pagamento`
+--
+
+INSERT INTO `forma_pagamento` (`idforma_pagamento`, `nome`, `ativo`) VALUES
+(1, 'Dinheiro', 1),
+(2, 'PIX', 1),
+(3, 'Cartão de Débito', 1),
+(4, 'Cartão de Crédito', 1);
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `pedido`
 --
 
 CREATE TABLE `pedido` (
   `idpedido` int(11) NOT NULL,
   `idusuario` int(11) NOT NULL,
+  `idforma_pagamento` int(11) DEFAULT NULL,
   `data_pedido` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` varchar(20) NOT NULL,
   `ativo` tinyint(1) NOT NULL DEFAULT 1,
@@ -178,11 +201,18 @@ ALTER TABLE `opcional`
   ADD PRIMARY KEY (`idopcional`);
 
 --
+-- Índices de tabela `forma_pagamento`
+--
+ALTER TABLE `forma_pagamento`
+  ADD PRIMARY KEY (`idforma_pagamento`);
+
+--
 -- Índices de tabela `pedido`
 --
 ALTER TABLE `pedido`
   ADD PRIMARY KEY (`idpedido`),
-  ADD KEY `fk_pedido_usuario` (`idusuario`);
+  ADD KEY `fk_pedido_usuario` (`idusuario`),
+  ADD KEY `fk_pedido_forma_pagamento` (`idforma_pagamento`);
 
 --
 -- Índices de tabela `pedidoproduto`
@@ -237,6 +267,12 @@ ALTER TABLE `opcional`
   MODIFY `idopcional` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de tabela `forma_pagamento`
+--
+ALTER TABLE `forma_pagamento`
+  MODIFY `idforma_pagamento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT de tabela `pedido`
 --
 ALTER TABLE `pedido`
@@ -268,7 +304,8 @@ ALTER TABLE `usuario`
 -- Restrições para tabelas `pedido`
 --
 ALTER TABLE `pedido`
-  ADD CONSTRAINT `fk_pedido_usuario` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`idusuario`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_pedido_usuario` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`idusuario`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_pedido_forma_pagamento` FOREIGN KEY (`idforma_pagamento`) REFERENCES `forma_pagamento` (`idforma_pagamento`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `pedidoproduto`
