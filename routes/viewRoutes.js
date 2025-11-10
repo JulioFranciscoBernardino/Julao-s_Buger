@@ -25,7 +25,7 @@ router.get('/cardapio', (req, res) => {
 });
 
 router.get('/pedidos', (req, res) => {
-    res.sendFile(path.join(__dirname, '../view/pedidos.html'));
+    res.sendFile(path.join(__dirname, '../view/gestor_pedidos.html'));
 });
 
 router.get('/pedidos_cliente', (req, res) => {

@@ -107,7 +107,8 @@ CREATE TABLE `pedidoproduto` (
   `idpedidoproduto` int(11) NOT NULL,
   `idpedido` int(11) NOT NULL,
   `idproduto` int(11) NOT NULL,
-  `quantidade` int(11) NOT NULL
+  `quantidade` int(11) NOT NULL,
+  `observacao` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

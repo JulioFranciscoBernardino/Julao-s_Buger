@@ -14,7 +14,7 @@
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body>
+<body class="cliente-pedidos">
 
   <!-- NAVBAR APPLE-STYLE -->
   <nav class="apple-navbar">
@@ -286,6 +286,7 @@ function exibirPedidos(pedidos) {
                         <span class="item-nome">${item.nome}</span>
                         <span class="item-qtd">x${item.quantidade}</span>
                         <span class="item-preco">R$ ${parseFloat(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
+                        ${item.observacao ? `<span class="item-observacao"><i class="fas fa-sticky-note"></i>${escapeHtml(item.observacao)}</span>` : ''}
                     </div>
                 `).join('') : ''}
                 ${pedido.itens && pedido.itens.length > 3 ? `
@@ -299,7 +300,7 @@ function exibirPedidos(pedidos) {
             
             <div class="pedido-footer">
                 <div class="pedido-total">
-                    <strong>Total: R$ ${parseFloat(pedido.total || 0).toFixed(2).replace('.', ',')}</strong>
+                    <strong>Total: R$ ${parseFloat(pedido.totalPedido ?? pedido.total ?? 0).toFixed(2).replace('.', ',')}</strong>
                 </div>
                 <div class="pedido-actions">
                     <button class="action-btn btn-repetir" ${pedido.idpedido === 0 ? 'disabled' : ''} onclick="event.stopPropagation(); repetirPedido(${pedido.idpedido || 0})">
@@ -390,6 +391,7 @@ async function verDetalhesPedido(idPedido) {
                                         `).join('')}
                                     </ul>
                                 ` : ''}
+                            ${item.observacao ? `<p class="item-observacao-detalhe"><strong>Observação:</strong> ${escapeHtml(item.observacao)}</p>` : ''}
                             </div>
                             <div class="item-preco-detalhes">
                                 R$ ${parseFloat(item.preco * item.quantidade).toFixed(2).replace('.', ',')}
@@ -510,6 +512,19 @@ function formatarStatus(status) {
         'cancelado': 'Cancelado'
     };
     return statusMap[status] || status;
+}
+
+function escapeHtml(texto) {
+    if (!texto) {
+        return '';
+    }
+
+    return String(texto)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function mostrarNotificacao(mensagem) {

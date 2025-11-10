@@ -61,6 +61,7 @@ CREATE TABLE PedidoProduto (
   idpedido        INT NOT NULL,
   idproduto       INT NOT NULL,
   quantidade      INT NOT NULL,
+  observacao      TEXT NULL,
   CONSTRAINT fk_pp_pedido
     FOREIGN KEY (idpedido)
     REFERENCES Pedido(idpedido)

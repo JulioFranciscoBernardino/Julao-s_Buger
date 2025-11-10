@@ -345,6 +345,36 @@
     color: #999;
 }
 
+.summary-item-observacao {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.summary-item-observacao label {
+    font-size: 0.8rem;
+    color: #555;
+    font-weight: 600;
+}
+
+.summary-item-observacao-textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #e1e1e1;
+    font-size: 0.9rem;
+    resize: vertical;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-item-observacao-textarea:focus {
+    outline: none;
+    border-color: #e8b705;
+    box-shadow: 0 0 0 3px rgba(232, 183, 5, 0.15);
+}
+
 .summary-item-preco {
     font-weight: 600;
     color: #333;

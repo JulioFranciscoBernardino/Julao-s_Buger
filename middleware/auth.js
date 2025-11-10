@@ -45,8 +45,16 @@ const authSession = (req, res, next) => {
     next();
 };
 
+const authAdmin = (req, res, next) => {
+    if (!req.usuario || !req.usuario.type || !['admin', 'adm'].includes(req.usuario.type)) {
+        return res.status(403).json({ erro: 'Acesso restrito a administradores' });
+    }
+    next();
+};
+
 module.exports = {
     authJWT,
     authJWTQuery,
-    authSession
+    authSession,
+    authAdmin
 };

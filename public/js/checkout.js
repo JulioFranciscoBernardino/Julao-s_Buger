@@ -4,6 +4,7 @@
 let enderecoSelecionado = null;
 let formaPagamentoSelecionada = null;
 let carrinhoData = [];
+let carrinhoRawData = [];
 let taxaEntrega = 5.00; // Taxa fixa de entrega
 
 // Inicialização ao carregar a página
@@ -42,26 +43,73 @@ function carregarCarrinhoLocalStorage() {
     console.log('Chave do carrinho encontrada:', carrinhoStr ? 'Sim' : 'Não');
     
     if (carrinhoStr) {
-        carrinhoData = JSON.parse(carrinhoStr);
-        console.log('Dados do carrinho carregados:', carrinhoData);
-        
-        // Converter estrutura do carrinho se necessário
-        if (carrinhoData.length > 0 && !carrinhoData[0].idproduto) {
-            carrinhoData = carrinhoData.map(item => ({
-                idproduto: item.produtoId || item.idproduto,
-                precoFinal: item.precoFinal || item.preco,
-                quantidade: item.quantidade,
-                nome: item.nome,
-                imagem: item.imagem,
-                opcionais: item.opcionais || []
-            }));
+        try {
+            carrinhoRawData = JSON.parse(carrinhoStr) || [];
+        } catch (error) {
+            console.error('Erro ao interpretar carrinho:', error);
+            carrinhoRawData = [];
         }
+
+        if (!Array.isArray(carrinhoRawData)) {
+            carrinhoRawData = [];
+        }
+
+        // Garantir que todos os itens possuam o campo de observação
+        carrinhoRawData = carrinhoRawData.map(item => {
+            if (item && typeof item === 'object') {
+                if (typeof item.observacao === 'undefined') {
+                    item.observacao = '';
+                }
+            }
+            return item;
+        });
+
+        // Converter para a estrutura usada no checkout
+        carrinhoData = carrinhoRawData.map(normalizarItemCarrinho);
         
-        console.log('Dados do carrinho após conversão:', carrinhoData);
+        console.log('Dados do carrinho carregados:', carrinhoData);
         renderizarResumoPedido();
     } else {
         alert('Seu carrinho está vazio!');
         window.location.href = '/';
+    }
+}
+
+function normalizarItemCarrinho(item) {
+    if (!item || typeof item !== 'object') {
+        return {
+            idproduto: null,
+            precoFinal: 0,
+            quantidade: 0,
+            nome: '',
+            imagem: null,
+            opcionais: [],
+            observacao: ''
+        };
+    }
+
+    const preco = parseFloat(
+        item.precoFinal ?? item.preco ?? item.precoBase ?? 0
+    );
+
+    return {
+        idproduto: item.idproduto || item.produtoId || item.id,
+        precoFinal: Number.isNaN(preco) ? 0 : preco,
+        quantidade: item.quantidade || 1,
+        nome: item.nome || 'Produto',
+        imagem: item.imagem || null,
+        opcionais: item.opcionais || [],
+        observacao: item.observacao || ''
+    };
+}
+
+function salvarCarrinhoRawAtualizado() {
+    try {
+        const serializado = JSON.stringify(carrinhoRawData || []);
+        localStorage.setItem('julaosBurger_carrinho', serializado);
+        localStorage.setItem('cart', serializado);
+    } catch (error) {
+        console.error('Erro ao salvar carrinho com observações:', error);
     }
 }
 
@@ -95,7 +143,7 @@ async function carregarDadosCliente() {
     if (isUsuarioLogado()) {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/usuario/perfil', {
+            const response = await fetch('/api/usuarios/perfil', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -374,12 +422,14 @@ function renderizarResumoPedido() {
     let html = '';
     let subtotal = 0;
 
-    carrinhoData.forEach(item => {
+    carrinhoData.forEach((item, index) => {
         const itemTotal = item.precoFinal * item.quantidade;
         subtotal += itemTotal;
 
+        const observacaoSanitizada = escaparHTML(item.observacao || '');
+
         html += `
-            <div class="summary-item">
+            <div class="summary-item" data-index="${index}">
                 <img src="${item.imagem || '/imgs/default-product.png'}" alt="${item.nome}" class="summary-item-img" 
                      onerror="this.src='/imgs/default-product.png'">
                 <div class="summary-item-info">
@@ -390,6 +440,15 @@ function renderizarResumoPedido() {
                         </div>
                     ` : ''}
                     <div class="summary-item-qtd">${item.quantidade}x</div>
+                    <div class="summary-item-observacao">
+                        <label for="observacao-item-${index}">Observações do item</label>
+                        <textarea 
+                            id="observacao-item-${index}" 
+                            class="summary-item-observacao-textarea" 
+                            data-index="${index}" 
+                            rows="2"
+                            placeholder="Ex: tirar cebola, cortar ao meio">${observacaoSanitizada}</textarea>
+                    </div>
                 </div>
                 <div class="summary-item-preco">R$ ${formatarPreco(itemTotal)}</div>
             </div>
@@ -397,6 +456,26 @@ function renderizarResumoPedido() {
     });
 
     container.innerHTML = html;
+
+    // Registrar listeners para observações
+    const camposObservacao = container.querySelectorAll('.summary-item-observacao-textarea');
+    camposObservacao.forEach(textarea => {
+        textarea.addEventListener('input', (evento) => {
+            const index = Number(evento.target.dataset.index);
+            if (Number.isNaN(index) || !carrinhoData[index]) {
+                return;
+            }
+
+            const valor = evento.target.value;
+            carrinhoData[index].observacao = valor;
+
+            if (carrinhoRawData[index] && typeof carrinhoRawData[index] === 'object') {
+                carrinhoRawData[index].observacao = valor;
+            }
+
+            salvarCarrinhoRawAtualizado();
+        });
+    });
     
     // Atualizar totais
     const totalTaxaEntrega = calcularTaxaEntrega(subtotal);
@@ -678,12 +757,16 @@ async function confirmarPedido() {
         const pedidoData = {
             idendereco: enderecoSelecionado.idendereco,
             idforma_pagamento: formaPagamentoSelecionada.idforma_pagamento,
-            itens: carrinhoData.map(item => ({
-                idproduto: item.idproduto,
-                quantidade: item.quantidade,
-                preco_unitario: item.precoFinal,
-                opcionais: item.opcionais || []
-            })),
+            itens: carrinhoData.map(item => {
+                const observacaoItem = item.observacao ? item.observacao.trim() : '';
+                return {
+                    idproduto: item.idproduto,
+                    quantidade: item.quantidade,
+                    preco_unitario: item.precoFinal,
+                    observacao: observacaoItem.length > 0 ? observacaoItem : null,
+                    opcionais: item.opcionais || []
+                };
+            }),
             valor_total: totalFinal,
             valor_entrega: totalTaxaEntrega,
             observacoes: observacoes,
@@ -694,7 +777,7 @@ async function confirmarPedido() {
         // Se usuário está logado, enviar pedido para o backend
         if (isUsuarioLogado()) {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/pedidos/criar', {
+            const response = await fetch('/api/pedidos', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -710,18 +793,22 @@ async function confirmarPedido() {
                 return;
             }
 
-            const result = await response.json();
+            const resultado = await response.json();
 
             if (response.ok) {
                 // Limpar carrinho
                 localStorage.removeItem('julaosBurger_carrinho');
                 localStorage.removeItem('cart');
                 
-                // Redirecionar para página de sucesso
-                alert('Pedido realizado com sucesso!');
-                window.location.href = '/pedidos_cliente.html';
+                // Redirecionar para a tela de acompanhamento do pedido
+                const pedidoId = resultado?.pedidoId;
+                const rotaAcompanhamento = pedidoId
+                    ? `/pedidos_cliente?pedido=${pedidoId}`
+                    : '/pedidos_cliente';
+
+                window.location.href = rotaAcompanhamento;
             } else {
-                alert('Erro ao confirmar pedido: ' + (result.erro || 'Erro desconhecido'));
+                alert('Erro ao confirmar pedido: ' + (resultado.erro || 'Erro desconhecido'));
             }
         } else {
             // Usuário não logado, salvar pedido localmente
@@ -761,4 +848,17 @@ function salvarPedidoLocal(pedidoData) {
 // Função auxiliar para formatar preço
 function formatarPreco(valor) {
     return valor.toFixed(2).replace('.', ',');
+}
+
+function escaparHTML(texto) {
+    if (!texto) {
+        return '';
+    }
+
+    return String(texto)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }

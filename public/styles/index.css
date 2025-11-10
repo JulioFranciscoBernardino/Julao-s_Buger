@@ -601,15 +601,15 @@ body button {
 
 /* Conteúdo do modal do produto */
 .modal-product {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  align-items: stretch;
 }
 
 .modal-product-image {
   width: 100%;
-  height: 250px;
+  max-height: 320px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 12px;
   overflow: hidden;
@@ -621,6 +621,7 @@ body button {
 .modal-product-image img {
   width: 100%;
   height: 100%;
+  max-height: 320px;
   object-fit: cover;
 }
 
@@ -633,7 +634,7 @@ body button {
 .modal-product-info {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .modal-product-title {
@@ -656,6 +657,40 @@ body button {
   font-size: 1rem;
   line-height: 1.6;
   margin: 0;
+}
+
+.modal-observacao {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-observacao label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #343a40;
+}
+
+.modal-observacao-textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 90px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-observacao-textarea:focus {
+  outline: none;
+  border-color: #e8b705;
+  box-shadow: 0 0 0 3px rgba(232, 183, 5, 0.2);
+}
+
+.modal-observacao small {
+  font-size: 0.78rem;
+  color: #6c757d;
 }
 
 .modal-product-actions {
@@ -921,7 +956,7 @@ body button {
   }
 
   .modal-product-image {
-    height: 200px;
+    max-height: 220px;
   }
 
   .modal-product-actions {
@@ -933,6 +968,19 @@ body button {
     width: 100%;
     justify-content: center;
   }
+}
+
+.cart-item-observacao {
+  margin-top: 0.35rem;
+  color: #92400e;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cart-item-observacao i {
+  font-size: 0.75rem;
 }
 
 @media (max-width: 480px) {

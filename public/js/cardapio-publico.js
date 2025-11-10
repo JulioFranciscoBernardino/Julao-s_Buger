@@ -331,6 +331,18 @@ async function abrirModalProduto(produto) {
                 <div class="modal-product-description">
                     ${produto.descricao || 'Sem descrição disponível.'}
                 </div>
+
+                <div class="modal-observacao">
+                    <label for="observacaoProduto">
+                        Observações para este item
+                    </label>
+                    <textarea
+                        id="observacaoProduto"
+                        class="modal-observacao-textarea"
+                        rows="3"
+                        placeholder="Ex: retirar cebola, ponto da carne, maionese à parte..."></textarea>
+                    <small>Estas observações serão enviadas apenas para este produto.</small>
+                </div>
                 
                 <!-- Seção de Grupos de Opcionais -->
                 <div id="opcionaisSection" class="opcionais-section" ${gruposOpcionais.length === 0 ? 'style="display: none;"' : ''}>
@@ -677,6 +689,15 @@ function mostrarMensagemValidacao(gruposInvalidos) {
 
 // Estrutura do carrinho (armazenada no localStorage)
 let carrinho = [];
+const sanitizeHtml = (texto) => {
+    if (!texto) return '';
+    return String(texto)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
 
 // Inicializar carrinho do localStorage
 function inicializarCarrinho() {
@@ -684,6 +705,13 @@ function inicializarCarrinho() {
     if (carrinhoSalvo) {
         try {
             carrinho = JSON.parse(carrinhoSalvo);
+            if (!Array.isArray(carrinho)) {
+                carrinho = [];
+            }
+            carrinho = carrinho.map(item => ({
+                ...item,
+                observacao: item && typeof item.observacao === 'string' ? item.observacao : ''
+            }));
         } catch (error) {
             console.error('Erro ao carregar carrinho:', error);
             carrinho = [];
@@ -729,6 +757,9 @@ function adicionarAoCarrinhoComOpcionais(idproduto) {
     const imagemProduto = imagemElement ? imagemElement.src : null;
     
     // Criar item do carrinho
+    const campoObservacao = document.getElementById('observacaoProduto');
+    const observacaoTexto = campoObservacao ? campoObservacao.value.trim() : '';
+
     const itemCarrinho = {
         id: Date.now(), // ID único para o item
         produtoId: idproduto,
@@ -743,12 +774,17 @@ function adicionarAoCarrinhoComOpcionais(idproduto) {
             quantidade: opcional.quantidade,
             nome: obterNomeOpcional(opcional.id)
         })),
-        imagem: imagemProduto
+        imagem: imagemProduto,
+        observacao: observacaoTexto
     };
     
     // Adicionar ao carrinho
     carrinho.push(itemCarrinho);
     salvarCarrinho();
+
+    if (campoObservacao) {
+        campoObservacao.value = '';
+    }
     
     // Mostrar feedback visual
     mostrarNotificacaoCarrinho(produtoNome);
@@ -844,6 +880,12 @@ function atualizarCarrinho() {
                             ${item.opcionais.map(op => `
                                 <small>${op.quantidade}x ${op.nome}${op.preco > 0 ? ` (+R$ ${formatarPreco(op.preco)})` : ''}</small>
                             `).join('')}
+                        </div>
+                    ` : ''}
+                    ${item.observacao ? `
+                        <div class="cart-item-observacao">
+                            <i class="fas fa-sticky-note"></i>
+                            <small>${sanitizeHtml(item.observacao)}</small>
                         </div>
                     ` : ''}
                     <div class="cart-item-price">R$ ${formatarPreco(item.precoFinal)}</div>
