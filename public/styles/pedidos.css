@@ -1345,6 +1345,16 @@ body {
     transform: translateY(-1px);
 }
 
+.btn-imprimir {
+    background: #2c3e50;
+    color: white;
+}
+
+.btn-imprimir:hover {
+    background: #1a252f;
+    transform: translateY(-1px);
+}
+
 .action-btn:disabled {
     background: #e9ecef;
     color: #6c757d;
@@ -2210,3 +2220,4 @@ body {
         justify-content: center;
     }
 }
+

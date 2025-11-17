@@ -1,5 +1,6 @@
 const db = require('../config/bd');
 const jwt = require('jsonwebtoken');
+const Usuario = require('../models/usuarioModel');
 
 async function carregarItensDetalhados(pedidoId) {
     const itensQuery = `
@@ -124,9 +125,23 @@ class PedidoController {
             const params = [];
             let whereClause = 'p.excluido = 0';
 
+            // SEMPRE filtrar apenas pedidos do dia atual (sem exceções)
+            // Pedidos de dias anteriores NÃO devem aparecer no gestor
+            // Se houver parâmetro 'data' na query, usar essa data específica (para relatórios/histórico)
             if (req.query.data) {
-                whereClause += ' AND DATE(p.data_pedido) = ?';
-                params.push(req.query.data);
+                // Validar formato da data (YYYY-MM-DD)
+                const dataRegex = /^\d{4}-\d{2}-\d{2}$/;
+                if (dataRegex.test(req.query.data)) {
+                    whereClause += ' AND DATE(p.data_pedido) = ?';
+                    params.push(req.query.data);
+                } else {
+                    // Se a data for inválida, usar data atual
+                    whereClause += ' AND DATE(p.data_pedido) = CURDATE()';
+                }
+            } else {
+                // Por padrão: APENAS pedidos do dia atual
+                // CURDATE() retorna a data atual do servidor MySQL (formato YYYY-MM-DD)
+                whereClause += ' AND DATE(p.data_pedido) = CURDATE()';
             }
 
             if (req.query.status) {
@@ -476,16 +491,140 @@ class PedidoController {
                 return res.status(400).json({ erro: 'Status inválido' });
             }
 
-            const query = `
-                UPDATE pedido 
-                SET status = ? 
-                WHERE idpedido = ? AND idusuario = ? AND ativo = 1
-            `;
+            // Verificar se é admin - admin pode atualizar qualquer pedido
+            const isAdmin = req.usuario.type === 'admin' || req.usuario.type === 'adm';
+            
+            let query;
+            let params;
+            
+            // IMPORTANTE: Usar UPDATE com condição WHERE para garantir que só atualiza se o status for diferente
+            // Isso evita duplicação quando a função é chamada duas vezes simultaneamente
+            if (isAdmin) {
+                if (statusConvertido === 'concluido') {
+                    // Para status "concluido", só atualizar se o status atual NÃO for "concluido"
+                    query = `
+                        UPDATE pedido 
+                        SET status = ? 
+                        WHERE idpedido = ? AND ativo = 1 AND status != 'concluido'
+                    `;
+                } else {
+                    query = `
+                        UPDATE pedido 
+                        SET status = ? 
+                        WHERE idpedido = ? AND ativo = 1
+                    `;
+                }
+                params = [statusConvertido, id];
+            } else {
+                if (statusConvertido === 'concluido') {
+                    // Para status "concluido", só atualizar se o status atual NÃO for "concluido"
+                    query = `
+                        UPDATE pedido 
+                        SET status = ? 
+                        WHERE idpedido = ? AND idusuario = ? AND ativo = 1 AND status != 'concluido'
+                    `;
+                } else {
+                    query = `
+                        UPDATE pedido 
+                        SET status = ? 
+                        WHERE idpedido = ? AND idusuario = ? AND ativo = 1
+                    `;
+                }
+                params = [statusConvertido, id, userId];
+            }
 
-            const [result] = await db.execute(query, [statusConvertido, id, userId]);
+            const [result] = await db.execute(query, params);
 
             if (result.affectedRows === 0) {
-                return res.status(404).json({ erro: 'Pedido não encontrado' });
+                // Se nenhuma linha foi afetada, verificar se o pedido existe e qual é o status atual
+                const verificarQuery = `
+                    SELECT status, idusuario 
+                    FROM pedido 
+                    WHERE idpedido = ? AND ativo = 1
+                `;
+                const [pedidoVerificado] = await db.execute(verificarQuery, [id]);
+                
+                if (pedidoVerificado.length === 0) {
+                    // Pedido não existe
+                    return res.status(404).json({ erro: 'Pedido não encontrado' });
+                }
+                
+                const statusAtual = pedidoVerificado[0].status;
+                
+                // Se o pedido já está com o status desejado, retornar sucesso (não é um erro)
+                if (statusAtual === statusConvertido) {
+                    console.log(`[STATUS] Pedido ${id} já está com status "${statusConvertido}"`);
+                    return res.json({ 
+                        mensagem: `Pedido já está com status "${statusConvertido}"`,
+                        statusAtual: statusAtual
+                    });
+                }
+                
+                // Se o status é diferente mas não foi atualizado, pode ser problema de permissão
+                if (!isAdmin) {
+                    const pedidoUserId = pedidoVerificado[0].idusuario;
+                    if (pedidoUserId !== userId) {
+                        return res.status(403).json({ erro: 'Você não tem permissão para atualizar este pedido' });
+                    }
+                }
+                
+                // Outro motivo (ex: tentando atualizar para "concluido" mas já está concluído)
+                if (statusConvertido === 'concluido' && statusAtual === 'concluido') {
+                    console.log('[FIDELIDADE] Pedido já estava concluído, ignorando atualização...');
+                    return res.json({ 
+                        mensagem: 'Pedido já está concluído',
+                        statusAtual: statusAtual
+                    });
+                }
+                
+                return res.status(400).json({ 
+                    erro: 'Não foi possível atualizar o status do pedido',
+                    statusAtual: statusAtual
+                });
+            }
+
+            // Se o pedido foi concluído E a atualização foi bem-sucedida, adicionar pontos
+            // Como usamos "status != 'concluido'" no WHERE, sabemos que o status mudou de algo para "concluido"
+            if (statusConvertido === 'concluido' && result.affectedRows > 0) {
+                try {
+                    // Buscar dados do pedido para calcular pontos
+                    const pedidoQuery = `
+                        SELECT idusuario 
+                        FROM pedido 
+                        WHERE idpedido = ?
+                    `;
+                    const [pedidos] = await db.execute(pedidoQuery, [id]);
+                    
+                    if (pedidos.length > 0) {
+                        const pedidoUserId = pedidos[0].idusuario;
+                        
+                        // Calcular valor total a partir dos itens do pedido
+                        const { totalItens } = await carregarItensDetalhados(id);
+                        const valorTotal = totalItens || 0;
+                        
+                        if (valorTotal > 0 && pedidoUserId) {
+                            // Calcular pontos: o valor total do pedido (arredondado para inteiro)
+                            const pontosGanhos = Math.round(valorTotal);
+                            
+                            console.log(`[FIDELIDADE] Adicionando ${pontosGanhos} pontos para o usuário ${pedidoUserId} (valor total: R$ ${valorTotal.toFixed(2)})`);
+                            
+                            if (pontosGanhos > 0 && pontosGanhos !== null && pontosGanhos !== undefined && !isNaN(pontosGanhos)) {
+                                const resultadoPontos = await Usuario.adicionarPontos(pedidoUserId, pontosGanhos);
+                                
+                                if (resultadoPontos) {
+                                    console.log(`✓ [FIDELIDADE] Pontos adicionados com sucesso: ${pontosGanhos} pontos para o usuário ${pedidoUserId}`);
+                                } else {
+                                    console.error(`✗ [FIDELIDADE] Falha ao adicionar pontos: nenhuma linha afetada para o usuário ${pedidoUserId}`);
+                                }
+                            } else {
+                                console.warn(`[FIDELIDADE] Pontos inválidos: ${pontosGanhos} (valor total: ${valorTotal})`);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    // Log do erro mas não falhar a atualização do status
+                    console.error('[FIDELIDADE] Erro ao adicionar pontos:', error);
+                }
             }
 
             res.json({ mensagem: 'Status atualizado com sucesso' });

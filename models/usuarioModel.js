@@ -35,6 +35,39 @@ class Usuario {
         );
         return resultado.affectedRows > 0;
     }
+
+    static async adicionarPontos(idusuario, pontos) {
+        // Garantir que pontos seja um número inteiro válido
+        const pontosInt = parseInt(pontos, 10);
+        
+        if (isNaN(pontosInt) || pontosInt <= 0) {
+            console.error(`Tentativa de adicionar pontos inválidos: ${pontos} para usuário ${idusuario}`);
+            return false;
+        }
+        
+        try {
+            const [resultado] = await pool.query(
+                'UPDATE usuario SET pontos = COALESCE(pontos, 0) + ? WHERE idusuario = ?',
+                [pontosInt, idusuario]
+            );
+            
+            console.log(`Query executada: UPDATE usuario SET pontos = COALESCE(pontos, 0) + ${pontosInt} WHERE idusuario = ${idusuario}`);
+            console.log(`Linhas afetadas: ${resultado.affectedRows}`);
+            
+            return resultado.affectedRows > 0;
+        } catch (error) {
+            console.error('Erro na query de adicionar pontos:', error);
+            throw error;
+        }
+    }
+
+    static async buscarPontos(idusuario) {
+        const [rows] = await pool.query(
+            'SELECT pontos FROM usuario WHERE idusuario = ?',
+            [idusuario]
+        );
+        return rows[0]?.pontos || 0;
+    }
 }
 
 module.exports = Usuario;
