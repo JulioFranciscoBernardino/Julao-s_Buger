@@ -1,6 +1,7 @@
 const db = require('../config/bd');
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/usuarioModel');
+const whatsappService = require('../services/whatsappService');
 
 async function carregarItensDetalhados(pedidoId) {
     const itensQuery = `
@@ -442,6 +443,29 @@ class PedidoController {
                 await connection.commit();
                 connection.release();
 
+                // Enviar confirmação via WhatsApp se o cliente tiver telefone cadastrado
+                try {
+                    const usuarioQuery = `SELECT nome, telefone FROM usuario WHERE idusuario = ?`;
+                    const [usuarios] = await db.execute(usuarioQuery, [userId]);
+                    
+                    if (usuarios.length > 0 && usuarios[0].telefone) {
+                        const pedido = { idpedido: pedidoId };
+                        // Buscar itens detalhados do pedido
+                        const { itensDetalhados } = await carregarItensDetalhados(pedidoId);
+                        
+                        // Enviar confirmação (em background, não bloquear resposta)
+                        whatsappService.sendOrderConfirmation(pedido, itensDetalhados, totalPedido, usuarios[0].telefone)
+                            .then(() => {
+                                console.log(`✅ Confirmação WhatsApp enviada para pedido #${pedidoId}`);
+                            })
+                            .catch((error) => {
+                                console.error(`❌ Erro ao enviar confirmação WhatsApp para pedido #${pedidoId}:`, error);
+                            });
+                    }
+                } catch (error) {
+                    console.error('[WHATSAPP] Erro ao enviar confirmação de pedido:', error);
+                }
+
                 res.status(201).json({
                     mensagem: 'Pedido criado com sucesso',
                     pedidoId: pedidoId,
@@ -624,6 +648,45 @@ class PedidoController {
                 } catch (error) {
                     // Log do erro mas não falhar a atualização do status
                     console.error('[FIDELIDADE] Erro ao adicionar pontos:', error);
+                }
+            }
+
+            // Enviar notificação via WhatsApp se o status foi atualizado com sucesso
+            if (result.affectedRows > 0) {
+                try {
+                    // Buscar dados do pedido e do cliente
+                    const pedidoQuery = `
+                        SELECT p.idpedido, p.status, p.idusuario, u.nome, u.telefone
+                        FROM pedido p
+                        JOIN usuario u ON p.idusuario = u.idusuario
+                        WHERE p.idpedido = ?
+                    `;
+                    const [pedidos] = await db.execute(pedidoQuery, [id]);
+                    
+                    if (pedidos.length > 0) {
+                        const pedido = pedidos[0];
+                        const telefoneCliente = pedido.telefone;
+                        
+                        // Se o cliente tem telefone cadastrado, enviar notificação
+                        if (telefoneCliente) {
+                            // Buscar itens do pedido para a mensagem
+                            const { itensDetalhados, totalItens } = await carregarItensDetalhados(id);
+                            
+                            // Enviar notificação de atualização de status (em background, não bloquear resposta)
+                            whatsappService.sendStatusUpdate(pedido, statusConvertido, telefoneCliente)
+                                .then(() => {
+                                    console.log(`✅ Notificação WhatsApp enviada para pedido #${id}`);
+                                })
+                                .catch((error) => {
+                                    console.error(`❌ Erro ao enviar notificação WhatsApp para pedido #${id}:`, error);
+                                });
+                        } else {
+                            console.log(`⚠️ Cliente do pedido #${id} não tem telefone cadastrado`);
+                        }
+                    }
+                } catch (error) {
+                    // Log do erro mas não falhar a atualização do status
+                    console.error('[WHATSAPP] Erro ao enviar notificação:', error);
                 }
             }
 
