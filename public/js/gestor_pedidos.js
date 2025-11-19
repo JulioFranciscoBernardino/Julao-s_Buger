@@ -1,229 +1,101 @@
-/**
- * Módulo de Impressão de Comandas
- * Responsável apenas pela geração e impressão de comandas de pedidos
- */
-
-// ============================================
-// FUNÇÕES AUXILIARES DE AUTENTICAÇÃO
-// ============================================
-
-function obterToken() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/login_cadastro.html';
-        return null;
+// Menu mobile toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const navbarToggle = document.querySelector('.navbar-toggle');
+    const navbarCenter = document.querySelector('.navbar-center');
+    
+    if (navbarToggle && navbarCenter) {
+        navbarToggle.addEventListener('click', () => {
+            navbarToggle.classList.toggle('active');
+            navbarCenter.classList.toggle('active');
+        });
     }
-    return token;
-}
+});
 
-function headersAutenticados(extraHeaders = {}) {
-    const token = obterToken();
-    if (!token) return null;
-    return {
-        ...extraHeaders,
-        Authorization: `Bearer ${token}`
-    };
-}
+// Variáveis globais de pedidos
+let pedidos = [];
+let pedidosAgrupadosPorStatus = {};
+let textoBuscaPainel = '';
+const statusOrdem = ['pendente', 'aceito', 'preparo', 'entrega', 'concluido'];
+const statusLabels = {
+    pendente: 'Pendente',
+    aceito: 'Aceito',
+    preparo: 'Em Preparo',
+    entrega: 'Para Entrega',
+    concluido: 'Concluído',
+    cancelado: 'Cancelado'
+};
+const SOM_PEDIDOS_ARQUIVO = '/sound/bell-2-123742.mp3';
+let audioNovoPedido = null;
+let ultimoTotalPendentes = 0;
+let requisicaoAudioLiberada = false;
+const statusEntradaMap = {
+    pendente: 'pendente',
+    aceito: 'aceito',
+    preparando: 'preparo',
+    pronto: 'entrega',
+    entregue: 'entrega',
+    concluido: 'concluido',
+    cancelado: 'cancelado'
+};
 
-// ============================================
-// FUNÇÕES AUXILIARES DE FORMATAÇÃO
-// ============================================
+// Funções auxiliares de autenticação e formatação são fornecidas por impressao.js
 
-function formatarDataHora(dataIso) {
-    if (!dataIso) return { data: '-', hora: '-' };
-    const data = new Date(dataIso);
-    if (Number.isNaN(data.getTime())) return { data: '-', hora: '-' };
-    return {
-        data: data.toLocaleDateString('pt-BR'),
-        hora: data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    };
-}
-
-function formatarPreco(valor) {
-    const numero = parseFloat(valor ?? 0);
-    if (Number.isNaN(numero)) return '0,00';
-    return numero.toFixed(2).replace('.', ',');
-}
-
-function montarEnderecoPedido(pedido) {
-    const enderecoObj = pedido.endereco || {};
-    const logradouro = pedido.logradouro || enderecoObj.logradouro || '';
-    const numero = pedido.numero || enderecoObj.numero || '';
-    const bairro = pedido.bairro || enderecoObj.bairro || '';
-    const cidade = pedido.cidade || enderecoObj.cidade || '';
-    const estado = pedido.estado || enderecoObj.estado || '';
-    const cep = pedido.cep || enderecoObj.cep || '';
-
-    const partes = [
-        logradouro,
-        numero ? `, ${numero}` : '',
-        bairro ? ` - ${bairro}` : '',
-        cidade ? ` - ${cidade}` : '',
-        estado ? `/${estado}` : ''
-    ];
-    const endereco = partes.join('').trim();
-    const cepFormatado = cep ? ` CEP: ${cep}` : '';
-    return (endereco || '-') + cepFormatado;
-}
-
-// ============================================
-// GERAÇÃO DE HTML PARA IMPRESSÃO
-// ============================================
-
-function gerarHTMLComanda(pedido) {
-    const { data, hora } = formatarDataHora(pedido.data_pedido || pedido.data);
-    const numeroPedido = String(pedido.idpedido).padStart(3, '0');
-    const nomeCliente = pedido.nome_cliente || pedido.cliente || 'Cliente';
-    const telefone = pedido.telefone_cliente || pedido.telefone || '-';
-    const endereco = pedido.endereco_formatado || montarEnderecoPedido(pedido);
-    const total = formatarPreco(pedido.totalPedido ?? pedido.valor_total ?? pedido.total ?? 0);
-
-    let html = '<div class="comanda-impressao">';
-
-    html += '<div class="comanda-header">';
-    html += '<div class="comanda-titulo">JULAO\'S BURGER</div>';
-    html += '<div class="comanda-linha"></div>';
-    html += '</div>';
-
-    html += '<div class="comanda-secao">';
-    html += '<div class="comanda-secao-titulo">PEDIDO #' + numeroPedido + '</div>';
-    html += '<div>Data: ' + data + ' ' + hora + '</div>';
-    html += '<div class="comanda-linha"></div>';
-    html += '</div>';
-
-    html += '<div class="comanda-secao">';
-    html += '<div class="comanda-secao-titulo">CLIENTE:</div>';
-    html += '<div>' + nomeCliente + '</div>';
-    html += '<div>Tel: ' + telefone + '</div>';
-    html += '<div class="comanda-linha"></div>';
-    html += '</div>';
-
-    html += '<div class="comanda-secao">';
-    html += '<div class="comanda-secao-titulo">ENTREGA:</div>';
-    html += '<div>' + endereco + '</div>';
-    html += '<div class="comanda-linha"></div>';
-    html += '</div>';
-
-    html += '<div class="comanda-secao">';
-    html += '<div class="comanda-secao-titulo">ITENS:</div>';
-
-    const itensPedido = Array.isArray(pedido.itens) ? pedido.itens : [];
-    itensPedido.forEach((item, index) => {
-        const nomeItem = item.nome || item.produto_nome || 'Produto';
-        const quantidade = item.quantidade ?? item.qtd ?? 1;
-        const precoItem = formatarPreco(item.preco || item.preco_unitario || 0);
-
-        html += '<div class="comanda-item">';
-        html += '<div class="comanda-item-numero">' + (index + 1) + '. ' + nomeItem + '</div>';
-        html += '<div class="comanda-item-detalhes">Qtd: ' + quantidade + ' x R$ ' + precoItem + '</div>';
-
-        if (Array.isArray(item.opcionais) && item.opcionais.length > 0) {
-            html += '<div class="comanda-opcionais">Opcionais:</div>';
-            item.opcionais.forEach(opcional => {
-                const nomeOpcional = opcional.nome || '';
-                const precoOpcional = opcional.preco > 0 ? ' (+R$ ' + formatarPreco(opcional.preco) + ')' : '';
-                const qtdOpcional = opcional.quantidade > 1 ? ' x' + opcional.quantidade : '';
-                html += '<div class="comanda-opcionais">- ' + nomeOpcional + qtdOpcional + precoOpcional + '</div>';
-            });
-        }
-
-        if (item.observacao) {
-            html += '<div class="comanda-observacao">Obs: ' + item.observacao + '</div>';
-        }
-
-        html += '</div>';
-    });
-
-    html += '<div class="comanda-linha"></div>';
-    html += '</div>';
-
-    html += '<div class="comanda-total">TOTAL: R$ ' + total + '</div>';
-    html += '<div class="comanda-linha"></div>';
-    html += '<div class="comanda-rodape">Obrigado pela preferência!</div>';
-    html += '</div>';
-
-    return html;
-}
-
-// ============================================
-// FUNÇÕES DE IMPRESSÃO
-// ============================================
-
-async function buscarPedidoCompleto(pedidoId) {
+function isAdmin() {
     try {
-        const headers = headersAutenticados();
-        if (!headers) return null;
-
-        const response = await fetch(`/api/pedidos/${pedidoId}`, { headers });
-        if (!response.ok) {
-            throw new Error('Erro ao buscar pedido');
-        }
-
-        const pedido = await response.json();
-        return pedido;
+        const token = obterToken();
+        if (!token) return false;
+        
+        // Decodificar token JWT (sem verificar assinatura, apenas para ler o payload)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.type === 'admin' || payload.type === 'adm';
     } catch (error) {
-        console.error('Erro ao buscar pedido completo:', error);
-        return null;
-    }
-}
-
-async function imprimirComanda(pedido) {
-    try {
-        const htmlComanda = gerarHTMLComanda(pedido);
-        const areaImpressao = document.getElementById('areaImpressao');
-        if (!areaImpressao) {
-            console.error('Área de impressão não encontrada');
-            return false;
-        }
-
-        areaImpressao.innerHTML = htmlComanda;
-        areaImpressao.style.display = 'block';
-
-        await new Promise(resolve => setTimeout(resolve, 100));
-        window.print();
-
-        setTimeout(() => {
-            areaImpressao.style.display = 'none';
-            areaImpressao.innerHTML = '';
-        }, 500);
-
-        return true;
-    } catch (error) {
-        console.error('Erro ao imprimir comanda:', error);
+        console.error('Erro ao verificar se é admin:', error);
         return false;
     }
 }
 
-async function imprimirComandaManual(pedidoId) {
+async function carregarPedidos() {
     try {
-        let pedidoParaImpressao = typeof pedidos !== 'undefined'
-            ? pedidos.find(p => p.idpedido === pedidoId)
-            : null;
+        const headers = headersAutenticados();
+        if (!headers) return false;
 
-        if (!pedidoParaImpressao || !pedidoParaImpressao.itens || pedidoParaImpressao.itens.length === 0) {
-            pedidoParaImpressao = await buscarPedidoCompleto(pedidoId);
+        // Se for admin, usar rota de admin (que já filtra por data atual)
+        // Se for usuário comum, usar rota normal
+        const url = isAdmin() ? '/api/pedidos/admin' : '/api/pedidos';
+        
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/login_cadastro.html';
+                return false;
+            }
+            throw new Error('Erro ao buscar pedidos');
         }
 
-        if (!pedidoParaImpressao) {
-            alert('Não foi possível carregar os dados do pedido para impressão.');
-            return;
-        }
-
-        const pedidoFormatado = {
-            ...pedidoParaImpressao,
-            idpedido: pedidoParaImpressao.idpedido || pedidoId,
-            nome_cliente: pedidoParaImpressao.nome_cliente || pedidoParaImpressao.cliente?.nome || pedidoParaImpressao.cliente || 'Cliente',
-            telefone_cliente: pedidoParaImpressao.telefone_cliente || pedidoParaImpressao.cliente?.telefone || pedidoParaImpressao.telefone || '',
-            endereco_formatado: pedidoParaImpressao.endereco_formatado || montarEnderecoPedido(pedidoParaImpressao),
-            data_pedido: pedidoParaImpressao.data_pedido || pedidoParaImpressao.data,
-            totalPedido: pedidoParaImpressao.totalPedido || pedidoParaImpressao.total || pedidoParaImpressao.valor_total || 0,
-            itens: pedidoParaImpressao.itens || []
-        };
-
-        await imprimirComanda(pedidoFormatado);
+        const pedidosApi = await response.json();
+        pedidos = Array.isArray(pedidosApi)
+            ? pedidosApi.map(p => {
+                const statusConvertido = statusEntradaMap[(p.status || '').toLowerCase()] || (p.status || '').toLowerCase();
+                return {
+                    ...p,
+                    status_original: p.status,
+                    status: statusConvertido,
+                    endereco_formatado: montarEnderecoPedido(p)
+                };
+            })
+            : [];
+        agruparPedidosPorStatus();
+        renderizarColunas();
+        return true;
     } catch (error) {
-        console.error('Erro ao imprimir comanda:', error);
-        alert('Erro ao imprimir comanda. Tente novamente.');
+        console.error('Erro ao carregar pedidos:', error);
+        ['pendente', 'aceito', 'preparo', 'entrega', 'concluido'].forEach(status => {
+            const container = document.getElementById(`pedidos-${status}`);
+            if (container) {
+                container.innerHTML = '<div class="empty-status erro">Erro ao carregar pedidos</div>';
+            }
+        });
+        return false;
     }
 }
 
@@ -634,42 +506,6 @@ async function cancelarPedido(id) {
     } catch (error) {
         console.error('Erro ao cancelar pedido:', error);
         alert('Não foi possível cancelar o pedido.');
-    }
-}
-
-// Função para imprimir comanda manualmente
-async function imprimirComandaManual(pedidoId) {
-    try {
-        // Buscar dados completos do pedido
-            let pedidoParaImpressao = pedidos.find(p => p.idpedido === pedidoId);
-            
-            // Se não tiver dados completos, buscar da API
-            if (!pedidoParaImpressao || !pedidoParaImpressao.itens || pedidoParaImpressao.itens.length === 0) {
-                pedidoParaImpressao = await buscarPedidoCompleto(pedidoId);
-            }
-            
-        if (!pedidoParaImpressao) {
-            alert('Não foi possível carregar os dados do pedido para impressão.');
-            return;
-        }
-        
-                // Garantir que todas as informações necessárias estão presentes
-                const pedidoFormatado = {
-                    ...pedidoParaImpressao,
-                    idpedido: pedidoParaImpressao.idpedido || pedidoId,
-                    nome_cliente: pedidoParaImpressao.nome_cliente || pedidoParaImpressao.cliente?.nome || pedidoParaImpressao.cliente || 'Cliente',
-                    telefone_cliente: pedidoParaImpressao.telefone_cliente || pedidoParaImpressao.cliente?.telefone || pedidoParaImpressao.telefone || '',
-                    endereco_formatado: pedidoParaImpressao.endereco_formatado || montarEnderecoPedido(pedidoParaImpressao),
-                    data_pedido: pedidoParaImpressao.data_pedido || pedidoParaImpressao.data,
-                    totalPedido: pedidoParaImpressao.totalPedido || pedidoParaImpressao.total || pedidoParaImpressao.valor_total || 0,
-                    itens: pedidoParaImpressao.itens || []
-                };
-                
-                // Imprimir comanda
-                await imprimirComanda(pedidoFormatado);
-    } catch (error) {
-        console.error('Erro ao imprimir comanda:', error);
-        alert('Erro ao imprimir comanda. Tente novamente.');
     }
 }
 
