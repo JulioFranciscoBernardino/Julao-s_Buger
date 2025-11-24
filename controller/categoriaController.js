@@ -38,8 +38,24 @@ const categoriaController = {
       await Categoria.atualizarCategoria(req.params.idcategoria, { nome });
       res.json({ message: 'Categoria atualizada com sucesso!' });
     } catch (error) {
-      console.error('Erro ao atualizar categoria:', error);
+      console.error('Erro ao atualizar categoria');
       res.status(500).json({ error: 'Erro ao atualizar categoria' });
+    }
+  },
+
+  reordenarCategorias: async (req, res) => {
+    try {
+      const { categorias } = req.body;
+      
+      if (!categorias || categorias.length === 0) {
+        return res.status(400).json({ error: 'Lista de categorias vazia' });
+      }
+      
+      await Categoria.reordenarCategorias(categorias);
+      res.json({ message: 'Categorias reordenadas com sucesso!' });
+    } catch (error) {
+      console.error('Erro ao reordenar categorias');
+      res.status(500).json({ error: 'Erro ao reordenar categorias' });
     }
   }
 };

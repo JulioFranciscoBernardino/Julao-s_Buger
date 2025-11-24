@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
             produtos
         });
     } catch (error) {
-        console.error('Erro ao carregar categorias e produtos:', error);
+        console.error('Erro ao carregar categorias e produtos');
         res.status(500).send('Erro ao carregar o cardápio');
     }
 });

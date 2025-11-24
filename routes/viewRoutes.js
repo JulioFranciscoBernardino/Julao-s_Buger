@@ -41,4 +41,8 @@ router.get('/conta', authJWTQuery, (req, res) => {
     res.sendFile(path.join(__dirname, '../view/conta.html'));
 });
 
+router.get('/horarios-funcionamento', (req, res) => {
+    res.sendFile(path.join(__dirname, '../view/horarios_funcionamento.html'));
+});
+
 module.exports = router;

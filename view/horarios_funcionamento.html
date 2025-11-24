@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Julão's Burger - Horários de Funcionamento</title>
+  <link rel="shortcut icon" href="/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
+  <link rel="stylesheet" href="/styles/navbar.css" />
+  <link rel="stylesheet" href="/styles/formCardapio.css" />
+  <link rel="stylesheet" href="/styles/horariosFuncionamento.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  <!-- NAVBAR APPLE-STYLE -->
+  <nav class="apple-navbar">
+    <div class="navbar-container">
+      <div class="navbar-left">
+        <a href="/index" class="navbar-logo">
+          <img src="/imgs/Logo Julãos Burguinho.png" alt="Julão's Burger" class="logo-img">
+          <span class="logo-text">Julão's Burger Mega Lanches</span>
+        </a>
+      </div>
+      
+      <div class="navbar-center">
+        <ul class="navbar-menu">
+          <li><a href="admin_dashboard" class="nav-link">Home</a></li>
+          <li><a href="cardapio" class="nav-link">Cardápio</a></li>
+          <li><a href="pedidos" class="nav-link">Pedidos</a></li>
+          <li><a href="horarios-funcionamento" class="nav-link active">Horários</a></li>
+        </ul>
+      </div>
+      
+      <div class="navbar-right">
+        <button id="logoutBtn" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+      
+      <button class="navbar-toggle" type="button" aria-label="Toggle navigation">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div class="horarios-container">
+    <div class="horarios-header">
+      <h1><i class="fas fa-clock"></i> Horários de Funcionamento</h1>
+      <p>Configure os horários de abertura e fechamento da loja para cada dia da semana</p>
+      <p style="color: #666; font-size: 0.9rem; margin-top: 0.5rem;">
+        <i class="fas fa-info-circle"></i> Horários considerados no fuso horário de Brasília, Brasil (UTC-3)
+      </p>
+    </div>
+
+    <div id="horariosLista">
+      <!-- Horários serão carregados aqui -->
+    </div>
+
+    <button id="btnSalvarHorarios" class="btn-salvar-horarios">
+      <i class="fas fa-save"></i> Salvar Horários
+    </button>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p class="loading-text">Salvando...</p>
+    </div>
+  </div>
+
+  <script src="/js/login_cadastro.js"></script>
+  <script src="/js/admin-check.js"></script>
+  <script src="/js/horariosFuncionamento.js"></script>
+</body>
+</html>
+

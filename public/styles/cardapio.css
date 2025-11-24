@@ -158,6 +158,7 @@
 
 .grupo-item {
   padding: 1rem;
+  padding-left: 2.5rem;
   margin-bottom: 0.75rem;
   cursor: pointer;
   border: 2px solid transparent;
@@ -455,6 +456,28 @@
   position: relative;
 }
 
+/* === DRAG HANDLE (Mover categoria) === */
+.categoria-handle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  cursor: grab;
+  color: #888;
+  font-size: 1rem;
+  z-index: 1;
+  padding: 5px;
+  transition: color 0.2s;
+}
+
+.categoria-handle:hover {
+  color: #667eea;
+}
+
+.grupo-item {
+  position: relative;
+  padding-left: 40px;
+}
+
 /* Efeito visual durante o arrasto */
 .drag-ghost {
   opacity: 0.6;
@@ -639,6 +662,81 @@
   background: #dc3545;
   color: white;
   box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* Estilos para switch de disponibilidade */
+.produto-disponibilidade {
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.switch-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch-text {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background-color: #28a745;
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+.switch input:focus + .slider {
+  box-shadow: 0 0 1px #28a745;
+}
+
+.switch input:disabled + .slider {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Responsividade dos botões de produto */
@@ -1344,6 +1442,38 @@
 }
 
 .btn-salvar i {
+  font-size: 1rem;
+}
+
+/* Botão de salvar ordenação de categorias */
+.btn-salvar-categorias {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-salvar-categorias:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-salvar-categorias:active {
+  transform: translateY(0);
+}
+
+.btn-salvar-categorias i {
+  margin-right: 0.5rem;
   font-size: 1rem;
 }
 

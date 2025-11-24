@@ -48,8 +48,8 @@ const Produto = {
   cadastrarProduto: async ({ nome, descricao, preco, imagem, idcategoria }) => {
     try {
       await db.query(
-        'INSERT INTO produto (nome, descricao, preco, imagem, idcategoria) VALUES (?,?,?,?,?)',
-        [nome, descricao, preco, imagem, idcategoria]
+        'INSERT INTO produto (nome, descricao, preco, imagem, idcategoria, disponivel) VALUES (?,?,?,?,?,?)',
+        [nome, descricao, preco, imagem, idcategoria, 1]
       );
     } catch (err) {
       throw err;
@@ -197,6 +197,17 @@ const Produto = {
       }));
       
       return opcionaisFormatados;
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  atualizarDisponibilidade: async (idproduto, disponivel) => {
+    try {
+      await db.query(
+        'UPDATE produto SET disponivel = ? WHERE idproduto = ?',
+        [disponivel ? 1 : 0, idproduto]
+      );
     } catch (err) {
       throw err;
     }

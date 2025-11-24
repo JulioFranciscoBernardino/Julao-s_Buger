@@ -27,17 +27,18 @@ document.addEventListener('DOMContentLoaded', function() {
 // Carregar dados do cardápio
 async function carregarCardapio() {
     try {
-        const response = await fetch('/api/cardapio/mostrarCardapio');
+        // Usa a rota específica para cardápio público que já filtra produtos disponíveis
+        const response = await fetch('/api/cardapio/mostrarCardapioPublico');
         if (!response.ok) {
             throw new Error('Erro ao carregar cardápio');
         }
         cardapioData = await response.json();
         
-        // Filtrar apenas produtos ativos
+        // Filtrar apenas produtos ativos (já filtrado por disponibilidade na API)
         if (cardapioData.categorias) {
             cardapioData.categorias = cardapioData.categorias.map(categoria => ({
                 ...categoria,
-                produtos: (categoria.produtos || []).filter(produto => !produto.excluido)
+                produtos: (categoria.produtos || []).filter(produto => !produto.excluido && produto.disponivel === 1)
             }));
         }
     } catch (error) {
@@ -150,7 +151,7 @@ async function renderizarProdutosCategoria(idcategoria, produtos) {
         return;
     }
     
-    const produtosAtivos = produtos.filter(produto => produto.ativo && !produto.excluido);
+    const produtosAtivos = produtos.filter(produto => produto.ativo && !produto.excluido && produto.disponivel === 1);
     
     if (produtosAtivos.length === 0) {
         container.innerHTML = '<p class="sem-produtos">Nenhum produto disponível nesta categoria.</p>';

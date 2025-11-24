@@ -2,7 +2,9 @@
 let lista = null;
 let modal = null;
 let ordenacaoAlterada = false; // Rastreia se a ordenação foi alterada
-let sortableInstance = null; // Instância do Sortable
+let sortableInstance = null; // Instância do Sortable para produtos
+let sortableCategoriasInstance = null; // Instância do Sortable para categorias
+let ordenacaoCategoriasAlterada = false; // Rastreia se a ordenação de categorias foi alterada
 
 // Funções de loading
 function showLoading(message = 'Carregando...') {
@@ -116,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const btnAddOpcional = document.getElementById('btnAddOpcional');
   const btnAddGrupo = document.getElementById('btnAddGrupo');
   const btnSalvarOrdenacao = document.getElementById('btnSalvarOrdenacao');
+  const btnSalvarOrdenacaoCategorias = document.getElementById('btnSalvarOrdenacaoCategorias');
   
   // Botões de ação na área principal
   const btnEditarCategoria = document.querySelector('.btn-acao.editar');
@@ -310,6 +313,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Botão de salvar ordenação de categorias
+  if (btnSalvarOrdenacaoCategorias) {
+    btnSalvarOrdenacaoCategorias.addEventListener('click', () => {
+      salvarOrdenacaoCategorias();
+    });
+  }
+
   // Formulário de grupo de opcionais
   if (formGrupoOpcional) {
     formGrupoOpcional.addEventListener('submit', async (e) => {
@@ -414,17 +424,27 @@ document.addEventListener('DOMContentLoaded', function() {
         // Se há imagem, usar FormData, senão usar JSON
         let response;
         if (temImagem) {
+          const file = fileInput.files[0];
+          console.log('📤 Enviando arquivo:', {
+            name: file.name,
+            size: file.size,
+            type: file.type
+          });
+          
           body = new FormData();
           body.append('nome', nome);
           body.append('descricao', descricao);
           body.append('preco', parseFloat(preco));
           body.append('categoria', parseInt(categoria));
-          body.append('imagem', fileInput.files[0]);
+          body.append('imagem', file);
           body.append('nomeImagem', nomeImagem);
+          
+          console.log('📋 FormData criado, enviando para:', url);
           
           response = await fetch(url, {
             method: method,
             body: body
+            // Não definir Content-Type manualmente - o browser define automaticamente com boundary
           });
         } else {
           body = JSON.stringify({
@@ -572,6 +592,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Não criar detalhes aqui - usar a área existente
 
         div.innerHTML = `
+          <div class="categoria-handle" title="Arrastar para reordenar">
+            <i class="fas fa-bars"></i>
+          </div>
           <div class="grupo-header">
             <h3>${categoria.nome}</h3>
             <span class="grupo-count">${(categoria.produtos || []).filter(p => !p.excluido).length} produtos</span>
@@ -596,7 +619,8 @@ document.addEventListener('DOMContentLoaded', function() {
         lista.insertBefore(div, btnNova);
       });
       
-      
+      // Inicializar Sortable para categorias
+      inicializarSortableCategorias();
     })
     .catch(err => {
       console.error('Erro ao carregar cardápio:', err);
@@ -738,6 +762,7 @@ function carregarProdutosCategoria(categoria) {
               srcImg = '/imgs/' + srcImg;
             }
 
+            const disponivel = produto.disponivel !== undefined ? produto.disponivel : 1;
             prodDiv.innerHTML = `
             <div class="produto-handle" title="Arrastar para reordenar">
               <i class="fas fa-bars"></i>
@@ -746,7 +771,7 @@ function carregarProdutosCategoria(categoria) {
             <div class="produto-conteudo">
               <div class="produto-img">
                 ${srcImg ? 
-                  `<img src="${srcImg}" alt="Imagem do produto">` : 
+                  `<img src="${srcImg}" alt="Imagem do produto" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'placeholder-img\\'><i class=\\'fas fa-image\\'></i><span>Imagem não encontrada</span></div>';">` : 
                   `<div class="placeholder-img"><i class="fas fa-image"></i><span>Sem imagem</span></div>`
                 }
               </div>
@@ -759,9 +784,18 @@ function carregarProdutosCategoria(categoria) {
             </div>
 
             <div class="produto-botoes">
-        <button title="Editar" class="btn-editar" data-id="${produto.idproduto}"><i class="fas fa-pen"></i></button>
-        <button title="Opcionais" class="btn-opcionais" data-id="${produto.idproduto}"><i class="fas fa-martini-glass"></i></button>
-        <button title="Excluir" class="btn-excluir" data-id="${produto.idproduto}"><i class="fas fa-trash"></i></button>
+              <div class="produto-disponibilidade">
+                <label class="switch-label">
+                  <span class="switch-text">Disponível</span>
+                  <label class="switch">
+                    <input type="checkbox" class="switch-disponivel" data-id="${produto.idproduto}" ${disponivel ? 'checked' : ''}>
+                    <span class="slider"></span>
+                  </label>
+                </label>
+              </div>
+              <button title="Editar" class="btn-editar" data-id="${produto.idproduto}"><i class="fas fa-pen"></i></button>
+              <button title="Opcionais" class="btn-opcionais" data-id="${produto.idproduto}"><i class="fas fa-martini-glass"></i></button>
+              <button title="Excluir" class="btn-excluir" data-id="${produto.idproduto}"><i class="fas fa-trash"></i></button>
             </div>
           `;
 
@@ -770,6 +804,9 @@ function carregarProdutosCategoria(categoria) {
 
   // Adicionar event listeners para os botões dos produtos
   adicionarEventListenersProdutos();
+  
+  // Adicionar event listeners para os switches de disponibilidade
+  adicionarEventListenersDisponibilidade();
 
           // Destruir instância anterior do Sortable se existir
           if (sortableInstance) {
@@ -886,6 +923,106 @@ async function salvarOrdenacao() {
   }
 }
 
+// Função para inicializar Sortable para categorias
+function inicializarSortableCategorias() {
+  const listaCategorias = document.getElementById('listaCategorias');
+  if (!listaCategorias) return;
+
+  // Destruir instância anterior se existir
+  if (sortableCategoriasInstance) {
+    sortableCategoriasInstance.destroy();
+  }
+
+  // Criar instância do Sortable para categorias
+  // Excluir o botão "Nova Categoria" e o botão de salvar da ordenação
+  sortableCategoriasInstance = Sortable.create(listaCategorias, {
+    handle: '.categoria-handle',
+    animation: 150,
+    ghostClass: 'drag-ghost',
+    filter: '.btn-novo-grupo, .btn-salvar-categorias', // Excluir botões do drag
+    onEnd: function(evt) {
+      // Marcar que a ordenação foi alterada e mostrar botão de salvar
+      ordenacaoCategoriasAlterada = true;
+      mostrarBotaoSalvarCategorias();
+    }
+  });
+}
+
+// Função para mostrar o botão de salvar ordenação de categorias
+function mostrarBotaoSalvarCategorias() {
+  const btnSalvar = document.getElementById('btnSalvarOrdenacaoCategorias');
+  if (btnSalvar) {
+    btnSalvar.style.display = 'block';
+  }
+}
+
+// Função para esconder o botão de salvar ordenação de categorias
+function esconderBotaoSalvarCategorias() {
+  const btnSalvar = document.getElementById('btnSalvarOrdenacaoCategorias');
+  if (btnSalvar) {
+    btnSalvar.style.display = 'none';
+  }
+  ordenacaoCategoriasAlterada = false;
+}
+
+// Função para salvar a ordenação de categorias
+async function salvarOrdenacaoCategorias() {
+  if (!ordenacaoCategoriasAlterada) return;
+  
+  try {
+    showLoading('Salvando ordenação das categorias...');
+    
+    const listaCategorias = document.getElementById('listaCategorias');
+    if (!listaCategorias) {
+      hideLoading();
+      alert('Lista de categorias não encontrada');
+      return;
+    }
+    
+    // Pegar os elementos filhos diretamente (após o Sortable reorganizar) - igual aos produtos
+    const categorias = Array.from(listaCategorias.children)
+      .filter(elemento => elemento.classList.contains('grupo-item'))
+      .map((elemento) => {
+        const idCategoria = elemento.getAttribute('data-id');
+        return { idcategoria: parseInt(idCategoria) };
+      })
+      .filter(cat => !isNaN(cat.idcategoria)); // Remover categorias inválidas
+
+    if (categorias.length === 0) {
+      hideLoading();
+      alert('Nenhuma categoria válida encontrada para reordenar');
+      return;
+    }
+
+    const response = await fetch('/api/categorias/reordenar', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ categorias })
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      // Esconder o botão de salvar
+      esconderBotaoSalvarCategorias();
+      
+      // Aguardar um pouco para garantir que o banco foi atualizado
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Recarregar a página para garantir que os dados mais recentes sejam carregados
+      window.location.reload();
+    } else {
+      hideLoading();
+      alert('Erro ao reordenar categorias: ' + (result.error || 'Erro desconhecido'));
+    }
+  } catch (error) {
+    hideLoading();
+    alert('Erro ao reordenar categorias!');
+  }
+}
+
 // Função para recarregar uma categoria específica com retry
 async function recarregarCategoria(idCategoria, tentativas = 0) {
   const maxTentativas = 3;
@@ -950,6 +1087,48 @@ function adicionarEventListenersProdutos() {
       e.preventDefault();
       const idProduto = btn.getAttribute('data-id');
       excluirProduto(idProduto);
+    });
+  });
+}
+
+// Função para adicionar event listeners aos switches de disponibilidade
+function adicionarEventListenersDisponibilidade() {
+  document.querySelectorAll('.switch-disponivel').forEach(switchEl => {
+    switchEl.addEventListener('change', async (e) => {
+      const idProduto = switchEl.getAttribute('data-id');
+      const disponivel = switchEl.checked;
+      
+      try {
+        const response = await fetch(`/api/produtos/disponibilidade/${idProduto}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ disponivel: disponivel })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          // Feedback visual opcional
+          const produtoBox = switchEl.closest('.produto-box');
+          if (produtoBox) {
+            produtoBox.style.opacity = '0.6';
+            setTimeout(() => {
+              produtoBox.style.opacity = '1';
+            }, 200);
+          }
+        } else {
+          // Reverter o switch em caso de erro
+          switchEl.checked = !disponivel;
+          alert('Erro ao atualizar disponibilidade: ' + result.error);
+        }
+      } catch (error) {
+        // Reverter o switch em caso de erro
+        switchEl.checked = !disponivel;
+        console.error('Erro ao atualizar disponibilidade:', error);
+        alert('Erro ao atualizar disponibilidade do produto!');
+      }
     });
   });
 }

@@ -12,7 +12,11 @@ const Categoria = {
 
   cadastrarCategoria: async ({ nome }) => {
     try {
-      await db.query('INSERT INTO categoria (nome) VALUES (?)', [nome]);
+      // Buscar a última posição para adicionar a nova categoria no final
+      const [rows] = await db.query('SELECT MAX(posicao) as maxPosicao FROM categoria WHERE excluido = 0');
+      const proximaPosicao = (rows[0]?.maxPosicao || 0) + 1;
+      
+      await db.query('INSERT INTO categoria (nome, posicao) VALUES (?, ?)', [nome, proximaPosicao]);
     } catch (err) {
       throw err;
     }
@@ -30,6 +34,32 @@ const Categoria = {
     try {
       await db.query('UPDATE categoria SET nome = ? WHERE idcategoria = ?', [nome, idcategoria]);
     } catch (err) {
+      throw err;
+    }
+  },
+
+  reordenarCategorias: async (categorias) => {
+    try {
+      if (!categorias || categorias.length === 0) {
+        throw new Error('Lista de categorias vazia');
+      }
+
+      // Usar transação para garantir consistência
+      await db.query('START TRANSACTION');
+      
+      // Atualizar as posições sequencialmente
+      for (let i = 0; i < categorias.length; i++) {
+        const categoria = categorias[i];
+        await db.query(
+          'UPDATE categoria SET posicao = ? WHERE idcategoria = ?',
+          [i + 1, categoria.idcategoria]
+        );
+      }
+      
+      await db.query('COMMIT');
+      
+    } catch (err) {
+      await db.query('ROLLBACK');
       throw err;
     }
   }

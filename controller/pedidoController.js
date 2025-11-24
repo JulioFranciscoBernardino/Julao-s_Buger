@@ -2,6 +2,20 @@ const db = require('../config/bd');
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/usuarioModel');
 
+// Função para obter a data atual em Brasília (UTC-3)
+// O Node.js já está configurado com TZ=America/Sao_Paulo no app.js
+function getDataAtualBrasilia() {
+    const agora = new Date();
+    
+    // Como o Node.js está configurado com timezone de Brasília,
+    // podemos usar os métodos locais diretamente
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+    
+    return `${ano}-${mes}-${dia}`;
+}
+
 async function carregarItensDetalhados(pedidoId) {
     const itensQuery = `
         SELECT 
@@ -72,7 +86,17 @@ class PedidoController {
 
             const query = `
                 SELECT 
-                    p.*,
+                    p.idpedido,
+                    p.idusuario,
+                    p.idendereco,
+                    p.idforma_pagamento,
+                    CONVERT_TZ(p.data_pedido, '+00:00', '-03:00') AS data_pedido,
+                    p.status,
+                    p.valor_total,
+                    p.valor_entrega,
+                    p.observacoes,
+                    p.ativo,
+                    p.excluido,
                     u.nome AS nome_cliente,
                     u.telefone AS telefone_cliente,
                     e.logradouro, e.numero, e.bairro, e.cidade, e.estado, e.cep
@@ -132,16 +156,23 @@ class PedidoController {
                 // Validar formato da data (YYYY-MM-DD)
                 const dataRegex = /^\d{4}-\d{2}-\d{2}$/;
                 if (dataRegex.test(req.query.data)) {
-                    whereClause += ' AND DATE(p.data_pedido) = ?';
+                    // Converter timestamp de UTC para Brasília (-03:00) antes de comparar a data
+                    // data_pedido está salvo em UTC, então convertemos para Brasília para comparar
+                    whereClause += ' AND DATE(CONVERT_TZ(p.data_pedido, "+00:00", "-03:00")) = ?';
                     params.push(req.query.data);
                 } else {
-                    // Se a data for inválida, usar data atual
-                    whereClause += ' AND DATE(p.data_pedido) = CURDATE()';
+                    // Se a data for inválida, usar data atual em Brasília
+                    const dataBrasilia = getDataAtualBrasilia();
+                    whereClause += ' AND DATE(CONVERT_TZ(p.data_pedido, "+00:00", "-03:00")) = ?';
+                    params.push(dataBrasilia);
                 }
             } else {
-                // Por padrão: APENAS pedidos do dia atual
-                // CURDATE() retorna a data atual do servidor MySQL (formato YYYY-MM-DD)
-                whereClause += ' AND DATE(p.data_pedido) = CURDATE()';
+                // Por padrão: APENAS pedidos do dia atual em Brasília (UTC-3)
+                // Converter timestamp de UTC para Brasília (-03:00) antes de comparar a data
+                // data_pedido está salvo em UTC, então convertemos para Brasília para comparar
+                const dataBrasilia = getDataAtualBrasilia();
+                whereClause += ' AND DATE(CONVERT_TZ(p.data_pedido, "+00:00", "-03:00")) = ?';
+                params.push(dataBrasilia);
             }
 
             if (req.query.status) {
@@ -153,7 +184,11 @@ class PedidoController {
                 SELECT 
                     p.idpedido,
                     p.idusuario,
-                    p.data_pedido,
+                    CASE 
+                        WHEN p.data_pedido IS NOT NULL 
+                        THEN CONVERT_TZ(p.data_pedido, '+00:00', '-03:00')
+                        ELSE NULL
+                    END AS data_pedido,
                     p.status,
                     p.valor_total,
                     p.valor_entrega,
@@ -177,6 +212,10 @@ class PedidoController {
             `;
 
             const [pedidos] = await db.execute(query, params);
+
+            if (!pedidos || pedidos.length === 0) {
+                return res.json([]);
+            }
 
             const pedidosComDetalhes = await Promise.all(
                 pedidos.map(async (pedido) => {
@@ -265,12 +304,23 @@ class PedidoController {
             const pedidoQuery = `
                 SELECT 
                     p.idpedido,
-                    p.data_pedido,
+                    CONVERT_TZ(p.data_pedido, '+00:00', '-03:00') AS data_pedido,
                     p.status,
                     p.valor_total,
                     p.valor_entrega,
-                    p.observacoes
+                    p.observacoes,
+                    u.nome AS nome_cliente,
+                    u.telefone AS telefone_cliente,
+                    e.logradouro,
+                    e.numero,
+                    e.complemento,
+                    e.bairro,
+                    e.cidade,
+                    e.estado,
+                    e.cep
                 FROM pedido p
+                LEFT JOIN usuario u ON p.idusuario = u.idusuario
+                LEFT JOIN endereco e ON p.idendereco = e.idendereco
                 WHERE p.idpedido = ? AND p.idusuario = ? AND p.ativo = 1 AND p.excluido = 0
             `;
 
@@ -367,9 +417,11 @@ class PedidoController {
 
             try {
                 // Criar pedido
+                // Estratégia: Salvar sempre em UTC (timezone 00)
+                // A conversão para horário de Brasília será feita apenas na leitura/consulta
                 const pedidoQuery = `
-                    INSERT INTO pedido (idusuario, idendereco, idforma_pagamento, status, valor_total, valor_entrega, observacoes) 
-                    VALUES (?, ?, ?, 'pendente', ?, ?, ?)
+                    INSERT INTO pedido (idusuario, idendereco, idforma_pagamento, status, valor_total, valor_entrega, observacoes, data_pedido) 
+                    VALUES (?, ?, ?, 'pendente', ?, ?, ?, UTC_TIMESTAMP())
                 `;
                 
                 const [pedidoResult] = await connection.execute(pedidoQuery, [

@@ -9,7 +9,7 @@ const produtoController = {
       const produtos = await Produto.getAll();
       res.json(produtos);
     } catch (err) {
-      console.error('Erro ao buscar produtos:', err);
+      console.error('Erro ao buscar produtos');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   },
@@ -20,7 +20,7 @@ const produtoController = {
       const produtos = await Produto.getByCategoria(idcategoria);
       res.json(produtos);
     } catch (err) {
-      console.error('Erro ao buscar produtos por categoria:', err);
+      console.error('Erro ao buscar produtos por categoria');
       res.status(500).json({ error: 'Erro interno do servidor' });
     }
   },
@@ -31,7 +31,14 @@ const produtoController = {
 
       let imagemUrl = null;
       if (req.file) {
-        imagemUrl = `/imgs/${req.file.filename}`;
+        // Verificar se o arquivo realmente existe
+        const fs = require('fs');
+        const filePath = req.file.path;
+        
+        if (fs.existsSync(filePath)) {
+          // URL relativa que funciona tanto local quanto no servidor AlwaysData
+          imagemUrl = `/imgs/${req.file.filename}`;
+        }
       }
 
       await Produto.cadastrarProduto({ 
@@ -44,7 +51,7 @@ const produtoController = {
       
       res.json({ message: 'Produto cadastrado com sucesso!', imagem: imagemUrl });
     } catch (error) {
-      console.error('Erro ao cadastrar produto:', error);
+      console.error('Erro ao cadastrar produto:', error.message);
       res.status(500).json({ error: 'Erro ao cadastrar produto' });
     }
   },
@@ -54,7 +61,7 @@ const produtoController = {
       await Produto.deletarProduto(req.params.idproduto);
       res.json({ mensagem: 'Produto marcado como excluído com sucesso!' });
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao excluir produto');
       res.status(500).json({ mensagem: 'Erro ao marcar produto como excluído.' });
     }
   },
@@ -73,15 +80,22 @@ const produtoController = {
       
       // Só adiciona imagem se um arquivo foi enviado
       if (req.file) {
-        updateData.imagem = `/imgs/${req.file.filename}`;
+        // Verificar se o arquivo realmente existe
+        const fs = require('fs');
+        const filePath = req.file.path;
+        
+        if (fs.existsSync(filePath)) {
+          // URL relativa que funciona tanto local quanto no servidor AlwaysData
+          updateData.imagem = `/imgs/${req.file.filename}`;
+        }
       }
 
       await Produto.atualizarProduto(idproduto, updateData);
       
       res.json({ message: 'Produto atualizado com sucesso!' });
     } catch (error) {
-      console.error('Erro ao atualizar produto:', error);
-      res.status(500).json({ error: 'Erro ao atualizar produto: ' + error.message });
+      console.error('Erro ao atualizar produto:', error.message);
+      res.status(500).json({ error: 'Erro ao atualizar produto' });
     }
   },
 
@@ -90,7 +104,7 @@ const produtoController = {
       const produto = await Produto.getById(req.params.idproduto);
       res.json(produto);
     } catch (err) {
-      console.error('Erro ao buscar produto:', err);
+      console.error('Erro ao buscar produto');
       res.status(500).json({ error: 'Erro ao buscar produto.' });
     }
   },
@@ -106,7 +120,7 @@ const produtoController = {
       await Produto.reordenarProdutos(produtos);
       res.json({ message: 'Produtos reordenados com sucesso!' });
     } catch (error) {
-      console.error('Erro ao reordenar produtos:', error);
+      console.error('Erro ao reordenar produtos');
       res.status(500).json({ error: 'Erro ao reordenar produtos' });
     }
   },
@@ -117,7 +131,7 @@ const produtoController = {
       const opcionais = await Produto.getOpcionaisDoProduto(idproduto);
       res.json(opcionais);
     } catch (error) {
-      console.error('Erro ao buscar opcionais do produto:', error);
+      console.error('Erro ao buscar opcionais do produto');
       res.status(500).json({ error: 'Erro ao buscar opcionais do produto' });
     }
   },
@@ -134,8 +148,22 @@ const produtoController = {
       
       res.json(grupos);
     } catch (error) {
-      console.error('Erro ao buscar grupos de opcionais do produto:', error);
+      console.error('Erro ao buscar grupos de opcionais do produto');
       res.status(500).json({ error: 'Erro ao buscar grupos de opcionais do produto' });
+    }
+  },
+
+  atualizarDisponibilidade: async (req, res) => {
+    try {
+      const { idproduto } = req.params;
+      const { disponivel } = req.body;
+      
+      await Produto.atualizarDisponibilidade(idproduto, disponivel);
+      
+      res.json({ message: 'Disponibilidade atualizada com sucesso!' });
+    } catch (error) {
+      console.error('Erro ao atualizar disponibilidade');
+      res.status(500).json({ error: 'Erro ao atualizar disponibilidade do produto' });
     }
   }
 
