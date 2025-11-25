@@ -45,4 +45,8 @@ router.get('/horarios-funcionamento', (req, res) => {
     res.sendFile(path.join(__dirname, '../view/horarios_funcionamento.html'));
 });
 
+router.get('/taxas-entrega', (req, res) => {
+    res.sendFile(path.join(__dirname, '../view/taxas_entrega.html'));
+});
+
 module.exports = router;

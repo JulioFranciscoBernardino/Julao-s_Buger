@@ -306,6 +306,38 @@
     margin-bottom: 1.5rem;
 }
 
+.summary-delivery-selector {
+    padding: 1rem 1.2rem;
+    border-radius: 16px;
+    background: #f9fafc;
+    border: 1px solid #eef0f4;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.summary-delivery-selector label {
+    font-weight: 600;
+    color: #1d1d1f;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.summary-delivery-selector select {
+    border-radius: 12px;
+    border: 1px solid #d7d9e0;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.95rem;
+    background: #fff;
+}
+
+.summary-helper {
+    font-size: 0.85rem;
+    color: #6b6b76;
+}
+
 .summary-item {
     display: flex;
     gap: 1rem;

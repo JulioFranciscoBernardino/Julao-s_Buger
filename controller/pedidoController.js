@@ -94,6 +94,7 @@ class PedidoController {
                     p.status,
                     p.valor_total,
                     p.valor_entrega,
+                    p.distancia_km,
                     p.observacoes,
                     p.ativo,
                     p.excluido,
@@ -192,6 +193,7 @@ class PedidoController {
                     p.status,
                     p.valor_total,
                     p.valor_entrega,
+                    p.distancia_km,
                     p.observacoes,
                     u.nome AS cliente_nome,
                     u.telefone AS cliente_telefone,
@@ -230,6 +232,7 @@ class PedidoController {
                             status: pedido.status,
                             valor_total: parseFloat(pedido.valor_total || 0),
                             valor_entrega: parseFloat(pedido.valor_entrega || 0),
+                            distancia_km: pedido.distancia_km ? Number(pedido.distancia_km) : null,
                             observacoes: pedido.observacoes,
                             cliente: {
                                 nome: pedido.cliente_nome || 'Cliente',
@@ -257,6 +260,7 @@ class PedidoController {
                             status: pedido.status,
                             valor_total: parseFloat(pedido.valor_total || 0),
                             valor_entrega: parseFloat(pedido.valor_entrega || 0),
+                            distancia_km: pedido.distancia_km ? Number(pedido.distancia_km) : null,
                             observacoes: pedido.observacoes,
                             cliente: {
                                 nome: pedido.cliente_nome || 'Cliente',
@@ -308,6 +312,7 @@ class PedidoController {
                     p.status,
                     p.valor_total,
                     p.valor_entrega,
+                    p.distancia_km,
                     p.observacoes,
                     u.nome AS nome_cliente,
                     u.telefone AS telefone_cliente,
@@ -331,6 +336,7 @@ class PedidoController {
             }
 
             const pedido = pedidos[0];
+            pedido.distancia_km = pedido.distancia_km ? Number(pedido.distancia_km) : null;
 
             // Buscar itens do pedido
             const itensQuery = `
@@ -397,7 +403,7 @@ class PedidoController {
                 return res.status(401).json({ erro: 'ID do usuário não encontrado' });
             }
 
-            const { itens, observacoes, idendereco, idforma_pagamento, valor_total, valor_entrega } = req.body;
+            const { itens, observacoes, idendereco, idforma_pagamento, valor_total, valor_entrega, distancia_km } = req.body;
 
             if (!itens || !Array.isArray(itens) || itens.length === 0) {
                 return res.status(400).json({ erro: 'Pedido deve conter pelo menos um item' });
@@ -420,8 +426,8 @@ class PedidoController {
                 // Estratégia: Salvar sempre em UTC (timezone 00)
                 // A conversão para horário de Brasília será feita apenas na leitura/consulta
                 const pedidoQuery = `
-                    INSERT INTO pedido (idusuario, idendereco, idforma_pagamento, status, valor_total, valor_entrega, observacoes, data_pedido) 
-                    VALUES (?, ?, ?, 'pendente', ?, ?, ?, UTC_TIMESTAMP())
+                    INSERT INTO pedido (idusuario, idendereco, idforma_pagamento, status, valor_total, valor_entrega, distancia_km, observacoes, data_pedido) 
+                    VALUES (?, ?, ?, 'pendente', ?, ?, ?, ?, UTC_TIMESTAMP())
                 `;
                 
                 const [pedidoResult] = await connection.execute(pedidoQuery, [
@@ -430,6 +436,7 @@ class PedidoController {
                     idforma_pagamento,
                     valor_total || 0,
                     valor_entrega || 0,
+                    distancia_km || null,
                     observacoes || null
                 ]);
                 const pedidoId = pedidoResult.insertId;

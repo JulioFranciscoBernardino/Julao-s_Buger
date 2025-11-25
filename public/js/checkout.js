@@ -5,7 +5,10 @@ let enderecoSelecionado = null;
 let formaPagamentoSelecionada = null;
 let carrinhoData = [];
 let carrinhoRawData = [];
-let taxaEntrega = 5.00; // Taxa fixa de entrega
+let taxasEntrega = [];
+let taxaEntregaSelecionada = null;
+let subtotalAtual = 0;
+const TAXA_ENTREGA_GRATIS = 200;
 
 // Inicialização ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarDadosCliente();
     carregarEnderecos();
     carregarFormasPagamento();
+    carregarTaxasEntrega();
     
     // Configurar event listeners
     configurarEventListeners();
@@ -478,21 +482,26 @@ function renderizarResumoPedido() {
     });
     
     // Atualizar totais
+    subtotalAtual = subtotal;
     const totalTaxaEntrega = calcularTaxaEntrega(subtotal);
     const totalFinal = subtotal + totalTaxaEntrega;
     
     document.getElementById('subtotal').textContent = `R$ ${formatarPreco(subtotal)}`;
     document.getElementById('taxaEntrega').textContent = `R$ ${formatarPreco(totalTaxaEntrega)}`;
     document.getElementById('totalPedido').textContent = `R$ ${formatarPreco(totalFinal)}`;
+
+    atualizarMensagemTaxaEntrega(subtotal);
 }
 
 // Calcular taxa de entrega
 function calcularTaxaEntrega(subtotal) {
-    // Entrega grátis para pedidos acima de R$ 200
-    if (subtotal >= 200) {
+    if (subtotal >= TAXA_ENTREGA_GRATIS) {
         return 0;
     }
-    return taxaEntrega;
+    if (taxaEntregaSelecionada) {
+        return Number(taxaEntregaSelecionada.valor) || 0;
+    }
+    return 0;
 }
 
 // Carregar formas de pagamento
@@ -554,6 +563,105 @@ function renderizarFormasPagamento(formas) {
     container.innerHTML = html;
 }
 
+// Taxas de entrega
+async function carregarTaxasEntrega() {
+    try {
+        const response = await fetch('/api/taxas-entrega');
+        if (!response.ok) {
+            throw new Error('Erro ao carregar taxas de entrega');
+        }
+        taxasEntrega = await response.json();
+        atualizarOpcoesTaxaEntrega();
+        atualizarMensagemTaxaEntrega();
+    } catch (error) {
+        console.error('Erro ao carregar taxas de entrega:', error);
+        taxasEntrega = [];
+        atualizarOpcoesTaxaEntrega(true);
+    }
+}
+
+function atualizarOpcoesTaxaEntrega(erro = false) {
+    const select = document.getElementById('taxaEntregaSelect');
+    if (!select) return;
+
+    select.innerHTML = '';
+
+    if (erro) {
+        select.innerHTML = '<option value="">Erro ao carregar taxas</option>';
+        select.disabled = true;
+        return;
+    }
+
+    if (!taxasEntrega.length) {
+        select.innerHTML = '<option value="">Nenhuma taxa cadastrada</option>';
+        select.disabled = true;
+        atualizarMensagemTaxaEntrega();
+        return;
+    }
+
+    select.disabled = false;
+    const options = ['<option value="">Selecione a distância</option>'];
+    taxasEntrega.forEach((taxa) => {
+        options.push(
+            `<option value="${taxa.id}">
+                Até ${Number(taxa.distancia_km).toFixed(1)} km - R$ ${Number(taxa.valor).toFixed(2)}
+            </option>`
+        );
+    });
+    select.innerHTML = options.join('');
+
+    if (taxasEntrega.length === 1) {
+        select.value = taxasEntrega[0].id;
+        taxaEntregaSelecionada = taxasEntrega[0];
+    }
+}
+
+function onTaxaEntregaChange(event) {
+    const valor = event.target.value;
+    if (!valor) {
+        taxaEntregaSelecionada = null;
+    } else {
+        taxaEntregaSelecionada = taxasEntrega.find((taxa) => String(taxa.id) === valor) || null;
+    }
+    atualizarMensagemTaxaEntrega();
+    renderizarResumoPedido();
+}
+
+function atualizarMensagemTaxaEntrega(subtotal = subtotalAtual) {
+    const mensagemEl = document.getElementById('taxaEntregaMensagem');
+    const select = document.getElementById('taxaEntregaSelect');
+    if (!mensagemEl) return;
+
+    if (subtotal >= TAXA_ENTREGA_GRATIS) {
+        mensagemEl.textContent = 'Entrega grátis para pedidos a partir de R$ 200,00.';
+        if (select) {
+            select.disabled = true;
+            select.value = '';
+        }
+        return;
+    }
+
+    if (select && !taxasEntrega.length) {
+        select.disabled = true;
+        mensagemEl.textContent = 'Nenhuma taxa cadastrada. Configure no painel administrativo.';
+        return;
+    }
+
+    if (select && select.disabled) {
+        select.disabled = false;
+    }
+
+    if (!taxaEntregaSelecionada) {
+        mensagemEl.textContent = 'Selecione a distância aproximada para calcular a taxa.';
+    } else {
+        mensagemEl.textContent = `Taxa aplicada para até ${Number(taxaEntregaSelecionada.distancia_km).toFixed(1)} km.`;
+        const selectElement = document.getElementById('taxaEntregaSelect');
+        if (selectElement && selectElement.value !== String(taxaEntregaSelecionada.id)) {
+            selectElement.value = taxaEntregaSelecionada.id;
+        }
+    }
+}
+
 // Selecionar forma de pagamento
 function selecionarFormaPagamento(id, forma) {
     formaPagamentoSelecionada = forma;
@@ -592,6 +700,11 @@ function configurarEventListeners() {
             buscarCEP(value);
         }
     });
+
+    const selectTaxa = document.getElementById('taxaEntregaSelect');
+    if (selectTaxa) {
+        selectTaxa.addEventListener('change', onTaxaEntregaChange);
+    }
 }
 
 // Abrir modal de endereço
@@ -737,6 +850,13 @@ async function confirmarPedido() {
 
         // Calcular totais
         const subtotal = carrinhoData.reduce((total, item) => total + (item.precoFinal * item.quantidade), 0);
+
+        if (subtotal < TAXA_ENTREGA_GRATIS && taxasEntrega.length > 0 && !taxaEntregaSelecionada) {
+            alert('Selecione a distância da entrega para calcular a taxa.');
+            document.getElementById('taxaEntregaSelect')?.focus();
+            return;
+        }
+
         const totalTaxaEntrega = calcularTaxaEntrega(subtotal);
         const totalFinal = subtotal + totalTaxaEntrega;
 
@@ -769,6 +889,7 @@ async function confirmarPedido() {
             }),
             valor_total: totalFinal,
             valor_entrega: totalTaxaEntrega,
+            distancia_km: taxaEntregaSelecionada ? Number(taxaEntregaSelecionada.distancia_km) : null,
             observacoes: observacoes,
             enderecoCompleto: enderecoSelecionado, // Para endereços temporários
             dadosCliente: Object.keys(dadosCliente).length > 0 ? dadosCliente : null // Dados do cliente não logado

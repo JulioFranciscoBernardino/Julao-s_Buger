@@ -16,6 +16,7 @@ const enderecoRoutes = require('./routes/enderecoRoutes');
 const pedidoRoutes = require('./routes/pedidoRoutes');
 const formaPagamentoRoutes = require('./routes/formaPagamentoRoutes');
 const horarioFuncionamentoRoutes = require('./routes/horarioFuncionamentoRoutes');
+const taxaEntregaRoutes = require('./routes/taxaEntregaRoutes');
 const rotas = require('./routes/index');
 const viewRoutes = require('./routes/viewRoutes');
 
@@ -34,22 +35,21 @@ app.use(express.json());
 app.use(cors());
 
 // Configuração CSP - SEMPRE bloquear imagens externas (mesmo em desenvolvimento)
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://gc.kis.v2.scr.kaspersky-labs.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://gc.kis.v2.scr.kaspersky-labs.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:"], // BLOQUEAR TODAS AS IMAGENS EXTERNAS
-      connectSrc: ["'self'"]
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://gc.kis.v2.scr.kaspersky-labs.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://gc.kis.v2.scr.kaspersky-labs.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+        connectSrc: ["'self'"],
+      }
     }
-  }
-}));
+  }));
 
 // Arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'view')));
+app.use(express.static(path.join(__dirname, 'view'))); 
 
 // Rotas
 app.use('/api/usuarios', usuarioRoutes);
@@ -63,6 +63,7 @@ app.use('/api/enderecos', enderecoRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/formas-pagamento', formaPagamentoRoutes);
 app.use('/api/horarios-funcionamento', horarioFuncionamentoRoutes);
+app.use('/api/taxas-entrega', taxaEntregaRoutes);
 app.use('/', rotas);
 app.use('/', viewRoutes);
 

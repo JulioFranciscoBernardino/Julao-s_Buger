@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 
 // Rotas públicas para consulta
 router.get('/', horarioFuncionamentoController.listarHorarios);
+router.get('/status', horarioFuncionamentoController.verificarStatusAtual);
 router.get('/dia/:diaSemana', horarioFuncionamentoController.buscarHorarioPorDia);
 
 // Rotas protegidas (requerem autenticação de admin)

@@ -5,6 +5,10 @@
 let cardapioData = null;
 let categoriaAtiva = null;
 let produtosExibidos = [];
+let statusFuncionamento = { aberto: true }; // Status padrão (assume aberto até verificar)
+let eventosCarrinhoConfigurados = false;
+const cacheProdutos = new Map();
+const cacheGruposProduto = new Map();
 
 // Elementos DOM
 const categoriesNav = document.getElementById('categoriesNav');
@@ -17,7 +21,9 @@ const modalBody = document.getElementById('modalBody');
 const closeModal = document.getElementById('closeModal');
 
 // Inicialização quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Verificar status de funcionamento primeiro
+    await verificarStatusFuncionamento();
     inicializarCardapio();
     configurarEventListeners();
 });
@@ -45,6 +51,47 @@ async function carregarCardapio() {
         console.error('Erro ao carregar cardápio:', error);
         throw error;
     }
+}
+
+function configurarEventosCarrinho() {
+    if (eventosCarrinhoConfigurados) return;
+    
+    const cartElement = document.querySelector('.cart');
+    if (!cartElement) return;
+    
+    cartElement.addEventListener('click', (event) => {
+        const botao = event.target.closest('[data-cart-action]');
+        if (!botao) {
+            return;
+        }
+        
+        event.preventDefault();
+        const action = botao.dataset.cartAction;
+        const itemId = botao.dataset.itemId ? Number(botao.dataset.itemId) : null;
+        const idValido = typeof itemId === 'number' && !Number.isNaN(itemId);
+        
+        switch (action) {
+            case 'qty-minus':
+                if (idValido) alterarQuantidadeCarrinho(itemId, -1);
+                break;
+            case 'qty-plus':
+                if (idValido) alterarQuantidadeCarrinho(itemId, 1);
+                break;
+            case 'remove-item':
+                if (idValido) removerItemCarrinho(itemId);
+                break;
+            case 'clear-cart':
+                limparCarrinho();
+                break;
+            case 'checkout':
+                finalizarCompra();
+                break;
+            default:
+                break;
+        }
+    });
+    
+    eventosCarrinhoConfigurados = true;
 }
 
 // Renderizar categorias na navegação
@@ -237,6 +284,11 @@ async function renderizarProdutos() {
         const productCard = await criarCardProduto(produto);
         productsGrid.appendChild(productCard);
     }
+    
+    // Aplicar status aos botões após renderizar
+    setTimeout(() => {
+        aplicarStatusBotões();
+    }, 100);
 }
 
 // Criar card do produto
@@ -274,7 +326,7 @@ async function criarCardProduto(produto) {
             </div>
             
             <div class="product-actions">
-                <button class="btn-add-to-cart" onclick="abrirModalProduto(${JSON.stringify(produto).replace(/"/g, '&quot;')}, event)">
+                <button class="btn-add-to-cart" ${!statusFuncionamento.aberto ? 'disabled title="' + (statusFuncionamento.mensagem || 'Estabelecimento fechado') + '"' : ''}>
                     <i class="fas fa-shopping-cart"></i>
                     Ver Detalhes
                 </button>
@@ -283,36 +335,100 @@ async function criarCardProduto(produto) {
     `;
     
     // Event listener para abrir modal (imagem e título)
-    const imageElement = card.querySelector('.product-image');
-    const titleElement = card.querySelector('.product-title');
-    
-    if (imageElement) {
-        imageElement.addEventListener('click', () => abrirModalProduto(produto));
-    }
-    if (titleElement) {
-        titleElement.addEventListener('click', () => abrirModalProduto(produto));
-    }
+    card.addEventListener('click', () => abrirModalProduto(produto));
     
     return card;
 }
 
-// Abrir modal do produto
-async function abrirModalProduto(produto) {
-    const preco = formatarPreco(produto.preco);
-    const imagem = produto.imagem ? 
-        (produto.imagem.startsWith('/imgs/') ? produto.imagem : `/imgs/${produto.imagem}`) : 
-        null;
+// Abrir modal do produto (aceita objeto completo ou apenas id)
+async function abrirModalProduto(produtoEntrada) {
+    const produtoId = typeof produtoEntrada === 'number' ? produtoEntrada : produtoEntrada?.idproduto;
+    if (!produtoId) {
+        console.warn('ID do produto não informado para abrir modal.');
+        return;
+    }
     
-    // Carregar grupos de opcionais do produto
-    let gruposOpcionais = [];
+    mostrarModalCarregando();
+    
     try {
-        const response = await fetch(`/api/produtos/${produto.idproduto}/grupos-opcionais`);
+        const [produto, gruposOpcionais] = await Promise.all([
+            obterProdutoCompleto(produtoEntrada, produtoId),
+            obterGruposOpcionaisProduto(produtoId)
+        ]);
+        
+        renderizarModalProduto(produto, gruposOpcionais);
+    } catch (error) {
+        console.error('Erro ao carregar produto:', error);
+        alert('Não foi possível carregar os detalhes deste produto. Tente novamente.');
+        fecharModal();
+    }
+}
+
+function mostrarModalCarregando() {
+    if (!modalBody) return;
+    
+    modalBody.innerHTML = `
+        <div class="modal-loading">
+            <div class="modal-loading-spinner"></div>
+            <p>Carregando produto...</p>
+        </div>
+    `;
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+async function obterProdutoCompleto(produtoEntrada, produtoId) {
+    if (produtoEntrada && typeof produtoEntrada === 'object' && produtoEntrada.nome && produtoEntrada.descricao) {
+        cacheProdutos.set(produtoId, produtoEntrada);
+        return produtoEntrada;
+    }
+    
+    if (cacheProdutos.has(produtoId)) {
+        return cacheProdutos.get(produtoId);
+    }
+    
+    const produtoLocal = cardapioData?.categorias
+        ?.flatMap(cat => cat.produtos || [])
+        ?.find(p => p.idproduto === produtoId);
+    
+    if (produtoLocal && produtoLocal.descricao) {
+        cacheProdutos.set(produtoId, produtoLocal);
+        return produtoLocal;
+    }
+    
+    const response = await fetch(`/api/produtos/${produtoId}`);
+    if (!response.ok) {
+        throw new Error('Não foi possível carregar os dados do produto.');
+    }
+    const produto = await response.json();
+    cacheProdutos.set(produtoId, produto);
+    return produto;
+}
+
+async function obterGruposOpcionaisProduto(produtoId) {
+    if (cacheGruposProduto.has(produtoId)) {
+        return cacheGruposProduto.get(produtoId);
+    }
+    
+    try {
+        const response = await fetch(`/api/produtos/${produtoId}/grupos-opcionais`);
         if (response.ok) {
-            gruposOpcionais = await response.json();
+            const grupos = await response.json();
+            cacheGruposProduto.set(produtoId, grupos);
+            return grupos;
         }
     } catch (error) {
         console.error('Erro ao carregar grupos de opcionais:', error);
     }
+    
+    return [];
+}
+
+function renderizarModalProduto(produto, gruposOpcionais) {
+    const preco = formatarPreco(produto.preco);
+    const imagem = produto.imagem ? 
+        (produto.imagem.startsWith('/imgs/') ? produto.imagem : `/imgs/${produto.imagem}`) : 
+        null;
     
     modalBody.innerHTML = `
         <div class="modal-product">
@@ -368,7 +484,7 @@ async function abrirModalProduto(produto) {
                 </div>
                 
                 <div class="modal-product-actions">
-                    <button class="btn-add-to-cart" onclick="adicionarAoCarrinhoComOpcionais(${produto.idproduto})">
+                    <button class="btn-add-to-cart" id="btnAdicionarCarrinho" ${!statusFuncionamento.aberto ? 'disabled title="' + (statusFuncionamento.mensagem || 'Estabelecimento fechado') + '"' : ''}>
                         <i class="fas fa-shopping-cart"></i>
                         Adicionar ao Carrinho
                     </button>
@@ -381,6 +497,15 @@ async function abrirModalProduto(produto) {
         </div>
     `;
     
+    // Configurar ação do botão de adicionar ao carrinho
+    const botaoAdicionarCarrinho = document.getElementById('btnAdicionarCarrinho');
+    if (botaoAdicionarCarrinho) {
+        botaoAdicionarCarrinho.addEventListener('click', (event) => {
+            event.preventDefault();
+            adicionarAoCarrinhoComOpcionais(produto.idproduto);
+        });
+    }
+    
     // Renderizar grupos de opcionais se existirem
     if (gruposOpcionais.length > 0) {
         renderizarGruposOpcionais(gruposOpcionais);
@@ -392,6 +517,11 @@ async function abrirModalProduto(produto) {
             atualizarBotaoCarrinho();
         }, 100);
     }
+    
+    // Aplicar status aos botões do modal
+    setTimeout(() => {
+        aplicarStatusBotões();
+    }, 150);
     
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
@@ -421,6 +551,7 @@ function renderizarGruposOpcionais(gruposOpcionais) {
                 ${grupo.opcionais.map(opcional => `
                     <div class="modal-opcional-item ${grupo.obrigatorio ? 'obrigatorio' : ''}" 
                          data-grupo="${grupo.idgrupo_opcional}" 
+                         data-opcional-id="${opcional.idopcional}"
                          data-maximo="${grupo.maximo_escolhas || ''}"
                          data-minimo="${grupo.minimo_escolhas || 0}">
                         <div class="modal-opcional-info">
@@ -428,15 +559,31 @@ function renderizarGruposOpcionais(gruposOpcionais) {
                             ${opcional.preco > 0 ? `<span class="modal-opcional-preco">+ R$ ${formatarPreco(opcional.preco)}</span>` : ''}
                         </div>
                         <div class="modal-quantity-selector">
-                            <button class="modal-qty-btn minus" onclick="alterarQuantidadeModal(${opcional.idopcional}, -1, event)">-</button>
+                            <button class="modal-qty-btn minus" data-acao="minus">-</button>
                             <span class="modal-qty-value" id="modal_qty_${opcional.idopcional}" data-preco="${opcional.preco}" data-tipo="${opcional.tipo}">0</span>
-                            <button class="modal-qty-btn plus" onclick="alterarQuantidadeModal(${opcional.idopcional}, 1, event)">+</button>
+                            <button class="modal-qty-btn plus" data-acao="plus">+</button>
                         </div>
                     </div>
                 `).join('')}
             </div>
         </div>
     `).join('');
+
+    configurarEventListenersOpcionais();
+}
+
+function configurarEventListenersOpcionais() {
+    const botoesQuantidade = document.querySelectorAll('.modal-qty-btn');
+    botoesQuantidade.forEach(botao => {
+        botao.addEventListener('click', (event) => {
+            event.preventDefault();
+            const container = botao.closest('.modal-opcional-item');
+            if (!container) return;
+            const opcionalId = container.dataset.opcionalId;
+            const delta = botao.dataset.acao === 'plus' ? 1 : -1;
+            alterarQuantidadeModal(opcionalId, delta, botao, event);
+        }, { once: false });
+    });
 }
 
 // Inicializar calculadora de preço
@@ -509,15 +656,30 @@ function atualizarPrecoModal() {
 }
 
 // Alterar quantidade no modal
-function alterarQuantidadeModal(idopcional, delta, event) {
-    event.stopPropagation();
+function alterarQuantidadeModal(idopcional, delta, elemento, evento) {
+    const currentEvent = evento || window.event;
+    if (currentEvent && typeof currentEvent.stopPropagation === 'function') {
+        currentEvent.stopPropagation();
+    }
     
     const qtyElement = document.getElementById(`modal_qty_${idopcional}`);
+    if (!qtyElement) {
+        return;
+    }
     const currentQty = parseInt(qtyElement.textContent) || 0;
     const newQty = Math.max(0, currentQty + delta);
     
     // Obter informações do grupo
-    const container = event.target.closest('.modal-opcional-item');
+    let container = null;
+    if (elemento && typeof elemento.closest === 'function') {
+        container = elemento.closest('.modal-opcional-item');
+    }
+    if (!container) {
+        container = document.querySelector(`.modal-opcional-item[data-opcional-id="${idopcional}"]`);
+    }
+    if (!container) {
+        return;
+    }
     const grupoId = container.dataset.grupo;
     const maximo = parseInt(container.dataset.maximo) || 999;
     const minimo = parseInt(container.dataset.minimo) || 0;
@@ -535,7 +697,8 @@ function alterarQuantidadeModal(idopcional, delta, event) {
     const plusBtn = container.querySelector('.modal-qty-btn.plus');
     
     minusBtn.disabled = newQty === 0;
-    plusBtn.disabled = totalSelecionado >= maximo;
+    
+    atualizarEstadoMaximoGrupo(grupoId, maximo);
     
     // Adicionar/remover classe de selecionado
     if (newQty > 0) {
@@ -556,6 +719,22 @@ function alterarQuantidadeModal(idopcional, delta, event) {
     // Atualizar estado do botão do carrinho
     atualizarBotaoCarrinho();
     
+}
+
+function atualizarEstadoMaximoGrupo(grupoId, maximo) {
+    if (!maximo || maximo >= 999) {
+        document.querySelectorAll(`.modal-opcionais-list [data-grupo="${grupoId}"] .modal-qty-btn.plus`).forEach(btn => {
+            btn.disabled = false;
+        });
+        return;
+    }
+    
+    const totalAtual = calcularTotalSelecionadoGrupoModal(grupoId);
+    const deveBloquear = totalAtual >= maximo;
+    
+    document.querySelectorAll(`.modal-opcionais-list [data-grupo="${grupoId}"] .modal-qty-btn.plus`).forEach(btn => {
+        btn.disabled = deveBloquear;
+    });
 }
 
 // Calcular total selecionado em um grupo no modal
@@ -632,9 +811,10 @@ function atualizarBotaoCarrinho() {
     if (validacao.valido) {
         // Todos os mínimos foram atendidos
         botaoCarrinho.disabled = false;
+        botaoCarrinho.removeAttribute('disabled');
         botaoCarrinho.classList.remove('btn-disabled');
         botaoCarrinho.classList.add('btn-enabled');
-        botaoCarrinho.textContent = 'Adicionar ao Carrinho';
+        botaoCarrinho.innerHTML = '<i class="fas fa-shopping-cart"></i> Adicionar ao Carrinho';
         
         // Remover mensagem de erro se existir
         const mensagemErro = document.getElementById('mensagemValidacao');
@@ -644,9 +824,12 @@ function atualizarBotaoCarrinho() {
     } else {
         // Alguns mínimos não foram atendidos
         botaoCarrinho.disabled = true;
+        if (!botaoCarrinho.hasAttribute('disabled')) {
+            botaoCarrinho.setAttribute('disabled', 'disabled');
+        }
         botaoCarrinho.classList.remove('btn-enabled');
         botaoCarrinho.classList.add('btn-disabled');
-        botaoCarrinho.textContent = 'Selecione os itens obrigatórios';
+        botaoCarrinho.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Selecione os itens obrigatórios';
         
         // Mostrar mensagem de erro
         mostrarMensagemValidacao(validacao.gruposInvalidos);
@@ -729,6 +912,12 @@ function salvarCarrinho() {
 
 // Adicionar ao carrinho com opcionais
 function adicionarAoCarrinhoComOpcionais(idproduto) {
+    // Verificar se o estabelecimento está aberto
+    if (!statusFuncionamento.aberto) {
+        alert(statusFuncionamento.mensagem || 'Estabelecimento fechado. Não é possível adicionar produtos ao carrinho.');
+        return;
+    }
+    
     const validacao = validarGruposObrigatorios();
     
     // Verificar se todos os mínimos obrigatórios foram atendidos
@@ -893,15 +1082,15 @@ function atualizarCarrinho() {
                 </div>
                 <div class="cart-item-actions">
                     <div class="cart-quantity-selector">
-                        <button class="cart-qty-btn minus" onclick="alterarQuantidadeCarrinho(${item.id}, -1)">
+                        <button class="cart-qty-btn minus" data-cart-action="qty-minus" data-item-id="${item.id}">
                             <i class="fas fa-minus"></i>
                         </button>
                         <span class="cart-qty-value">${item.quantidade}</span>
-                        <button class="cart-qty-btn plus" onclick="alterarQuantidadeCarrinho(${item.id}, 1)">
+                        <button class="cart-qty-btn plus" data-cart-action="qty-plus" data-item-id="${item.id}">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    <button class="cart-remove-btn" onclick="removerItemCarrinho(${item.id})" title="Remover item">
+                    <button class="cart-remove-btn" data-cart-action="remove-item" data-item-id="${item.id}" title="Remover item">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -910,6 +1099,7 @@ function atualizarCarrinho() {
     });
     
     cartItems.innerHTML = htmlItens;
+    configurarEventosCarrinho();
     
     // Calcular e exibir total
     const total = calcularTotalCarrinho();
@@ -936,11 +1126,11 @@ function atualizarCarrinho() {
                     <span class="total-value">R$ ${formatarPreco(total)}</span>
                 </div>
             </div>
-            <button class="btn-checkout" onclick="finalizarCompra()">
+            <button class="btn-checkout" data-cart-action="checkout">
                 <i class="fas fa-check"></i>
                 Finalizar Compra
             </button>
-            <button class="btn-clear-cart" onclick="limparCarrinho()">
+            <button class="btn-clear-cart" data-cart-action="clear-cart">
                 <i class="fas fa-trash"></i>
                 Limpar Carrinho
             </button>
@@ -1041,6 +1231,7 @@ function finalizarCompra() {
 // Inicializar carrinho ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
     inicializarCarrinho();
+    configurarEventosCarrinho();
 });
 
 
@@ -1153,6 +1344,12 @@ function formatarPreco(preco) {
 
 // Funções de interação (placeholder para futuras implementações)
 function adicionarAoCarrinho(produtoId) {
+    // Verificar se o estabelecimento está aberto
+    if (!statusFuncionamento.aberto) {
+        alert(statusFuncionamento.mensagem || 'Estabelecimento fechado. Não é possível adicionar produtos ao carrinho.');
+        return;
+    }
+    
     // TODO: Implementar funcionalidade de carrinho
     alert(`Produto ${produtoId} adicionado ao carrinho!`);
 }
@@ -1191,27 +1388,124 @@ async function buscarProdutos(termo) {
     }
 }
 
-// Função para atualizar status do restaurante
+// Função para verificar status de funcionamento
+async function verificarStatusFuncionamento() {
+    try {
+        const response = await fetch('/api/horarios-funcionamento/status');
+        if (response.ok) {
+            statusFuncionamento = await response.json();
+            atualizarStatusRestaurante();
+            aplicarStatusBotões();
+            return statusFuncionamento;
+        } else {
+            console.error('Erro ao verificar status de funcionamento');
+            // Em caso de erro, assume aberto para não bloquear o usuário
+            statusFuncionamento = { aberto: true };
+            return statusFuncionamento;
+        }
+    } catch (error) {
+        console.error('Erro ao verificar status:', error);
+        // Em caso de erro, assume aberto para não bloquear o usuário
+        statusFuncionamento = { aberto: true };
+        return statusFuncionamento;
+    }
+}
+
+// Função para atualizar status do restaurante no UI
 function atualizarStatusRestaurante() {
-    const agora = new Date();
-    const hora = agora.getHours();
     const statusElement = document.getElementById('statusIndicator');
     
-    // Simular horário de funcionamento (8h às 22h)
-    const aberto = hora >= 8 && hora < 22;
-    
     if (statusElement) {
-        statusElement.textContent = aberto ? 'Aberto' : 'Fechado';
-        statusElement.className = `status-indicator ${aberto ? '' : 'fechado'}`;
+        statusElement.textContent = statusFuncionamento.aberto ? 'Aberto' : 'Fechado';
+        statusElement.className = `status-indicator ${statusFuncionamento.aberto ? '' : 'fechado'}`;
+    }
+}
+
+// Função para aplicar status aos botões (desabilitar se fechado)
+function aplicarStatusBotões() {
+    const aberto = statusFuncionamento.aberto;
+    
+    // Desabilitar botão de abrir carrinho
+    const openCartBtn = document.getElementById('openCart');
+    if (openCartBtn) {
+        openCartBtn.disabled = !aberto;
+        openCartBtn.title = aberto ? 'Abrir carrinho' : (statusFuncionamento.mensagem || 'Estabelecimento fechado');
+        if (!aberto) {
+            openCartBtn.style.opacity = '0.5';
+            openCartBtn.style.cursor = 'not-allowed';
+        } else {
+            openCartBtn.style.opacity = '1';
+            openCartBtn.style.cursor = 'pointer';
+        }
+    }
+    
+    // Desabilitar botões "Ver Detalhes" nos cards de produtos
+    document.querySelectorAll('.btn-add-to-cart').forEach(btn => {
+        if (btn.textContent.includes('Ver Detalhes')) {
+            btn.disabled = !aberto;
+            if (!aberto) {
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.title = statusFuncionamento.mensagem || 'Estabelecimento fechado';
+            } else {
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.title = '';
+            }
+        }
+    });
+    
+    // Desabilitar botões "Adicionar" na lista de produtos
+    document.querySelectorAll('.btn-adicionar').forEach(btn => {
+        btn.disabled = !aberto;
+        if (!aberto) {
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.title = statusFuncionamento.mensagem || 'Estabelecimento fechado';
+        } else {
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            btn.title = '';
+        }
+    });
+    
+    // Desabilitar botão "Adicionar ao Carrinho" no modal
+    const btnAdicionarCarrinho = document.getElementById('btnAdicionarCarrinho');
+    if (btnAdicionarCarrinho) {
+        btnAdicionarCarrinho.disabled = !aberto;
+        if (!aberto) {
+            btnAdicionarCarrinho.style.opacity = '0.5';
+            btnAdicionarCarrinho.style.cursor = 'not-allowed';
+            btnAdicionarCarrinho.title = statusFuncionamento.mensagem || 'Estabelecimento fechado';
+        } else {
+            btnAdicionarCarrinho.style.opacity = '1';
+            btnAdicionarCarrinho.style.cursor = 'pointer';
+            btnAdicionarCarrinho.title = '';
+        }
+    }
+    
+    // Verificar se há botão no modal (pode ter sido criado dinamicamente)
+    const btnToUpdate = document.getElementById('btnAdicionarCarrinho') || document.querySelector('.modal-product-actions .btn-add-to-cart');
+    if (btnToUpdate) {
+        btnToUpdate.disabled = !aberto;
+        if (!aberto) {
+            btnToUpdate.style.opacity = '0.5';
+            btnToUpdate.style.cursor = 'not-allowed';
+            btnToUpdate.title = statusFuncionamento.mensagem || 'Estabelecimento fechado';
+        } else {
+            btnToUpdate.style.opacity = '1';
+            btnToUpdate.style.cursor = 'pointer';
+            btnToUpdate.title = '';
+        }
     }
 }
 
 // Atualizar status ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
-    atualizarStatusRestaurante();
+    verificarStatusFuncionamento();
     
     // Atualizar status a cada minuto
-    setInterval(atualizarStatusRestaurante, 60000);
+    setInterval(verificarStatusFuncionamento, 60000);
 });
 
 // Função para lidar com mudanças de orientação da tela
@@ -1341,7 +1635,7 @@ function mostrarResultadosNaPagina(produtos, termo) {
                     <h3 class="produto-nome">${produto.nome}</h3>
                     <p class="produto-descricao">${produto.descricao || 'Sem descrição disponível.'}</p>
                     <div class="produto-preco">R$ ${preco}</div>
-                    <button class="btn-adicionar" onclick="event.stopPropagation(); adicionarAoCarrinho(${produto.idproduto})">
+                    <button class="btn-adicionar" onclick="event.stopPropagation(); adicionarAoCarrinho(${produto.idproduto})" ${!statusFuncionamento.aberto ? 'disabled title="' + (statusFuncionamento.mensagem || 'Estabelecimento fechado') + '"' : ''}>
                         <i class="fas fa-plus"></i>
                         Adicionar
                     </button>
@@ -1776,6 +2070,7 @@ function mostrarResultadosBusca(produtos) {
 
 // Exportar funções para uso global
 window.buscarProdutos = buscarProdutos;
+window.abrirModalProduto = abrirModalProduto;
 window.adicionarAoCarrinho = adicionarAoCarrinho;
 window.adicionarAosFavoritos = adicionarAosFavoritos;
 window.fecharModal = fecharModal;

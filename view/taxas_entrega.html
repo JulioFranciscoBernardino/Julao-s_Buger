@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Julão's Burger - Taxas de Entrega</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preload" href="/styles/navbar.css" as="style">
+  <link rel="preload" href="/styles/taxasEntrega.css" as="style">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="shortcut icon" href="/imgs/logoJulaos.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/styles/navbar.css">
+  <link rel="stylesheet" href="/styles/taxasEntrega.css">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  <nav class="apple-navbar">
+    <div class="navbar-container">
+      <div class="navbar-left">
+        <a href="/index" class="navbar-logo">
+          <img src="/imgs/logoJulaos.png" alt="Julão's Burger" class="logo-img">
+          <span class="logo-text">Julão's Burger Mega Lanches</span>
+        </a>
+      </div>
+      
+      <div class="navbar-center">
+        <ul class="navbar-menu">
+          <li><a href="admin_dashboard" class="nav-link">Home</a></li>
+          <li><a href="cardapio" class="nav-link">Cardápio</a></li>
+          <li><a href="pedidos" class="nav-link">Pedidos</a></li>
+          <li><a href="horarios-funcionamento" class="nav-link">Horários</a></li>
+          <li><a href="taxas-entrega" class="nav-link active">Taxas de Entrega</a></li>
+        </ul>
+      </div>
+      
+      <div class="navbar-right">
+        <button id="logoutBtn" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+      
+      <button class="navbar-toggle" type="button" aria-label="Toggle navigation">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="taxas-container">
+    <header class="taxas-header">
+      <h1><i class="fas fa-motorcycle"></i> Taxas de Entrega</h1>
+    </header>
+
+    <section class="taxas-form-card">
+      <form id="taxaEntregaForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="distanciaKm">Distância (km) *</label>
+            <input type="number" id="distanciaKm" step="0.1" min="0.1" placeholder="Ex: 1.0" required>
+          </div>
+          <div class="form-group">
+            <label for="valorTaxa">Valor (R$) *</label>
+            <input type="number" id="valorTaxa" step="0.01" min="0" placeholder="Ex: 3.00" required>
+          </div>
+          <div class="form-group">
+            <label for="observacaoTaxa">Descrição (opcional)</label>
+            <input type="text" id="observacaoTaxa" placeholder="Até 1 km, região central...">
+          </div>
+          <div class="form-group checkbox-group">
+            <label for="taxaAtiva">
+              <input type="checkbox" id="taxaAtiva" checked>
+              Ativa
+            </label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="btnSalvarTaxa">
+            <i class="fas fa-save"></i> Salvar Taxa
+          </button>
+          <button type="button" class="btn-secondary" id="btnCancelarEdicao" hidden>
+            <i class="fas fa-undo"></i> Cancelar Edição
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="taxas-lista-card">
+      <div class="lista-header">
+        <h2><i class="fas fa-list"></i> Faixas de Entrega</h2>
+        <button class="btn-link" id="btnRecarregarTaxas">
+          <i class="fas fa-rotate-right"></i> Recarregar
+        </button>
+      </div>
+      <div id="listaTaxasContainer" class="lista-container">
+        <div class="lista-empty">
+          <i class="fas fa-map-marker-alt"></i>
+          <p>Nenhuma taxa cadastrada.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/login_cadastro.js" defer></script>
+  <script src="/js/admin-check.js" defer></script>
+  <script src="/js/taxasEntrega.js" defer></script>
+</body>
+</html>
+
