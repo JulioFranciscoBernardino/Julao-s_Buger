@@ -4,10 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Julão's Burger - Dashboard</title>
-    <link rel="shortcut icon" href="/imgs/Logo Julãos Burguinho.png" type="image/x-icon">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="/styles/navbar.css" />
-    <link rel="stylesheet" href="/styles/dashboard.css" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://code.jquery.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preload" href="/styles/navbar.css" as="style">
+    <link rel="preload" href="/styles/dashboard.css" as="style">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="shortcut icon" href="/imgs/logoJulaos.png" type="image/x-icon">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    
+    <link rel="stylesheet" href="/styles/navbar.css">
+    <link rel="stylesheet" href="/styles/dashboard.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -19,7 +30,7 @@
     <div class="navbar-container">
       <div class="navbar-left">
         <a href="/index" class="navbar-logo">
-          <img src="/imgs/Logo Julãos Burguinho.png" alt="Julão's Burguinho" class="logo-img">
+          <img src="/imgs/logoJulaos.png" alt="Julão's Burguinho" class="logo-img">
           <span class="logo-text">Julão's Burger Mega Lanches</span>
         </a>
       </div>
@@ -103,9 +114,9 @@
     </div>
   </main>
 
-<script src="/js/login_cadastro.js"></script>
-<script src="/js/admin-check.js"></script>
-<script>
+<script src="/js/login_cadastro.js" defer></script>
+<script src="/js/admin-check.js" defer></script>
+<script defer>
 // Menu mobile toggle
 document.addEventListener('DOMContentLoaded', function() {
     const navbarToggle = document.querySelector('.navbar-toggle');

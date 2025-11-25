@@ -7,7 +7,18 @@ const produtoController = {
   listarProdutos: async (req, res) => {
     try {
       const produtos = await Produto.getAll();
-      res.json(produtos);
+      const produtosLimpos = produtos.map(produto => {
+        if (produto.imagem) {
+          if (produto.imagem.startsWith('http://') || produto.imagem.startsWith('https://')) {
+            const fileName = produto.imagem.split('/').pop().split('?')[0];
+            produto.imagem = `/imgs/${fileName}`;
+          } else if (!produto.imagem.startsWith('/imgs/')) {
+            produto.imagem = `/imgs/${produto.imagem}`;
+          }
+        }
+        return produto;
+      });
+      res.json(produtosLimpos);
     } catch (err) {
       console.error('Erro ao buscar produtos');
       res.status(500).json({ error: 'Erro interno do servidor' });
@@ -31,14 +42,7 @@ const produtoController = {
 
       let imagemUrl = null;
       if (req.file) {
-        // Verificar se o arquivo realmente existe
-        const fs = require('fs');
-        const filePath = req.file.path;
-        
-        if (fs.existsSync(filePath)) {
-          // URL relativa que funciona tanto local quanto no servidor AlwaysData
-          imagemUrl = `/imgs/${req.file.filename}`;
-        }
+        imagemUrl = `/imgs/${req.file.filename}`;
       }
 
       await Produto.cadastrarProduto({ 
@@ -80,14 +84,7 @@ const produtoController = {
       
       // Só adiciona imagem se um arquivo foi enviado
       if (req.file) {
-        // Verificar se o arquivo realmente existe
-        const fs = require('fs');
-        const filePath = req.file.path;
-        
-        if (fs.existsSync(filePath)) {
-          // URL relativa que funciona tanto local quanto no servidor AlwaysData
-          updateData.imagem = `/imgs/${req.file.filename}`;
-        }
+        updateData.imagem = `/imgs/${req.file.filename}`;
       }
 
       await Produto.atualizarProduto(idproduto, updateData);

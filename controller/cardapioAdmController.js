@@ -1,5 +1,23 @@
 const CategoriaModel = require('../models/cardapioAdmModel');
 
+function limparImagensProdutos(categorias) {
+  categorias.forEach(categoria => {
+    if (categoria.produtos) {
+      categoria.produtos.forEach(produto => {
+        if (produto.imagem) {
+          if (produto.imagem.startsWith('http://') || produto.imagem.startsWith('https://')) {
+            const fileName = produto.imagem.split('/').pop().split('?')[0];
+            produto.imagem = `/imgs/${fileName}`;
+          } else if (!produto.imagem.startsWith('/imgs/')) {
+            produto.imagem = `/imgs/${produto.imagem}`;
+          }
+        }
+      });
+    }
+  });
+  return categorias;
+}
+
 exports.mostrarCardapio = async (req, res) => {
   try {
     // Headers para evitar cache
@@ -10,8 +28,10 @@ exports.mostrarCardapio = async (req, res) => {
     });
 
     // Agora getCategoriasComProdutos retorna um array de categorias com array produtos
-    const categorias = await CategoriaModel.getCategoriasComProdutos();
-
+    let categorias = await CategoriaModel.getCategoriasComProdutos();
+    
+    // Limpar URLs absolutas das imagens
+    categorias = limparImagensProdutos(categorias);
 
     // Retorna diretamente, sem necessidade de agrupar
     res.json({ categorias });
@@ -31,7 +51,10 @@ exports.mostrarCardapioPublico = async (req, res) => {
     });
 
     // Usa a função que filtra apenas produtos disponíveis
-    const categorias = await CategoriaModel.getCategoriasComProdutosDisponiveis();
+    let categorias = await CategoriaModel.getCategoriasComProdutosDisponiveis();
+    
+    // Limpar URLs absolutas das imagens
+    categorias = limparImagensProdutos(categorias);
 
     // Retorna diretamente, sem necessidade de agrupar
     res.json({ categorias });

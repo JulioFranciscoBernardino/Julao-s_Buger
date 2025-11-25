@@ -268,11 +268,34 @@ function irParaConta() {
         window.location.href = url;
     } else {
         alert('Você precisa estar logado para acessar sua conta.');
-        window.location.href = '/login_cadastro.html';
+        window.location.href = '/login_cadastro';
     }
 }
 
-// Expor função globalmente
+// Expor função globalmente (garantir que esteja disponível)
 window.irParaConta = irParaConta;
+
+// Também expor quando o DOM estiver pronto e adicionar event listener
+document.addEventListener('DOMContentLoaded', function() {
+    window.irParaConta = irParaConta;
+    
+    // Adicionar event listener ao botão de perfil
+    const perfilBtn = document.getElementById('perfilBtn');
+    if (perfilBtn) {
+        perfilBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            irParaConta();
+        });
+    }
+});
+
+// Também tentar adicionar o listener imediatamente (caso o DOM já esteja pronto)
+const perfilBtn = document.getElementById('perfilBtn');
+if (perfilBtn) {
+    perfilBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        irParaConta();
+    });
+}
 
 

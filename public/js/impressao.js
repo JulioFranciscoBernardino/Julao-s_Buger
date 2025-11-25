@@ -330,7 +330,55 @@ function renderizarColunas() {
             container.appendChild(card);
         });
     });
+    
+    // Adicionar event listeners aos botões de ação
+    adicionarEventListenersBotoes();
+    
     atualizarResumo();
+}
+
+// Flag para garantir que o listener seja adicionado apenas uma vez
+let eventListenersBotoesAdicionados = false;
+
+function adicionarEventListenersBotoes() {
+    // Usar delegação de eventos no container principal (adicionar apenas uma vez)
+    if (eventListenersBotoesAdicionados) return;
+    
+    const expedicaoBoard = document.getElementById('expedicaoBoard');
+    if (!expedicaoBoard) return;
+    
+    expedicaoBoard.addEventListener('click', function(e) {
+        const btn = e.target.closest('.action-btn');
+        if (!btn) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const action = btn.dataset.action;
+        const pedidoId = parseInt(btn.dataset.pedidoId);
+        
+        if (!pedidoId || isNaN(pedidoId)) return;
+        
+        switch(action) {
+            case 'detalhes':
+                abrirModalDetalhes(pedidoId);
+                break;
+            case 'imprimir':
+                imprimirComandaManual(pedidoId);
+                break;
+            case 'cancelar':
+                cancelarPedido(pedidoId);
+                break;
+            case 'atualizar':
+                const novoStatus = btn.dataset.status;
+                if (novoStatus) {
+                    atualizarStatus(pedidoId, novoStatus);
+                }
+                break;
+        }
+    });
+    
+    eventListenersBotoesAdicionados = true;
 }
 
 function atualizarResumo() {
@@ -652,7 +700,7 @@ function getBotoesAcao(status, pedidoId) {
     
     // Botão de detalhes sempre presente
     botoes += `
-        <button class="action-btn btn-detalhes" onclick="abrirModalDetalhes(${pedidoId})">
+        <button class="action-btn btn-detalhes" data-action="detalhes" data-pedido-id="${pedidoId}">
             <i class="fas fa-eye"></i>
             Detalhes
         </button>
@@ -661,7 +709,7 @@ function getBotoesAcao(status, pedidoId) {
     // Botão de impressão sempre presente (exceto para pedidos cancelados)
     if (status !== 'cancelado') {
         botoes += `
-            <button class="action-btn btn-imprimir" onclick="imprimirComandaManual(${pedidoId})" title="Imprimir Comanda">
+            <button class="action-btn btn-imprimir" data-action="imprimir" data-pedido-id="${pedidoId}" title="Imprimir Comanda">
                 <i class="fas fa-print"></i>
                 Imprimir
             </button>
@@ -672,11 +720,11 @@ function getBotoesAcao(status, pedidoId) {
     switch(status) {
         case 'pendente':
             botoes += `
-                <button class="action-btn btn-aceitar" onclick="atualizarStatus(${pedidoId}, 'aceito')">
+                <button class="action-btn btn-aceitar" data-action="atualizar" data-pedido-id="${pedidoId}" data-status="aceito">
                     <i class="fas fa-check"></i>
                     Aceitar
                 </button>
-                <button class="action-btn btn-cancelar" onclick="cancelarPedido(${pedidoId})">
+                <button class="action-btn btn-cancelar" data-action="cancelar" data-pedido-id="${pedidoId}">
                     <i class="fas fa-times"></i>
                     Cancelar
                 </button>
@@ -684,11 +732,11 @@ function getBotoesAcao(status, pedidoId) {
             break;
         case 'aceito':
             botoes += `
-                <button class="action-btn btn-preparar" onclick="atualizarStatus(${pedidoId}, 'preparo')">
+                <button class="action-btn btn-preparar" data-action="atualizar" data-pedido-id="${pedidoId}" data-status="preparo">
                     <i class="fas fa-play"></i>
                     Iniciar Preparo
                 </button>
-                <button class="action-btn btn-cancelar" onclick="cancelarPedido(${pedidoId})">
+                <button class="action-btn btn-cancelar" data-action="cancelar" data-pedido-id="${pedidoId}">
                     <i class="fas fa-times"></i>
                     Cancelar
                 </button>
@@ -696,11 +744,11 @@ function getBotoesAcao(status, pedidoId) {
             break;
         case 'preparo':
             botoes += `
-                <button class="action-btn btn-pronto" onclick="atualizarStatus(${pedidoId}, 'entrega')">
+                <button class="action-btn btn-pronto" data-action="atualizar" data-pedido-id="${pedidoId}" data-status="entrega">
                     <i class="fas fa-check-circle"></i>
                     Pronto
                 </button>
-                <button class="action-btn btn-cancelar" onclick="cancelarPedido(${pedidoId})">
+                <button class="action-btn btn-cancelar" data-action="cancelar" data-pedido-id="${pedidoId}">
                     <i class="fas fa-times"></i>
                     Cancelar
                 </button>
@@ -708,11 +756,11 @@ function getBotoesAcao(status, pedidoId) {
             break;
         case 'entrega':
             botoes += `
-                <button class="action-btn btn-entregar" onclick="atualizarStatus(${pedidoId}, 'concluido')">
+                <button class="action-btn btn-entregar" data-action="atualizar" data-pedido-id="${pedidoId}" data-status="concluido">
                     <i class="fas fa-truck"></i>
                     Entregar
                 </button>
-                <button class="action-btn btn-cancelar" onclick="cancelarPedido(${pedidoId})">
+                <button class="action-btn btn-cancelar" data-action="cancelar" data-pedido-id="${pedidoId}">
                     <i class="fas fa-times"></i>
                     Cancelar
                 </button>
@@ -919,6 +967,9 @@ window.onclick = function(event) {
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
     registrarControlesPainel();
+    
+    // Adicionar event listeners aos botões (delegação de eventos)
+    adicionarEventListenersBotoes();
 
     // Carregar pedidos
     carregarPedidos().then(() => {

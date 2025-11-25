@@ -1,5 +1,5 @@
 /* Cardápio Público - Julão's Burger */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+/* Fontes carregadas via link tag no HTML com font-display: swap */
 
 * {
   box-sizing: border-box;

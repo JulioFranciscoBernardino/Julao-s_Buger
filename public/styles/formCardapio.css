@@ -30,7 +30,7 @@ input[type="file"]::-webkit-file-upload-button {
 input[type="file"]:hover::-webkit-file-upload-button {
   background: linear-gradient(90deg, #FFD700 60%, #FFCC00 100%);
 }
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+/* Fontes carregadas via link tag no HTML com font-display: swap */
 
 /* Estilo do fundo do modal */
 .modal {

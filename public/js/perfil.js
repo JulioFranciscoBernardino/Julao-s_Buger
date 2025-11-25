@@ -311,12 +311,19 @@ function renderizarEnderecos() {
                 <i class="fas fa-map-marker-alt"></i>
                 <h3>Nenhum endereço cadastrado</h3>
                 <p>Adicione um endereço para facilitar seus pedidos</p>
-                <button class="btn-primary" onclick="abrirModalNovoEndereco()">
+                <button class="btn-primary" id="btnAdicionarEnderecoVazio">
                     <i class="fas fa-plus"></i>
                     Adicionar Endereço
                 </button>
             </div>
         `;
+        
+        // Adicionar event listener ao botão
+        const btnAdicionar = document.getElementById('btnAdicionarEnderecoVazio');
+        if (btnAdicionar) {
+            btnAdicionar.addEventListener('click', abrirModalNovoEndereco);
+        }
+        
         return;
     }
     
@@ -359,22 +366,39 @@ function renderizarEnderecos() {
             
             <div class="endereco-acoes">
                 ${!endereco.principal ? `
-                    <button class="btn-endereco btn-principal" onclick="definirEnderecoPrincipal(${endereco.idendereco})">
+                    <button class="btn-endereco btn-principal" data-action="principal" data-id="${endereco.idendereco}">
                         <i class="fas fa-star"></i>
                         Principal
                     </button>
                 ` : ''}
-                <button class="btn-endereco btn-editar" onclick="editarEndereco(${endereco.idendereco})">
+                <button class="btn-endereco btn-editar" data-action="editar" data-id="${endereco.idendereco}">
                     <i class="fas fa-edit"></i>
                     Editar
                 </button>
-                <button class="btn-endereco btn-excluir" onclick="excluirEndereco(${endereco.idendereco})">
+                <button class="btn-endereco btn-excluir" data-action="excluir" data-id="${endereco.idendereco}">
                     <i class="fas fa-trash"></i>
                     Excluir
                 </button>
             </div>
         </div>
     `).join('');
+    
+    // Adicionar event listeners aos botões
+    lista.querySelectorAll('.btn-endereco').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.dataset.action;
+            const id = parseInt(this.dataset.id);
+            
+            if (action === 'editar') {
+                editarEndereco(id);
+            } else if (action === 'excluir') {
+                excluirEndereco(id);
+            } else if (action === 'principal') {
+                definirEnderecoPrincipal(id);
+            }
+        });
+    });
 }
 
 function getIconeEndereco(apelido) {

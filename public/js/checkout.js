@@ -430,8 +430,8 @@ function renderizarResumoPedido() {
 
         html += `
             <div class="summary-item" data-index="${index}">
-                <img src="${item.imagem || '/imgs/default-product.png'}" alt="${item.nome}" class="summary-item-img" 
-                     onerror="this.src='/imgs/default-product.png'">
+                <img src="${item.imagem ? (item.imagem.startsWith('/imgs/') ? item.imagem : `/imgs/${item.imagem}`) : '/imgs/default-product.png'}" alt="${item.nome}" class="summary-item-img" 
+                     onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding: 10px; text-align: center; color: #999;\\'><i class=\\'fas fa-image\\'></i><br>Imagem não encontrada</div>';">
                 <div class="summary-item-info">
                     <div class="summary-item-nome">${item.nome}</div>
                     ${item.opcionais && item.opcionais.length > 0 ? `

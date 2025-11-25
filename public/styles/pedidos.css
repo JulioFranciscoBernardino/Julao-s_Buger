@@ -848,7 +848,7 @@ body.gestor-pedidos .pedido-card:active {
     }
 }
 
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+/* Fontes carregadas via link tag no HTML com font-display: swap */
 
 /* Reset básico */
 * {
@@ -860,7 +860,6 @@ body.gestor-pedidos .pedido-card:active {
 /* Fonte Apple-style */
 html {
     width: 100%;
-    height: 100%;
     margin: 0;
     padding: 0;
 }
@@ -874,19 +873,23 @@ body {
     padding: 0;
 }
 
-/* PEDIDOS MAIN */
-html, body.gestor-pedidos {
+/* Permitir scroll na página de pedidos do cliente */
+body.cliente-pedidos {
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+}
+
+/* PEDIDOS MAIN - Apenas para gestor de pedidos */
+body.gestor-pedidos {
     height: 100%;
     width: 100%;
     overflow: hidden;
     margin: 0;
     padding: 0;
-}
-
-body.gestor-pedidos {
     display: flex;
     flex-direction: column;
-    width: 100%;
 }
 
 body.gestor-pedidos .pedidos-main {
@@ -899,6 +902,8 @@ body.gestor-pedidos .pedidos-main {
     height: calc(100vh - 44px);
     width: 100%;
 }
+
+/* Permitir scroll na página de pedidos do cliente */
 
 .pedidos-container {
     max-width: 1200px;

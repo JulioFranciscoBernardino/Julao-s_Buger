@@ -265,7 +265,7 @@ async function criarCardProduto(produto) {
             
             <div class="product-image">
                 ${imagem ? 
-                    `<img src="${imagem}" alt="${produto.nome}" loading="lazy">` :
+                    `<img src="${imagem}" alt="${produto.nome}" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><i class=\\'fas fa-utensils\\'></i><span>Imagem não encontrada</span></div>';" />` :
                     `<div class="product-image-placeholder">
                         <i class="fas fa-utensils"></i>
                         <span>Sem imagem</span>
@@ -318,7 +318,7 @@ async function abrirModalProduto(produto) {
         <div class="modal-product">
             <div class="modal-product-image">
                 ${imagem ? 
-                    `<img src="${imagem}" alt="${produto.nome}">` :
+                    `<img src="${imagem}" alt="${produto.nome}" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><i class=\\'fas fa-utensils\\'></i><span>Imagem não encontrada</span></div>';" />` :
                     `<div class="product-image-placeholder">
                         <i class="fas fa-utensils"></i>
                         <span>Sem imagem</span>
@@ -870,7 +870,7 @@ function atualizarCarrinho() {
             <div class="cart-item" data-item-id="${item.id}">
                 <div class="cart-item-image">
                     ${item.imagem ? 
-                        `<img src="${item.imagem}" alt="${item.nome}">` :
+                        `<img src="${item.imagem.startsWith('/imgs/') ? item.imagem : `/imgs/${item.imagem}`}" alt="${item.nome}" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-utensils\\'></i>';" />` :
                         `<i class="fas fa-utensils"></i>`
                     }
                 </div>
@@ -1330,7 +1330,7 @@ function mostrarResultadosNaPagina(produtos, termo) {
         return `
             <div class="produto-card" onclick="abrirModalProduto(${produto.idproduto})">
                 <div class="produto-image">
-                    <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy">
+                    <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><i class=\\'fas fa-utensils\\'></i><span>Imagem não encontrada</span></div>';" />
                     <div class="produto-overlay">
                         <button class="btn-overlay" onclick="event.stopPropagation(); abrirModalProduto(${produto.idproduto})">
                             <i class="fas fa-eye"></i>
@@ -1399,7 +1399,7 @@ function executarBusca() {
             <div class="search-result-item" onclick="selecionarProdutoDaBusca(${produto.idproduto})">
                 <div class="search-result-image">
                     ${imagem ? 
-                        `<img src="${imagem}" alt="${produto.nome}">` :
+                        `<img src="${imagem}" alt="${produto.nome}" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-utensils\\' style=\\'color: #adb5bd;\\'></i>';" />` :
                         `<i class="fas fa-utensils" style="color: #adb5bd;"></i>`
                     }
                 </div>
@@ -1761,7 +1761,7 @@ function mostrarResultadosBusca(produtos) {
             return `
                 <div class="search-result-item" onclick="selecionarProdutoDaBusca(${produto.idproduto})">
                     <div class="search-result-image">
-                        <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy">
+                        <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-utensils\\' style=\\'color: #adb5bd;\\'></i>';" />
                     </div>
                     <div class="search-result-info">
                         <div class="search-result-name">${produto.nome}</div>
