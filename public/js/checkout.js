@@ -7,8 +7,21 @@ let carrinhoData = [];
 let carrinhoRawData = [];
 let taxasEntrega = [];
 let taxaEntregaSelecionada = null;
-let subtotalAtual = 0;
-const TAXA_ENTREGA_GRATIS = 200;
+let distanciaCalculada = null;
+let tipoPedido = 'entrega'; // 'entrega' ou 'retirada'
+
+// Endereço do restaurante (configurável - pode vir de uma API ou configuração)
+const ENDERECO_RESTAURANTE = {
+    logradouro: 'Rua dos Bandeirantes',
+    numero: '813',
+    bairro: 'Vila Bocaina',
+    cidade: 'Mauá',
+    estado: 'SP',
+    cep: '09350276'
+};
+
+// WhatsApp da hamburgueria (formato: 5511999999999 - sem caracteres especiais)
+const WHATSAPP_RESTAURANTE = '5511993199463'; // Substitua pelo número real do restaurante
 
 // Inicialização ao carregar a página
 document.addEventListener('DOMContentLoaded', function() {
@@ -23,15 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
     configurarEventListeners();
 });
 
-// Verificar se usuário está autenticado
-function verificarAutenticacao() {
-    const token = localStorage.getItem('token');
-    return !!token;
-}
-
 // Verificar se há usuário logado
 function isUsuarioLogado() {
-    return verificarAutenticacao();
+    return !!localStorage.getItem('token');
 }
 
 // Carregar carrinho do localStorage
@@ -44,13 +51,10 @@ function carregarCarrinhoLocalStorage() {
         carrinhoStr = localStorage.getItem('cart');
     }
     
-    console.log('Chave do carrinho encontrada:', carrinhoStr ? 'Sim' : 'Não');
-    
     if (carrinhoStr) {
         try {
             carrinhoRawData = JSON.parse(carrinhoStr) || [];
         } catch (error) {
-            console.error('Erro ao interpretar carrinho:', error);
             carrinhoRawData = [];
         }
 
@@ -70,8 +74,6 @@ function carregarCarrinhoLocalStorage() {
 
         // Converter para a estrutura usada no checkout
         carrinhoData = carrinhoRawData.map(normalizarItemCarrinho);
-        
-        console.log('Dados do carrinho carregados:', carrinhoData);
         renderizarResumoPedido();
     } else {
         alert('Seu carrinho está vazio!');
@@ -113,7 +115,7 @@ function salvarCarrinhoRawAtualizado() {
         localStorage.setItem('julaosBurger_carrinho', serializado);
         localStorage.setItem('cart', serializado);
     } catch (error) {
-        console.error('Erro ao salvar carrinho com observações:', error);
+        // Erro silencioso ao salvar carrinho
     }
 }
 
@@ -139,7 +141,7 @@ async function carregarDadosCliente() {
                 localStorage.removeItem('dados_cliente_temp');
             }
         } catch (error) {
-            console.error('Erro ao carregar dados temporários:', error);
+            // Erro silencioso ao carregar dados temporários
         }
     }
     
@@ -167,7 +169,6 @@ async function carregarDadosCliente() {
             renderizarDadosCliente(dadosUsuario);
             
         } catch (error) {
-            console.error('Erro ao carregar dados do usuário:', error);
             renderizarFormularioDadosCliente();
         }
     } else {
@@ -303,7 +304,6 @@ async function carregarEnderecos() {
             renderizarEnderecos(enderecos);
             
         } catch (error) {
-            console.error('Erro ao carregar endereços:', error);
             carregarEnderecosTemporarios();
         }
     } else {
@@ -334,7 +334,6 @@ function carregarEnderecosTemporarios() {
             
             renderizarEnderecos(enderecosValidos);
         } catch (error) {
-            console.error('Erro ao carregar endereços temporários:', error);
             renderizarEnderecos([]);
         }
     } else {
@@ -360,16 +359,13 @@ function renderizarEnderecos(enderecos) {
     let html = '';
     enderecos.forEach(endereco => {
         const isPrincipal = endereco.principal === 1 || endereco.principal === true;
-        if (isPrincipal && !enderecoSelecionado) {
-            enderecoSelecionado = endereco;
-        }
+        // Não selecionar automaticamente nenhum endereço no início
 
         html += `
-            <div class="endereco-option ${isPrincipal ? 'selected' : ''}" data-id="${endereco.idendereco}">
+            <div class="endereco-option" data-id="${endereco.idendereco}" data-endereco='${JSON.stringify(endereco).replace(/'/g, "&#39;")}'>
                 <label class="endereco-label">
                     <input type="radio" name="endereco" value="${endereco.idendereco}" 
-                           ${isPrincipal ? 'checked' : ''}
-                           onchange="selecionarEndereco(${endereco.idendereco}, ${JSON.stringify(endereco).replace(/"/g, '&quot;')})">
+                           data-endereco-id="${endereco.idendereco}">
                     <div class="endereco-info">
                         <span class="endereco-nome">
                             ${endereco.nome || 'Endereço'}
@@ -389,10 +385,32 @@ function renderizarEnderecos(enderecos) {
 
     container.innerHTML = html;
     
-    // Habilitar botão de confirmar se houver endereço selecionado
+    // Configurar event listeners para endereços
+    container.querySelectorAll('input[name="endereco"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                const enderecoOption = this.closest('.endereco-option');
+                const enderecoData = JSON.parse(enderecoOption.dataset.endereco.replace(/&#39;/g, "'"));
+                selecionarEndereco(enderecoData.idendereco, enderecoData);
+            }
+        });
+    });
+    
+    // Botão de confirmar só será habilitado quando um endereço for selecionado
+    // Não habilitar automaticamente no início
     if (enderecoSelecionado) {
         document.getElementById('btnConfirmarPedido').disabled = false;
+    } else {
+        document.getElementById('btnConfirmarPedido').disabled = true;
     }
+    
+    // Garantir que nenhum endereço esteja selecionado no início
+    enderecoSelecionado = null;
+    distanciaCalculada = null;
+    taxaEntregaSelecionada = null;
+    
+    // Atualizar resumo sem taxa de entrega
+    renderizarResumoPedido();
 }
 
 // Selecionar endereço
@@ -403,10 +421,181 @@ function selecionarEndereco(id, endereco) {
     document.querySelectorAll('.endereco-option').forEach(opt => {
         opt.classList.remove('selected');
     });
-    document.querySelector(`[data-id="${id}"]`).classList.add('selected');
+    const enderecoElement = document.querySelector(`[data-id="${id}"]`);
+    if (enderecoElement) {
+        enderecoElement.classList.add('selected');
+    }
+    
+    // Calcular distância e taxa automaticamente
+    calcularDistanciaETaxa(endereco);
     
     // Habilitar botão
-    document.getElementById('btnConfirmarPedido').disabled = false;
+    const btnConfirmar = document.getElementById('btnConfirmarPedido');
+    if (btnConfirmar) {
+        btnConfirmar.disabled = false;
+    }
+}
+
+// Calcular distância e taxa de entrega automaticamente
+async function calcularDistanciaETaxa(enderecoEntrega) {
+    if (!enderecoEntrega) {
+        distanciaCalculada = null;
+        taxaEntregaSelecionada = null;
+        renderizarResumoPedido();
+        return;
+    }
+
+    if (tipoPedido === 'retirada') {
+        taxaEntregaSelecionada = null;
+        renderizarResumoPedido();
+        return;
+    }
+
+    try {
+        const enderecoRestaurante = `${ENDERECO_RESTAURANTE.logradouro}, ${ENDERECO_RESTAURANTE.numero}, ${ENDERECO_RESTAURANTE.bairro}, ${ENDERECO_RESTAURANTE.cidade}, ${ENDERECO_RESTAURANTE.estado}`;
+        const enderecoDestino = `${enderecoEntrega.logradouro}, ${enderecoEntrega.numero}, ${enderecoEntrega.bairro}, ${enderecoEntrega.cidade}, ${enderecoEntrega.estado}`;
+
+        const distancia = await calcularDistanciaEntreEnderecos(enderecoRestaurante, enderecoDestino);
+        
+        if (distancia !== null && distancia !== undefined && typeof distancia === 'number' && distancia > 0) {
+            distanciaCalculada = distancia;
+            encontrarTaxaPorDistancia(distancia);
+        } else {
+            aplicarTaxaFixaFallback();
+        }
+        
+        // Garantir que sempre haja uma taxa quando houver endereço selecionado
+        if (!taxaEntregaSelecionada) {
+            aplicarTaxaFixaFallback();
+        }
+        
+        renderizarResumoPedido();
+        
+    } catch (error) {
+        aplicarTaxaFixaFallback();
+        renderizarResumoPedido();
+    }
+}
+
+// Calcular distância entre dois endereços usando Google Maps Distance Matrix API
+async function calcularDistanciaEntreEnderecos(origem, destino) {
+    try {
+        const response = await fetch('/api/distancia/calcular', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ origem, destino })
+        });
+
+        const data = await response.json();
+        
+        // Se a resposta contém erro, retornar null
+        if (data.erro || !data.distancia) {
+            return null;
+        }
+
+        // Verificar se a distância é válida
+        if (data && typeof data.distancia === 'number' && data.distancia > 0) {
+            return data.distancia;
+        }
+        
+        return null;
+        
+    } catch (error) {
+        return null;
+    }
+}
+
+// Aplicar taxa fixa quando a API falhar
+function aplicarTaxaFixaFallback() {
+    distanciaCalculada = 4.0;
+    
+    if (!taxasEntrega || taxasEntrega.length === 0) {
+        taxaEntregaSelecionada = {
+            id: 'fallback',
+            distancia_km: 4.0,
+            valor: 8.00,
+            observacao: 'Taxa padrão (API indisponível)',
+            ativo: true
+        };
+        return;
+    }
+    
+    const taxasAtivas = taxasEntrega.filter(t => t.ativo !== false && t.ativo !== 0);
+    
+    if (taxasAtivas.length === 0) {
+        taxaEntregaSelecionada = {
+            id: 'fallback',
+            distancia_km: 4.0,
+            valor: 8.00,
+            observacao: 'Taxa padrão (API indisponível)',
+            ativo: true
+        };
+        return;
+    }
+    
+    const taxaR$8 = taxasAtivas.find(t => Number(t.valor) === 8);
+    if (taxaR$8) {
+        taxaEntregaSelecionada = taxaR$8;
+        return;
+    }
+    
+    const taxa4km = taxasAtivas.find(t => Number(t.distancia_km) === 4 || Number(t.distancia_km) === 4.0);
+    if (taxa4km) {
+        taxaEntregaSelecionada = taxa4km;
+        return;
+    }
+    
+    const taxasOrdenadas = [...taxasAtivas].sort((a, b) => Number(a.distancia_km) - Number(b.distancia_km));
+    if (taxasOrdenadas.length > 0) {
+        taxaEntregaSelecionada = taxasOrdenadas[0];
+        return;
+    }
+    
+    taxaEntregaSelecionada = {
+        id: 'fallback',
+        distancia_km: 4.0,
+        valor: 8.00,
+        observacao: 'Taxa padrão (API indisponível)',
+        ativo: true
+    };
+}
+
+// Encontrar taxa de entrega baseada na distância
+function encontrarTaxaPorDistancia(distancia) {
+    if (!taxasEntrega || taxasEntrega.length === 0) {
+        aplicarTaxaFixaFallback();
+        return;
+    }
+
+    const taxasAtivas = taxasEntrega.filter(t => t.ativo !== false && t.ativo !== 0);
+    
+    if (taxasAtivas.length === 0) {
+        aplicarTaxaFixaFallback();
+        return;
+    }
+
+    const taxasQueCobrem = taxasAtivas.filter(taxa => {
+        return distancia <= Number(taxa.distancia_km);
+    });
+
+    if (taxasQueCobrem.length === 0) {
+        // Se nenhuma taxa cobre a distância, usar a maior taxa disponível
+        const taxasOrdenadas = [...taxasAtivas].sort((a, b) => Number(b.distancia_km) - Number(a.distancia_km));
+        if (taxasOrdenadas.length > 0) {
+            taxaEntregaSelecionada = taxasOrdenadas[0];
+        } else {
+            aplicarTaxaFixaFallback();
+        }
+    } else {
+        taxasQueCobrem.sort((a, b) => {
+            const distA = Number(a.distancia_km);
+            const distB = Number(b.distancia_km);
+            return distA - distB;
+        });
+        taxaEntregaSelecionada = taxasQueCobrem[0];
+    }
 }
 
 // Renderizar resumo do pedido
@@ -432,10 +621,28 @@ function renderizarResumoPedido() {
 
         const observacaoSanitizada = escaparHTML(item.observacao || '');
 
+        // Normalizar caminho da imagem
+        let imagemHtml = '';
+        if (item.imagem) {
+            let imgPath = item.imagem.replace(/^https?:\/\/[^\/]+/, '');
+            if (!imgPath.startsWith('/imgs/')) {
+                imgPath = imgPath.replace(/^\/imgs\/imgs\//, '/imgs/');
+                if (!imgPath.startsWith('/imgs/')) {
+                    imgPath = `/imgs/${imgPath.replace(/^\//, '')}`;
+                }
+            }
+            imagemHtml = `<img src="${imgPath}" alt="${item.nome}" class="summary-item-img" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+        }
+        
+        if (!imagemHtml) {
+            imagemHtml = '<div class="summary-item-placeholder"><i class="fas fa-utensils"></i></div>';
+        } else {
+            imagemHtml += '<div class="summary-item-placeholder" style="display:none;"><i class="fas fa-utensils"></i></div>';
+        }
+
         html += `
             <div class="summary-item" data-index="${index}">
-                <img src="${item.imagem ? (item.imagem.startsWith('/imgs/') ? item.imagem : `/imgs/${item.imagem}`) : '/imgs/default-product.png'}" alt="${item.nome}" class="summary-item-img" 
-                     onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div style=\\'padding: 10px; text-align: center; color: #999;\\'><i class=\\'fas fa-image\\'></i><br>Imagem não encontrada</div>';">
+                ${imagemHtml}
                 <div class="summary-item-info">
                     <div class="summary-item-nome">${item.nome}</div>
                     ${item.opcionais && item.opcionais.length > 0 ? `
@@ -482,7 +689,6 @@ function renderizarResumoPedido() {
     });
     
     // Atualizar totais
-    subtotalAtual = subtotal;
     const totalTaxaEntrega = calcularTaxaEntrega(subtotal);
     const totalFinal = subtotal + totalTaxaEntrega;
     
@@ -490,17 +696,33 @@ function renderizarResumoPedido() {
     document.getElementById('taxaEntrega').textContent = `R$ ${formatarPreco(totalTaxaEntrega)}`;
     document.getElementById('totalPedido').textContent = `R$ ${formatarPreco(totalFinal)}`;
 
-    atualizarMensagemTaxaEntrega(subtotal);
 }
 
 // Calcular taxa de entrega
 function calcularTaxaEntrega(subtotal) {
-    if (subtotal >= TAXA_ENTREGA_GRATIS) {
+    // Se for retirada, não há taxa
+    if (tipoPedido === 'retirada') {
         return 0;
     }
-    if (taxaEntregaSelecionada) {
-        return Number(taxaEntregaSelecionada.valor) || 0;
+    
+    // Se há um endereço selecionado mas não há taxa, tentar aplicar fallback
+    if (enderecoSelecionado && !taxaEntregaSelecionada) {
+        aplicarTaxaFixaFallback();
     }
+    
+    // Se há uma taxa selecionada, usar o valor dela
+    if (taxaEntregaSelecionada && taxaEntregaSelecionada.valor) {
+        return Number(taxaEntregaSelecionada.valor);
+    }
+    
+    // Se ainda não há taxa mas há endereço, aplicar fallback
+    if (enderecoSelecionado) {
+        aplicarTaxaFixaFallback();
+        if (taxaEntregaSelecionada && taxaEntregaSelecionada.valor) {
+            return Number(taxaEntregaSelecionada.valor);
+        }
+    }
+    
     return 0;
 }
 
@@ -517,7 +739,6 @@ async function carregarFormasPagamento() {
         renderizarFormasPagamento(formas);
         
     } catch (error) {
-        console.error('Erro ao carregar formas de pagamento:', error);
         document.getElementById('formaPagamentoContainer').innerHTML = `
             <div class="error-message">
                 <i class="fas fa-exclamation-circle"></i>
@@ -549,11 +770,11 @@ function renderizarFormasPagamento(formas) {
         }
 
         html += `
-            <div class="forma-pagamento-option ${isFirst ? 'selected' : ''}" data-id="${forma.idforma_pagamento}">
+            <div class="forma-pagamento-option ${isFirst ? 'selected' : ''}" data-id="${forma.idforma_pagamento}" data-forma='${JSON.stringify(forma).replace(/'/g, "&#39;")}'>
                 <label class="forma-pagamento-label">
                     <input type="radio" name="formaPagamento" value="${forma.idforma_pagamento}" 
                            ${isFirst ? 'checked' : ''}
-                           onchange="selecionarFormaPagamento(${forma.idforma_pagamento}, ${JSON.stringify(forma).replace(/"/g, '&quot;')})">
+                           data-forma-id="${forma.idforma_pagamento}">
                     <div class="forma-pagamento-nome">${forma.nome}</div>
                 </label>
             </div>
@@ -561,6 +782,17 @@ function renderizarFormasPagamento(formas) {
     });
 
     container.innerHTML = html;
+    
+    // Configurar event listeners para formas de pagamento
+    container.querySelectorAll('input[name="formaPagamento"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                const formaOption = this.closest('.forma-pagamento-option');
+                const formaData = JSON.parse(formaOption.dataset.forma);
+                selecionarFormaPagamento(formaData.idforma_pagamento, formaData);
+            }
+        });
+    });
 }
 
 // Taxas de entrega
@@ -570,95 +802,15 @@ async function carregarTaxasEntrega() {
         if (!response.ok) {
             throw new Error('Erro ao carregar taxas de entrega');
         }
-        taxasEntrega = await response.json();
-        atualizarOpcoesTaxaEntrega();
-        atualizarMensagemTaxaEntrega();
+        const data = await response.json();
+        taxasEntrega = Array.isArray(data) ? data : [];
+        
+        // Se houver um endereço já selecionado, recalcular a taxa
+        if (enderecoSelecionado && tipoPedido === 'entrega') {
+            calcularDistanciaETaxa(enderecoSelecionado);
+        }
     } catch (error) {
-        console.error('Erro ao carregar taxas de entrega:', error);
         taxasEntrega = [];
-        atualizarOpcoesTaxaEntrega(true);
-    }
-}
-
-function atualizarOpcoesTaxaEntrega(erro = false) {
-    const select = document.getElementById('taxaEntregaSelect');
-    if (!select) return;
-
-    select.innerHTML = '';
-
-    if (erro) {
-        select.innerHTML = '<option value="">Erro ao carregar taxas</option>';
-        select.disabled = true;
-        return;
-    }
-
-    if (!taxasEntrega.length) {
-        select.innerHTML = '<option value="">Nenhuma taxa cadastrada</option>';
-        select.disabled = true;
-        atualizarMensagemTaxaEntrega();
-        return;
-    }
-
-    select.disabled = false;
-    const options = ['<option value="">Selecione a distância</option>'];
-    taxasEntrega.forEach((taxa) => {
-        options.push(
-            `<option value="${taxa.id}">
-                Até ${Number(taxa.distancia_km).toFixed(1)} km - R$ ${Number(taxa.valor).toFixed(2)}
-            </option>`
-        );
-    });
-    select.innerHTML = options.join('');
-
-    if (taxasEntrega.length === 1) {
-        select.value = taxasEntrega[0].id;
-        taxaEntregaSelecionada = taxasEntrega[0];
-    }
-}
-
-function onTaxaEntregaChange(event) {
-    const valor = event.target.value;
-    if (!valor) {
-        taxaEntregaSelecionada = null;
-    } else {
-        taxaEntregaSelecionada = taxasEntrega.find((taxa) => String(taxa.id) === valor) || null;
-    }
-    atualizarMensagemTaxaEntrega();
-    renderizarResumoPedido();
-}
-
-function atualizarMensagemTaxaEntrega(subtotal = subtotalAtual) {
-    const mensagemEl = document.getElementById('taxaEntregaMensagem');
-    const select = document.getElementById('taxaEntregaSelect');
-    if (!mensagemEl) return;
-
-    if (subtotal >= TAXA_ENTREGA_GRATIS) {
-        mensagemEl.textContent = 'Entrega grátis para pedidos a partir de R$ 200,00.';
-        if (select) {
-            select.disabled = true;
-            select.value = '';
-        }
-        return;
-    }
-
-    if (select && !taxasEntrega.length) {
-        select.disabled = true;
-        mensagemEl.textContent = 'Nenhuma taxa cadastrada. Configure no painel administrativo.';
-        return;
-    }
-
-    if (select && select.disabled) {
-        select.disabled = false;
-    }
-
-    if (!taxaEntregaSelecionada) {
-        mensagemEl.textContent = 'Selecione a distância aproximada para calcular a taxa.';
-    } else {
-        mensagemEl.textContent = `Taxa aplicada para até ${Number(taxaEntregaSelecionada.distancia_km).toFixed(1)} km.`;
-        const selectElement = document.getElementById('taxaEntregaSelect');
-        if (selectElement && selectElement.value !== String(taxaEntregaSelecionada.id)) {
-            selectElement.value = taxaEntregaSelecionada.id;
-        }
     }
 }
 
@@ -675,6 +827,14 @@ function selecionarFormaPagamento(id, forma) {
 
 // Configurar event listeners
 function configurarEventListeners() {
+    // Radio buttons de tipo de pedido (entrega/retirada)
+    document.querySelectorAll('input[name="tipoPedido"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            tipoPedido = this.value;
+            atualizarInterfaceTipoPedido();
+        });
+    });
+
     // Botão adicionar novo endereço
     document.getElementById('btnNovoEndereco').addEventListener('click', function() {
         abrirModalEndereco();
@@ -688,22 +848,71 @@ function configurarEventListeners() {
 
     // Máscara CEP
     const cepInput = document.getElementById('cepEndereco');
-    cepInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 5) {
-            value = value.substring(0, 5) + '-' + value.substring(5, 8);
-        }
-        e.target.value = value;
+    if (cepInput) {
+        // Remover event listeners anteriores se existirem
+        const novoCepInput = cepInput.cloneNode(true);
+        cepInput.parentNode.replaceChild(novoCepInput, cepInput);
+        
+        novoCepInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 5) {
+                value = value.substring(0, 5) + '-' + value.substring(5, 8);
+            }
+            e.target.value = value;
 
-        // Buscar CEP automaticamente quando completo
-        if (value.length === 9) {
-            buscarCEP(value);
-        }
-    });
+            // Buscar CEP automaticamente quando completo (9 caracteres com hífen)
+            if (value.length === 9) {
+                // Pequeno delay para garantir que o valor foi atualizado
+                setTimeout(() => {
+                    buscarCEP(value);
+                }, 100);
+            }
+        });
+        
+        // Também buscar ao perder o foco se o CEP estiver completo
+        novoCepInput.addEventListener('blur', function(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            if (value.length === 8) {
+                buscarCEP(e.target.value);
+            }
+        });
+    }
 
-    const selectTaxa = document.getElementById('taxaEntregaSelect');
-    if (selectTaxa) {
-        selectTaxa.addEventListener('change', onTaxaEntregaChange);
+    // Removido: campo de seleção manual de distância
+    
+    // Inicializar interface baseada no tipo de pedido padrão
+    atualizarInterfaceTipoPedido();
+}
+
+// Atualizar interface baseado no tipo de pedido
+function atualizarInterfaceTipoPedido() {
+    const secaoEndereco = document.getElementById('secaoEndereco');
+    
+    if (tipoPedido === 'retirada') {
+        // Esconder seção de endereço
+        secaoEndereco.classList.add('hidden');
+        
+        // Limpar seleção de endereço
+        enderecoSelecionado = null;
+        distanciaCalculada = null;
+        taxaEntregaSelecionada = null;
+        
+        // Habilitar botão de confirmar (não precisa de endereço)
+        document.getElementById('btnConfirmarPedido').disabled = false;
+        
+        // Atualizar resumo (sem taxa de entrega)
+        renderizarResumoPedido();
+    } else {
+        // Mostrar seção de endereço
+        secaoEndereco.classList.remove('hidden');
+        
+        // Desabilitar botão até selecionar endereço
+        if (!enderecoSelecionado) {
+            document.getElementById('btnConfirmarPedido').disabled = true;
+        }
+        
+        // Atualizar resumo
+        renderizarResumoPedido();
     }
 }
 
@@ -723,23 +932,221 @@ function abrirModalEndereco() {
 function fecharModalEndereco() {
     document.getElementById('modalNovoEndereco').classList.remove('active');
     document.getElementById('formNovoEndereco').reset();
+    
+    // Limpar estados visuais dos campos
+    const cepInput = document.getElementById('cepEndereco');
+    if (cepInput) {
+        cepInput.style.borderColor = '';
+        cepInput.style.backgroundImage = 'none';
+        cepInput.style.paddingRight = '';
+    }
+    
+    // Remover mensagens de feedback
+    const mensagemCEP = document.getElementById('cepMensagem');
+    if (mensagemCEP) {
+        mensagemCEP.remove();
+    }
 }
 
 // Buscar CEP via API
 async function buscarCEP(cep) {
+    const cepInput = document.getElementById('cepEndereco');
+    if (!cepInput) return;
+    
+    const cepLimpo = cep.replace(/\D/g, '');
+    
+    // Validar CEP (deve ter 8 dígitos)
+    if (cepLimpo.length !== 8) {
+        return;
+    }
+    
+    // Adicionar estado de loading
+    cepInput.style.borderColor = '#e8b705';
+    cepInput.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23e8b705\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M21 12a9 9 0 1 1-6.219-8.56\'/%3E%3C/svg%3E")';
+    cepInput.style.backgroundRepeat = 'no-repeat';
+    cepInput.style.backgroundPosition = 'right 0.75rem center';
+    cepInput.style.paddingRight = '2.5rem';
+    
     try {
-        const cepLimpo = cep.replace(/\D/g, '');
-        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        // Criar um timeout para a requisição (10 segundos)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        // Usar URL da ViaCEP (sem callback para evitar problemas)
+        const url = `https://viacep.com.br/ws/${cepLimpo}/json/`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+            cache: 'no-cache',
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        // Verificar se a resposta é OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
-        if (!data.erro) {
-            document.getElementById('logradouroEndereco').value = data.logradouro || '';
-            document.getElementById('bairroEndereco').value = data.bairro || '';
-            document.getElementById('cidadeEndereco').value = data.localidade || '';
-            document.getElementById('estadoEndereco').value = data.uf || '';
+        // Verificar se há erro na resposta
+        if (data.erro === true || (data.erro && data.erro !== false)) {
+            // CEP não encontrado
+            cepInput.style.borderColor = '#dc3545';
+            cepInput.style.backgroundImage = 'none';
+            cepInput.style.paddingRight = '0.75rem';
+            mostrarMensagemCEP('CEP não encontrado. Por favor, verifique e tente novamente.', 'erro');
+            return;
         }
+
+        // Verificar se os dados essenciais estão presentes
+        if (!data.localidade || !data.uf) {
+            cepInput.style.borderColor = '#dc3545';
+            cepInput.style.backgroundImage = 'none';
+            cepInput.style.paddingRight = '0.75rem';
+            mostrarMensagemCEP('CEP encontrado, mas dados incompletos. Preencha manualmente.', 'erro');
+            return;
+        }
+
+        // Preencher campos automaticamente
+        const logradouroInput = document.getElementById('logradouroEndereco');
+        const bairroInput = document.getElementById('bairroEndereco');
+        const cidadeInput = document.getElementById('cidadeEndereco');
+        const estadoInput = document.getElementById('estadoEndereco');
+        
+        if (logradouroInput) logradouroInput.value = data.logradouro || '';
+        if (bairroInput) bairroInput.value = data.bairro || '';
+        if (cidadeInput) cidadeInput.value = data.localidade || '';
+        if (estadoInput) estadoInput.value = data.uf || '';
+        
+        // Feedback visual de sucesso
+        cepInput.style.borderColor = '#28a745';
+        cepInput.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2328a745\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'20 6 9 17 4 12\'/%3E%3C/svg%3E")';
+        cepInput.style.backgroundRepeat = 'no-repeat';
+        cepInput.style.backgroundPosition = 'right 0.75rem center';
+        cepInput.style.paddingRight = '2.5rem';
+        
+        // Remover feedback após 2 segundos
+        setTimeout(() => {
+            cepInput.style.borderColor = '';
+            cepInput.style.backgroundImage = 'none';
+            cepInput.style.paddingRight = '0.75rem';
+        }, 2000);
+        
+        // Focar no campo de número se logradouro foi preenchido
+        const numeroInput = document.getElementById('numeroEndereco');
+        if (numeroInput && logradouroInput && logradouroInput.value) {
+            numeroInput.focus();
+        }
+        
+        mostrarMensagemCEP('Endereço encontrado!', 'sucesso');
+        
     } catch (error) {
-        console.error('Erro ao buscar CEP:', error);
+        // Verificar se foi timeout
+        if (error.name === 'AbortError') {
+            cepInput.style.borderColor = '#dc3545';
+            cepInput.style.backgroundImage = 'none';
+            cepInput.style.paddingRight = '0.75rem';
+            mostrarMensagemCEP('Tempo de busca excedido. Verifique sua conexão e tente novamente.', 'erro');
+            return;
+        }
+        
+        // Tentar com URL alternativa (sem parâmetros extras)
+        try {
+            const controllerAlt = new AbortController();
+            const timeoutIdAlt = setTimeout(() => controllerAlt.abort(), 8000);
+            
+            const urlAlt = `https://viacep.com.br/ws/${cepLimpo}/json/`;
+            const responseAlt = await fetch(urlAlt, {
+                signal: controllerAlt.signal,
+                cache: 'no-cache'
+            });
+            
+            clearTimeout(timeoutIdAlt);
+            
+            if (responseAlt.ok) {
+                const dataAlt = await responseAlt.json();
+                
+                if (!dataAlt.erro && dataAlt.localidade) {
+                    // Preencher com dados alternativos
+                    const logradouroInput = document.getElementById('logradouroEndereco');
+                    const bairroInput = document.getElementById('bairroEndereco');
+                    const cidadeInput = document.getElementById('cidadeEndereco');
+                    const estadoInput = document.getElementById('estadoEndereco');
+                    
+                    if (logradouroInput) logradouroInput.value = dataAlt.logradouro || '';
+                    if (bairroInput) bairroInput.value = dataAlt.bairro || '';
+                    if (cidadeInput) cidadeInput.value = dataAlt.localidade || '';
+                    if (estadoInput) estadoInput.value = dataAlt.uf || '';
+                    
+                    cepInput.style.borderColor = '#28a745';
+                    cepInput.style.backgroundImage = 'none';
+                    cepInput.style.paddingRight = '0.75rem';
+                    mostrarMensagemCEP('Endereço encontrado!', 'sucesso');
+                    return;
+                }
+            }
+        } catch (errorAlt) {
+            // Erro silencioso na tentativa alternativa
+        }
+        
+        cepInput.style.borderColor = '#dc3545';
+        cepInput.style.backgroundImage = 'none';
+        cepInput.style.paddingRight = '0.75rem';
+        
+        // Mensagem mais específica baseada no tipo de erro
+        let mensagemErro = 'Erro ao buscar CEP. Verifique sua conexão e tente novamente.';
+        if (error.message && error.message.includes('Failed to fetch')) {
+            mensagemErro = 'Erro de conexão. Verifique sua internet e tente novamente.';
+        } else if (error.message && error.message.includes('network')) {
+            mensagemErro = 'Erro de rede. Tente novamente em alguns instantes.';
+        }
+        
+        mostrarMensagemCEP(mensagemErro, 'erro');
+    }
+}
+
+// Mostrar mensagem de feedback para busca de CEP
+function mostrarMensagemCEP(mensagem, tipo) {
+    // Remover mensagem anterior se existir
+    const mensagemAnterior = document.getElementById('cepMensagem');
+    if (mensagemAnterior) {
+        mensagemAnterior.remove();
+    }
+    
+    // Criar elemento de mensagem
+    const mensagemEl = document.createElement('div');
+    mensagemEl.id = 'cepMensagem';
+    mensagemEl.style.cssText = `
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        ${tipo === 'sucesso' 
+            ? 'background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;' 
+            : 'background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'}
+    `;
+    mensagemEl.textContent = mensagem;
+    
+    // Inserir após o campo CEP
+    const cepInput = document.getElementById('cepEndereco');
+    const formGroup = cepInput.closest('.form-group');
+    if (formGroup) {
+        formGroup.appendChild(mensagemEl);
+        
+        // Remover mensagem após 3 segundos (se for sucesso)
+        if (tipo === 'sucesso') {
+            setTimeout(() => {
+                mensagemEl.style.transition = 'opacity 0.3s ease';
+                mensagemEl.style.opacity = '0';
+                setTimeout(() => mensagemEl.remove(), 300);
+            }, 3000);
+        }
     }
 }
 
@@ -747,15 +1154,40 @@ async function buscarCEP(cep) {
 async function salvarNovoEndereco(event) {
     event.preventDefault();
 
+    // Validar campos obrigatórios
+    const nome = document.getElementById('nomeEndereco').value.trim();
+    const cep = document.getElementById('cepEndereco').value.replace(/\D/g, '');
+    const logradouro = document.getElementById('logradouroEndereco').value.trim();
+    const numero = document.getElementById('numeroEndereco').value.trim();
+    const bairro = document.getElementById('bairroEndereco').value.trim();
+    const cidade = document.getElementById('cidadeEndereco').value.trim();
+    const estado = document.getElementById('estadoEndereco').value.trim().toUpperCase();
+
+    if (!nome || !cep || !logradouro || !numero || !bairro || !cidade || !estado) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+
+    if (cep.length !== 8) {
+        alert('CEP inválido. Deve conter 8 dígitos.');
+        return;
+    }
+
+    if (estado.length !== 2) {
+        alert('Estado inválido. Deve conter 2 letras (ex: SP).');
+        return;
+    }
+
     const endereco = {
-        nome: document.getElementById('nomeEndereco').value,
-        cep: document.getElementById('cepEndereco').value,
-        logradouro: document.getElementById('logradouroEndereco').value,
-        numero: document.getElementById('numeroEndereco').value,
-        complemento: document.getElementById('complementoEndereco').value || '',
-        bairro: document.getElementById('bairroEndereco').value,
-        cidade: document.getElementById('cidadeEndereco').value,
-        estado: document.getElementById('estadoEndereco').value,
+        apelido: nome, // O backend espera 'apelido', não 'nome'
+        cep: cep, // Backend espera CEP sem hífen (8 dígitos)
+        logradouro,
+        numero,
+        complemento: document.getElementById('complementoEndereco').value.trim() || '',
+        bairro,
+        cidade,
+        estado,
+        referencia: '', // Campo opcional
         principal: false
     };
 
@@ -778,12 +1210,14 @@ async function salvarNovoEndereco(event) {
             } else if (response.ok) {
                 const novoEndereco = await response.json();
                 fecharModalEndereco();
-                carregarEnderecos();
+                // Recarregar página para atualizar endereços e recalcular distância
+                window.location.reload();
             } else {
-                alert('Erro ao salvar endereço');
+                // Tentar obter mensagem de erro do backend
+                const erroData = await response.json().catch(() => ({ erro: 'Erro ao salvar endereço' }));
+                alert(erroData.erro || 'Erro ao salvar endereço');
             }
         } catch (error) {
-            console.error('Erro ao salvar endereço:', error);
             // Em caso de erro, tentar salvar temporariamente
             salvarEnderecoTemporario(endereco);
         }
@@ -810,7 +1244,8 @@ function salvarEnderecoTemporario(endereco) {
     localStorage.setItem('enderecos_temporarios', JSON.stringify(enderecos));
 
     fecharModalEndereco();
-    carregarEnderecos();
+    // Recarregar página para atualizar endereços e recalcular distância
+    window.location.reload();
 }
 
 // Confirmar pedido
@@ -833,7 +1268,7 @@ async function confirmarPedido() {
         }
         
         // Validar dados
-        if (!enderecoSelecionado) {
+        if (tipoPedido === 'entrega' && !enderecoSelecionado) {
             alert('Selecione um endereço de entrega');
             return;
         }
@@ -851,13 +1286,14 @@ async function confirmarPedido() {
         // Calcular totais
         const subtotal = carrinhoData.reduce((total, item) => total + (item.precoFinal * item.quantidade), 0);
 
-        if (subtotal < TAXA_ENTREGA_GRATIS && taxasEntrega.length > 0 && !taxaEntregaSelecionada) {
-            alert('Selecione a distância da entrega para calcular a taxa.');
-            document.getElementById('taxaEntregaSelect')?.focus();
+        // Validar taxa de entrega apenas se for entrega
+        if (tipoPedido === 'entrega' && taxasEntrega.length > 0 && !taxaEntregaSelecionada) {
+            alert('Aguarde o cálculo da distância ou selecione um endereço válido.');
             return;
         }
 
-        const totalTaxaEntrega = calcularTaxaEntrega(subtotal);
+        // Calcular taxa de entrega (zero se for retirada)
+        const totalTaxaEntrega = tipoPedido === 'retirada' ? 0 : calcularTaxaEntrega(subtotal);
         const totalFinal = subtotal + totalTaxaEntrega;
 
         // Coletar observações
@@ -875,7 +1311,8 @@ async function confirmarPedido() {
 
         // Preparar dados do pedido
         const pedidoData = {
-            idendereco: enderecoSelecionado.idendereco,
+            tipo_entrega: tipoPedido, // 'entrega' ou 'retirada'
+            idendereco: tipoPedido === 'entrega' && enderecoSelecionado ? enderecoSelecionado.idendereco : null,
             idforma_pagamento: formaPagamentoSelecionada.idforma_pagamento,
             itens: carrinhoData.map(item => {
                 const observacaoItem = item.observacao ? item.observacao.trim() : '';
@@ -889,9 +1326,9 @@ async function confirmarPedido() {
             }),
             valor_total: totalFinal,
             valor_entrega: totalTaxaEntrega,
-            distancia_km: taxaEntregaSelecionada ? Number(taxaEntregaSelecionada.distancia_km) : null,
+            distancia_km: tipoPedido === 'entrega' && distanciaCalculada ? Number(distanciaCalculada) : null,
             observacoes: observacoes,
-            enderecoCompleto: enderecoSelecionado, // Para endereços temporários
+            enderecoCompleto: tipoPedido === 'entrega' && enderecoSelecionado ? enderecoSelecionado : null, // Para endereços temporários
             dadosCliente: Object.keys(dadosCliente).length > 0 ? dadosCliente : null // Dados do cliente não logado
         };
 
@@ -921,23 +1358,32 @@ async function confirmarPedido() {
                 localStorage.removeItem('julaosBurger_carrinho');
                 localStorage.removeItem('cart');
                 
-                // Redirecionar para a tela de acompanhamento do pedido
+                // Obter ID do pedido
                 const pedidoId = resultado?.pedidoId;
+                
+                // Abrir WhatsApp com mensagem do pedido
+                abrirWhatsAppPedido(pedidoId, pedidoData);
+                
+                // Redirecionar para a tela de acompanhamento do pedido
                 const rotaAcompanhamento = pedidoId
                     ? `/pedidos_cliente?pedido=${pedidoId}`
                     : '/pedidos_cliente';
 
-                window.location.href = rotaAcompanhamento;
+                // Pequeno delay para garantir que o WhatsApp abra antes do redirecionamento
+                setTimeout(() => {
+                    window.location.href = rotaAcompanhamento;
+                }, 500);
             } else {
                 alert('Erro ao confirmar pedido: ' + (resultado.erro || 'Erro desconhecido'));
             }
         } else {
             // Usuário não logado, salvar pedido localmente
+            // Abrir WhatsApp mesmo para pedidos não logados
+            abrirWhatsAppPedido(null, pedidoData);
             salvarPedidoLocal(pedidoData);
         }
 
     } catch (error) {
-        console.error('Erro ao confirmar pedido:', error);
         alert('Erro ao confirmar pedido. Tente novamente.');
     }
 }
@@ -982,4 +1428,100 @@ function escaparHTML(texto) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+// Gerar mensagem para WhatsApp
+function gerarMensagemWhatsApp(pedidoId, pedidoData) {
+    const numeroPedido = pedidoId ? `#${String(pedidoId).padStart(3, '0')}` : '(aguardando confirmação)';
+    const tipoEntrega = pedidoData.tipo_entrega === 'retirada' ? 'Retirada no Local' : 'Entrega';
+    
+    let mensagem = `🍔 *PEDIDO REALIZADO - JULÃO'S BURGER*\n\n`;
+    mensagem += `Pedido ${numeroPedido}\n\n`;
+    
+    // Itens do pedido - usar dados do carrinho que ainda estão na memória
+    mensagem += `*ITENS:*\n`;
+    carrinhoData.forEach((item, index) => {
+        const nomeProduto = item.nome || `Produto ${index + 1}`;
+        const quantidade = item.quantidade || 1;
+        const preco = item.precoFinal || 0;
+        mensagem += `${quantidade}x ${nomeProduto} - R$ ${formatarPreco(preco * quantidade)}\n`;
+        
+        // Opcionais
+        if (item.opcionais && item.opcionais.length > 0) {
+            item.opcionais.forEach(opcional => {
+                const qtdOpcional = opcional.quantidade || 1;
+                const nomeOpcional = opcional.nome || 'Opcional';
+                const precoOpcional = opcional.preco || 0;
+                mensagem += `  ➕ ${qtdOpcional}x ${nomeOpcional}${precoOpcional > 0 ? ` (+R$ ${formatarPreco(precoOpcional * qtdOpcional)})` : ''}\n`;
+            });
+        }
+        
+        // Observação do item
+        if (item.observacao) {
+            mensagem += `  📝 Obs: ${item.observacao}\n`;
+        }
+    });
+    
+    mensagem += `\n`;
+    
+    // Tipo de entrega
+    mensagem += `*TIPO:* ${tipoEntrega}\n`;
+    
+    // Endereço (se for entrega)
+    if (pedidoData.tipo_entrega === 'entrega' && pedidoData.enderecoCompleto) {
+        const end = pedidoData.enderecoCompleto;
+        mensagem += `*ENDEREÇO:*\n`;
+        mensagem += `${end.logradouro}, ${end.numero}`;
+        if (end.complemento) mensagem += ` - ${end.complemento}`;
+        mensagem += `\n${end.bairro}, ${end.cidade} - ${end.estado}`;
+        if (end.cep) mensagem += `\nCEP: ${end.cep}`;
+        mensagem += `\n\n`;
+    } else if (pedidoData.tipo_entrega === 'retirada') {
+        mensagem += `*RETIRADA NO ESTABELECIMENTO*\n\n`;
+    }
+    
+    // Forma de pagamento
+    const formaPagamento = formaPagamentoSelecionada?.nome || 'Não informado';
+    mensagem += `*FORMA DE PAGAMENTO:* ${formaPagamento}\n\n`;
+    
+    // Totais
+    const subtotal = carrinhoData.reduce((total, item) => {
+        const preco = item.precoFinal || 0;
+        const quantidade = item.quantidade || 1;
+        const totalOpcionais = (item.opcionais || []).reduce((sub, opc) => {
+            return sub + ((opc.preco || 0) * (opc.quantidade || 1));
+        }, 0);
+        return total + ((preco * quantidade) + totalOpcionais);
+    }, 0);
+    
+    mensagem += `*RESUMO:*\n`;
+    mensagem += `Subtotal: R$ ${formatarPreco(subtotal)}\n`;
+    if (pedidoData.valor_entrega > 0) {
+        mensagem += `Taxa de Entrega: R$ ${formatarPreco(pedidoData.valor_entrega)}\n`;
+    }
+    mensagem += `*TOTAL: R$ ${formatarPreco(pedidoData.valor_total)}*\n\n`;
+    
+    // Observações gerais
+    if (pedidoData.observacoes) {
+        mensagem += `*OBSERVAÇÕES:*\n${pedidoData.observacoes}\n\n`;
+    }
+    
+    mensagem += `Obrigado pela preferência! 🍔❤️`;
+    
+    return mensagem;
+}
+
+// Abrir WhatsApp com mensagem do pedido
+function abrirWhatsAppPedido(pedidoId, pedidoData) {
+    try {
+        const mensagem = gerarMensagemWhatsApp(pedidoId, pedidoData);
+        const mensagemEncoded = encodeURIComponent(mensagem);
+        const urlWhatsApp = `https://wa.me/${WHATSAPP_RESTAURANTE}?text=${mensagemEncoded}`;
+        
+        // Abrir WhatsApp em nova aba
+        window.open(urlWhatsApp, '_blank');
+    } catch (error) {
+        // Se houver erro, não bloquear o fluxo do pedido
+        console.error('Erro ao abrir WhatsApp:', error);
+    }
 }

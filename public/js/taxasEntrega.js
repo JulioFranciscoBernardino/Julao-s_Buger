@@ -79,10 +79,10 @@ function renderizarLista() {
       </td>
       <td>
         <div class="table-actions">
-          <button class="btn-icon btn-edit" onclick="editarTaxa(${taxa.id})">
+          <button class="btn-icon btn-edit" data-action="edit" data-id="${taxa.id}">
             <i class="fas fa-pen"></i>
           </button>
-          <button class="btn-icon btn-delete" onclick="excluirTaxa(${taxa.id})">
+          <button class="btn-icon btn-delete" data-action="delete" data-id="${taxa.id}">
             <i class="fas fa-trash"></i>
           </button>
         </div>
@@ -106,6 +106,24 @@ function renderizarLista() {
       </tbody>
     </table>
   `;
+  
+  // Adicionar event listeners usando delegation
+  const tbody = listaContainer.querySelector('tbody');
+  if (tbody) {
+    tbody.addEventListener('click', (e) => {
+      const button = e.target.closest('button[data-action]');
+      if (!button) return;
+      
+      const action = button.dataset.action;
+      const id = parseInt(button.dataset.id);
+      
+      if (action === 'edit') {
+        editarTaxa(id);
+      } else if (action === 'delete') {
+        excluirTaxa(id);
+      }
+    });
+  }
 }
 
 async function handleSubmit(event) {
@@ -199,6 +217,4 @@ async function excluirTaxa(id) {
   }
 }
 
-window.editarTaxa = editarTaxa;
-window.excluirTaxa = excluirTaxa;
 

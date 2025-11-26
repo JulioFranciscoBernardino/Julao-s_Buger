@@ -12,16 +12,14 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Se foi fornecido um nome personalizado, usar ele
-    if (req.body.nomeImagem) {
-      const extensao = path.extname(file.originalname);
-      const nomeArquivo = req.body.nomeImagem + extensao;
-      cb(null, nomeArquivo);
-    } else {
-      // Senão, usar timestamp como antes
-      const nomeArquivo = Date.now() + path.extname(file.originalname);
-      cb(null, nomeArquivo);
-    }
+    // Usar timestamp + nome original (sanitizado) para evitar conflitos
+    const timestamp = Date.now();
+    const nomeOriginal = path.basename(file.originalname, path.extname(file.originalname))
+      .replace(/[^a-z0-9]/gi, '-')
+      .toLowerCase();
+    const extensao = path.extname(file.originalname);
+    const nomeArquivo = `${timestamp}-${nomeOriginal}${extensao}`;
+    cb(null, nomeArquivo);
   }
 });
 

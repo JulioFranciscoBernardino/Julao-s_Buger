@@ -88,31 +88,9 @@
         <label for="produtoImagem">Imagem</label><br>
         <input type="file" id="produtoImagem" accept="image/*" onchange="handleImageChange()"><br>
         
-        <!-- Seção para nome da imagem -->
-        <div id="imageNameSection" style="display: none;">
-          <label for="nomeImagem">Nome da Imagem</label><br>
-          <input type="text" id="nomeImagem" class="texto" placeholder="Ex: cheese-burger-principal" /><br>
-          <small style="color: #666; font-size: 12px;">Nome será usado para salvar a imagem (sem espaços, use hífens)</small><br>
-          
-          <!-- Preview da imagem -->
-          <div id="imagePreview" style="margin-top: 10px; display: none;">
-            <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid #ddd;">
-            <button type="button" onclick="removeImage()" style="margin-left: 10px; padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Remover</button>
-          </div>
-        </div>
-        
-        <!-- Seção para imagem existente (modo edição) -->
-        <div id="existingImageSection" style="display: none;">
-          <label>Imagem Atual</label><br>
-          <div id="currentImagePreview" style="margin-bottom: 10px;">
-            <img id="currentImg" src="" alt="Imagem atual" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid #ddd;">
-            <div style="margin-top: 5px;">
-              <span id="currentImageName" style="font-size: 12px; color: #666;"></span>
-            </div>
-          </div>
-          <button type="button" onclick="toggleImageUpdate()" style="padding: 8px 16px; background: #007aff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
-            <i class="fas fa-edit"></i> Alterar Imagem
-          </button>
+        <!-- Preview da imagem -->
+        <div id="imagePreview" class="image-preview-container" style="display: none;">
+          <img id="previewImg" src="" alt="Preview" class="image-preview">
         </div>
         
         <button type="submit" id="Concluir">Concluir</button>

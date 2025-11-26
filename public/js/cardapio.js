@@ -23,75 +23,39 @@ function hideLoading() {
 function handleImageChange() {
   const fileInput = document.getElementById('produtoImagem');
   const file = fileInput.files[0];
+  const previewContainer = document.getElementById('imagePreview');
+  const previewImg = document.getElementById('previewImg');
   
   if (file) {
-    // Mostrar seção de nome da imagem
-    showNewImageSection();
-    hideExistingImageSection();
-    
-    // Gerar nome sugerido baseado no nome do produto
-    const nomeProduto = document.getElementById('nomeProduto').value;
-    if (nomeProduto) {
-      const nomeSugerido = nomeProduto.toLowerCase()
-        .replace(/[^a-z0-9]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
-      document.getElementById('nomeImagem').value = nomeSugerido;
-    }
-    
-    // Mostrar preview da imagem
+    // Mostrar preview da imagem selecionada
     const reader = new FileReader();
     reader.onload = function(e) {
-      const previewImg = document.getElementById('previewImg');
       previewImg.src = e.target.result;
-      document.getElementById('imagePreview').style.display = 'block';
+      previewContainer.style.display = 'block';
     };
     reader.readAsDataURL(file);
   } else {
-    hideNewImageSection();
+    previewContainer.style.display = 'none';
   }
 }
 
-function showNewImageSection() {
-  document.getElementById('imageNameSection').style.display = 'block';
-}
-
-function hideNewImageSection() {
-  document.getElementById('imageNameSection').style.display = 'none';
-  document.getElementById('imagePreview').style.display = 'none';
-  document.getElementById('produtoImagem').value = '';
-  document.getElementById('nomeImagem').value = '';
-}
-
-function showExistingImage(imageUrl, imageName) {
-  const existingSection = document.getElementById('existingImageSection');
-  const currentImg = document.getElementById('currentImg');
-  const currentImageName = document.getElementById('currentImageName');
+function showExistingImage(imageUrl) {
+  const previewContainer = document.getElementById('imagePreview');
+  const previewImg = document.getElementById('previewImg');
   
-  currentImg.src = imageUrl;
-  // Extrair apenas o nome do arquivo da URL
-  const fileName = imageUrl.split('/').pop();
-  currentImageName.textContent = `Arquivo: ${fileName}`;
-  existingSection.style.display = 'block';
-}
-
-function hideExistingImageSection() {
-  document.getElementById('existingImageSection').style.display = 'none';
-}
-
-function toggleImageUpdate() {
-  hideExistingImageSection();
-  showNewImageSection();
+  // Garantir que a URL está correta
+  if (imageUrl && !imageUrl.startsWith('/imgs/') && !imageUrl.startsWith('http')) {
+    imageUrl = `/imgs/${imageUrl}`;
+  }
   
-  // Limpar campos
-  document.getElementById('produtoImagem').value = '';
-  document.getElementById('nomeImagem').value = '';
-  document.getElementById('imagePreview').style.display = 'none';
-}
-
-function removeImage() {
-  hideNewImageSection();
-  document.getElementById('produtoImagem').value = '';
+  previewImg.src = imageUrl;
+  previewImg.onerror = function() {
+    console.error('Erro ao carregar imagem:', imageUrl);
+    previewContainer.style.display = 'none';
+  };
+  previewImg.onload = function() {
+    previewContainer.style.display = 'block';
+  };
 }
 let modalProduto = null;
 let modalOpcional = null;
@@ -153,13 +117,13 @@ document.addEventListener('DOMContentLoaded', function() {
       formProduto.dataset.modo = 'inserir';
       delete formProduto.dataset.idProduto;
       
-      // Limpar campos e esconder seções de imagem
+      // Limpar campos e esconder preview de imagem
       document.getElementById('nomeProduto').value = '';
       document.getElementById('descricaoProduto').value = '';
       document.getElementById('precoProduto').value = '';
       document.getElementById('produtoCategoria').value = '';
-      hideNewImageSection();
-      hideExistingImageSection();
+      document.getElementById('produtoImagem').value = '';
+      document.getElementById('imagePreview').style.display = 'none';
       
       // Mostrar modal
       modalProduto.style.display = 'block';
@@ -404,14 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Verificar se há imagem para upload
         const fileInput = document.getElementById('produtoImagem');
-        const nomeImagem = document.getElementById('nomeImagem').value.trim();
         const temImagem = fileInput.files.length > 0;
-        
-        if (temImagem && !nomeImagem) {
-          hideLoading();
-          alert('Por favor, informe o nome da imagem!');
-          return;
-        }
         
         if (modo === 'editar') {
           url = `/api/produtos/atualizar/${idProduto}`;
@@ -437,7 +394,6 @@ document.addEventListener('DOMContentLoaded', function() {
           body.append('preco', parseFloat(preco));
           body.append('categoria', parseInt(categoria));
           body.append('imagem', file);
-          body.append('nomeImagem', nomeImagem);
           
           console.log('📋 FormData criado, enviando para:', url);
           
@@ -1161,13 +1117,11 @@ async function editarProduto(idProduto) {
     formProduto.dataset.modo = 'editar';
     formProduto.dataset.idProduto = idProduto;
     
-    // Configurar seção de imagem existente
-    if (produto.imagemUrl) {
-      showExistingImage(produto.imagemUrl);
-      hideNewImageSection();
+    // Mostrar imagem existente se houver
+    if (produto.imagem) {
+      showExistingImage(produto.imagem);
     } else {
-      hideExistingImageSection();
-      hideNewImageSection();
+      document.getElementById('imagePreview').style.display = 'none';
     }
     
     // Mostrar modal

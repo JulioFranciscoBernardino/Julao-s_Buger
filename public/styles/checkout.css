@@ -181,6 +181,83 @@
     margin-left: 0.5rem;
 }
 
+/* TIPO DE PEDIDO */
+.tipo-pedido-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.tipo-pedido-option {
+    position: relative;
+    cursor: pointer;
+}
+
+.tipo-pedido-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tipo-pedido-card {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tipo-pedido-card i {
+    font-size: 2rem;
+    color: #666;
+    transition: color 0.3s ease;
+}
+
+.tipo-pedido-card span {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+}
+
+.tipo-pedido-card small {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.tipo-pedido-option:hover .tipo-pedido-card {
+    border-color: #e8b705;
+    background: #fffef5;
+}
+
+.tipo-pedido-option:hover .tipo-pedido-card i {
+    color: #e8b705;
+}
+
+.tipo-pedido-option input[type="radio"]:checked + .tipo-pedido-card {
+    border-color: #e8b705;
+    background: #fffef5;
+}
+
+.tipo-pedido-option input[type="radio"]:checked + .tipo-pedido-card i {
+    color: #e8b705;
+}
+
+.tipo-pedido-option input[type="radio"]:checked + .tipo-pedido-card span {
+    color: #e8b705;
+}
+
+/* Esconder seção de endereço quando for retirada */
+#secaoEndereco.hidden {
+    display: none;
+}
+
 /* FORMAS DE PAGAMENTO */
 .forma-pagamento-container {
     margin-bottom: 1rem;
@@ -306,7 +383,7 @@
     margin-bottom: 1.5rem;
 }
 
-.summary-delivery-selector {
+.summary-delivery-info {
     padding: 1rem 1.2rem;
     border-radius: 16px;
     background: #f9fafc;
@@ -317,20 +394,16 @@
     gap: 0.6rem;
 }
 
-.summary-delivery-selector label {
-    font-weight: 600;
-    color: #1d1d1f;
+.delivery-info-item {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: #1d1d1f;
 }
 
-.summary-delivery-selector select {
-    border-radius: 12px;
-    border: 1px solid #d7d9e0;
-    padding: 0.65rem 0.8rem;
-    font-size: 0.95rem;
-    background: #fff;
+.delivery-info-item i {
+    color: #667eea;
 }
 
 .summary-helper {
@@ -354,6 +427,19 @@
     height: 60px;
     object-fit: cover;
     border-radius: 8px;
+}
+
+.summary-item-placeholder {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    font-size: 1.5rem;
+    flex-shrink: 0;
 }
 
 .summary-item-info {

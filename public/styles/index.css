@@ -195,17 +195,22 @@ body button {
 }
 
 .nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
   padding: 0 1rem;
 }
 
 .category-tabs {
   display: flex;
   overflow-x: auto;
+  overflow-y: visible;
   gap: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  width: 100%;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-width: 0;
 }
 
 .category-tabs::-webkit-scrollbar {
@@ -225,6 +230,7 @@ body button {
   border-bottom: 3px solid transparent;
   text-decoration: none;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .category-tab:hover {
@@ -311,7 +317,20 @@ body button {
 .categoria-section {
   margin-bottom: 2rem;
   scroll-margin-top: 100px;
-  /* Offset para scroll suave */
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUpSection 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUpSection {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .categoria-header {
@@ -428,6 +447,25 @@ body button {
   overflow: hidden;
   cursor: pointer;
   margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.product-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .product-card::before {
@@ -445,7 +483,7 @@ body button {
 
 .product-card:hover {
   border-color: #e8b705;
-  transform: translateY(-4px);
+  transform: translateY(-4px) !important;
   box-shadow: 0 8px 25px rgba(255, 107, 53, 0.15);
 }
 

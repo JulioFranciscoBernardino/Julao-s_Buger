@@ -118,8 +118,14 @@ function gerarHTMLComanda(pedido) {
     html += '</div>';
 
     html += '<div class="comanda-secao">';
-    html += '<div class="comanda-secao-titulo">ENTREGA:</div>';
-    html += '<div>' + endereco + '</div>';
+    const tipoEntrega = pedido.tipo_entrega || 'entrega';
+    if (tipoEntrega === 'retirada') {
+        html += '<div class="comanda-secao-titulo">RETIRADA NO LOCAL</div>';
+        html += '<div style="font-weight: 700; color: #e8b705;">Cliente retirará no estabelecimento</div>';
+    } else {
+        html += '<div class="comanda-secao-titulo">ENTREGA:</div>';
+        html += '<div>' + endereco + '</div>';
+    }
     html += '<div class="comanda-linha"></div>';
     html += '</div>';
 
@@ -341,7 +347,15 @@ function renderizarColunas() {
 let eventListenersBotoesAdicionados = false;
 
 function adicionarEventListenersBotoes() {
-    // Usar delegação de eventos no container principal (adicionar apenas uma vez)
+    // Se gestor_pedidos.js está carregado e estamos na página de pedidos,
+    // não adicionar listeners aqui (gestor_pedidos.js já adiciona listeners diretamente nos botões)
+    const isGestorPedidosPage = window.location.pathname.includes('/pedidos') || 
+                                 window.location.pathname.includes('gestor_pedidos') ||
+                                 document.querySelector('.gestor-pedidos');
+    if (isGestorPedidosPage) {
+        return;
+    }
+    
     if (eventListenersBotoesAdicionados) return;
     
     const expedicaoBoard = document.getElementById('expedicaoBoard');
@@ -659,41 +673,6 @@ async function cancelarPedido(id) {
     }
 }
 
-// Função para imprimir comanda manualmente
-async function imprimirComandaManual(pedidoId) {
-    try {
-        // Buscar dados completos do pedido
-            let pedidoParaImpressao = pedidos.find(p => p.idpedido === pedidoId);
-            
-            // Se não tiver dados completos, buscar da API
-            if (!pedidoParaImpressao || !pedidoParaImpressao.itens || pedidoParaImpressao.itens.length === 0) {
-                pedidoParaImpressao = await buscarPedidoCompleto(pedidoId);
-            }
-            
-        if (!pedidoParaImpressao) {
-            alert('Não foi possível carregar os dados do pedido para impressão.');
-            return;
-        }
-        
-                // Garantir que todas as informações necessárias estão presentes
-                const pedidoFormatado = {
-                    ...pedidoParaImpressao,
-                    idpedido: pedidoParaImpressao.idpedido || pedidoId,
-                    nome_cliente: pedidoParaImpressao.nome_cliente || pedidoParaImpressao.cliente?.nome || pedidoParaImpressao.cliente || 'Cliente',
-                    telefone_cliente: pedidoParaImpressao.telefone_cliente || pedidoParaImpressao.cliente?.telefone || pedidoParaImpressao.telefone || '',
-                    endereco_formatado: pedidoParaImpressao.endereco_formatado || montarEnderecoPedido(pedidoParaImpressao),
-                    data_pedido: pedidoParaImpressao.data_pedido || pedidoParaImpressao.data,
-                    totalPedido: pedidoParaImpressao.totalPedido || pedidoParaImpressao.total || pedidoParaImpressao.valor_total || 0,
-                    itens: pedidoParaImpressao.itens || []
-                };
-                
-                // Imprimir comanda
-                await imprimirComanda(pedidoFormatado);
-    } catch (error) {
-        console.error('Erro ao imprimir comanda:', error);
-        alert('Erro ao imprimir comanda. Tente novamente.');
-    }
-}
 
 function getBotoesAcao(status, pedidoId) {
     let botoes = '';

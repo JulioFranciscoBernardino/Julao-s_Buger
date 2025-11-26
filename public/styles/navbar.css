@@ -130,6 +130,45 @@ body {
     color: #007aff;
 }
 
+.sound-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    cursor: pointer;
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.sound-toggle:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sound-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.sound-toggle i {
+    font-size: 16px;
+    color: #1d1d1f;
+    transition: all 0.2s ease;
+}
+
+.sound-toggle input[type="checkbox"]:not(:checked) + i {
+    color: #999;
+    opacity: 0.5;
+}
+
+.sound-toggle input[type="checkbox"]:checked + i {
+    color: #007aff;
+}
+
 /* Mobile Toggle */
 .navbar-toggle {
     display: none;

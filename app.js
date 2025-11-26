@@ -17,6 +17,7 @@ const pedidoRoutes = require('./routes/pedidoRoutes');
 const formaPagamentoRoutes = require('./routes/formaPagamentoRoutes');
 const horarioFuncionamentoRoutes = require('./routes/horarioFuncionamentoRoutes');
 const taxaEntregaRoutes = require('./routes/taxaEntregaRoutes');
+const distanciaRoutes = require('./routes/distanciaRoutes');
 const rotas = require('./routes/index');
 const viewRoutes = require('./routes/viewRoutes');
 
@@ -39,10 +40,10 @@ app.use(cors());
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://gc.kis.v2.scr.kaspersky-labs.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://gc.kis.v2.scr.kaspersky-labs.com", "https://code.jquery.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://gc.kis.v2.scr.kaspersky-labs.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-        connectSrc: ["'self'"],
+        connectSrc: ["'self'", "https://viacep.com.br", "https://maps.googleapis.com", "https://gc.kis.v2.scr.kaspersky-labs.com"],
       }
     }
   }));
@@ -64,6 +65,7 @@ app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/formas-pagamento', formaPagamentoRoutes);
 app.use('/api/horarios-funcionamento', horarioFuncionamentoRoutes);
 app.use('/api/taxas-entrega', taxaEntregaRoutes);
+app.use('/api/distancia', distanciaRoutes);
 app.use('/', rotas);
 app.use('/', viewRoutes);
 

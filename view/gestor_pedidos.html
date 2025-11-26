@@ -48,6 +48,10 @@
       </div>
       
       <div class="navbar-right">
+        <label class="sound-toggle" title="Ativar/Desativar alerta sonoro">
+          <input type="checkbox" id="toggleSomPedidos" checked>
+          <i class="fas fa-volume-up"></i>
+        </label>
         <button id="logoutBtn" class="logout-btn">
           <i class="fas fa-sign-out-alt"></i>
         </button>
@@ -130,7 +134,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="modalTitulo">Detalhes do Pedido</h3>
-        <button class="modal-close" onclick="fecharModalDetalhes()">
+        <button class="modal-close" id="btnFecharModalDetalhes">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -138,7 +142,7 @@
         <!-- Conteúdo será preenchido dinamicamente -->
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" onclick="fecharModalDetalhes()">
+        <button class="btn-secondary" id="btnFecharModalDetalhesFooter">
           <i class="fas fa-times"></i>
           Fechar
         </button>
@@ -152,6 +156,7 @@
 <script src="/js/login_cadastro.js" defer></script>
 <script src="/js/admin-check.js" defer></script>
 <script src="/js/impressao.js" defer></script>
+<script src="/js/gestor_pedidos.js" defer></script>
 <!-- CSS para Impressão -->
 <style>
 

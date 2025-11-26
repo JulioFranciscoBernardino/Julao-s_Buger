@@ -99,6 +99,17 @@ const produtoController = {
   buscarProdutoPorId: async (req, res) => {
     try {
       const produto = await Produto.getById(req.params.idproduto);
+      
+      // Garantir que a URL da imagem está formatada corretamente
+      if (produto && produto.imagem) {
+        if (produto.imagem.startsWith('http://') || produto.imagem.startsWith('https://')) {
+          const fileName = produto.imagem.split('/').pop().split('?')[0];
+          produto.imagem = `/imgs/${fileName}`;
+        } else if (!produto.imagem.startsWith('/imgs/')) {
+          produto.imagem = `/imgs/${produto.imagem}`;
+        }
+      }
+      
       res.json(produto);
     } catch (err) {
       console.error('Erro ao buscar produto');

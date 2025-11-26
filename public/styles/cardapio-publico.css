@@ -181,17 +181,22 @@ body {
 }
 
 .nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
   padding: 0 1rem;
 }
 
 .category-tabs {
   display: flex;
   overflow-x: auto;
+  overflow-y: visible;
   gap: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  width: 100%;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-width: 0;
 }
 
 .category-tabs::-webkit-scrollbar {
@@ -209,6 +214,7 @@ body {
   white-space: nowrap;
   position: relative;
   border-bottom: 3px solid transparent;
+  flex-shrink: 0;
 }
 
 .category-tab:hover {

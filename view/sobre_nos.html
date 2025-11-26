@@ -40,8 +40,8 @@
                         </svg></a>
                     </li>
                     <li><a href="/index" class="menu">Cardápio</a> </li>
-                    <li><a href="/login_cadastro" class="menu">Login</a></li>
-                    <li><a href="/conta" class="menu">Conta</a></li>
+                    <li><a href="/login_cadastro" class="menu" id="loginLink">Login</a></li>
+                    <li><a href="#" class="menu" id="contaLink">Conta</a></li>
                     <li><a href="/admin_dashboard" class="menu">Admistração</a></li>
                     <li><button id="logoutBtn">Sair</button></li>
                 </ul>
@@ -91,6 +91,28 @@
     <script src="/js/index.js" defer></script>
     <script src="/js/login_cadastro.js" defer></script>
     <script src="/js/admin-check.js" defer></script>
+    <script>
+        // Adicionar event listener para o link de conta
+        document.addEventListener('DOMContentLoaded', function() {
+            const contaLink = document.getElementById('contaLink');
+            if (contaLink) {
+                contaLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.irParaConta) {
+                        window.irParaConta();
+                    } else {
+                        // Se a função ainda não estiver disponível, verificar token diretamente
+                        const token = localStorage.getItem('token');
+                        if (token) {
+                            window.location.href = '/conta';
+                        } else {
+                            window.location.href = '/login_cadastro';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

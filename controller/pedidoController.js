@@ -96,6 +96,7 @@ class PedidoController {
                     p.valor_entrega,
                     p.distancia_km,
                     p.observacoes,
+                    p.tipo_entrega,
                     p.ativo,
                     p.excluido,
                     u.nome AS nome_cliente,
@@ -195,6 +196,7 @@ class PedidoController {
                     p.valor_entrega,
                     p.distancia_km,
                     p.observacoes,
+                    p.tipo_entrega,
                     u.nome AS cliente_nome,
                     u.telefone AS cliente_telefone,
                     u.email AS cliente_email,
@@ -234,6 +236,7 @@ class PedidoController {
                             valor_entrega: parseFloat(pedido.valor_entrega || 0),
                             distancia_km: pedido.distancia_km ? Number(pedido.distancia_km) : null,
                             observacoes: pedido.observacoes,
+                            tipo_entrega: pedido.tipo_entrega || 'entrega',
                             cliente: {
                                 nome: pedido.cliente_nome || 'Cliente',
                                 telefone: pedido.cliente_telefone || '',
@@ -262,6 +265,7 @@ class PedidoController {
                             valor_entrega: parseFloat(pedido.valor_entrega || 0),
                             distancia_km: pedido.distancia_km ? Number(pedido.distancia_km) : null,
                             observacoes: pedido.observacoes,
+                            tipo_entrega: pedido.tipo_entrega || 'entrega',
                             cliente: {
                                 nome: pedido.cliente_nome || 'Cliente',
                                 telefone: pedido.cliente_telefone || '',
@@ -314,6 +318,7 @@ class PedidoController {
                     p.valor_entrega,
                     p.distancia_km,
                     p.observacoes,
+                    p.tipo_entrega,
                     u.nome AS nome_cliente,
                     u.telefone AS telefone_cliente,
                     e.logradouro,
@@ -403,14 +408,15 @@ class PedidoController {
                 return res.status(401).json({ erro: 'ID do usuário não encontrado' });
             }
 
-            const { itens, observacoes, idendereco, idforma_pagamento, valor_total, valor_entrega, distancia_km } = req.body;
+            const { itens, observacoes, idendereco, idforma_pagamento, valor_total, valor_entrega, distancia_km, tipo_entrega } = req.body;
 
             if (!itens || !Array.isArray(itens) || itens.length === 0) {
                 return res.status(400).json({ erro: 'Pedido deve conter pelo menos um item' });
             }
 
-            if (!idendereco) {
-                return res.status(400).json({ erro: 'Endereço é obrigatório' });
+            // Endereço só é obrigatório se for entrega
+            if (tipo_entrega !== 'retirada' && !idendereco) {
+                return res.status(400).json({ erro: 'Endereço é obrigatório para entrega' });
             }
 
             if (!idforma_pagamento) {
@@ -426,18 +432,21 @@ class PedidoController {
                 // Estratégia: Salvar sempre em UTC (timezone 00)
                 // A conversão para horário de Brasília será feita apenas na leitura/consulta
                 const pedidoQuery = `
-                    INSERT INTO pedido (idusuario, idendereco, idforma_pagamento, status, valor_total, valor_entrega, distancia_km, observacoes, data_pedido) 
-                    VALUES (?, ?, ?, 'pendente', ?, ?, ?, ?, UTC_TIMESTAMP())
+                    INSERT INTO pedido (idusuario, idendereco, idforma_pagamento, status, valor_total, valor_entrega, distancia_km, observacoes, tipo_entrega, data_pedido) 
+                    VALUES (?, ?, ?, 'pendente', ?, ?, ?, ?, ?, UTC_TIMESTAMP())
                 `;
+                
+                const tipoEntrega = tipo_entrega === 'retirada' ? 'retirada' : 'entrega';
                 
                 const [pedidoResult] = await connection.execute(pedidoQuery, [
                     userId,
-                    idendereco,
+                    idendereco || null, // Pode ser null se for retirada
                     idforma_pagamento,
                     valor_total || 0,
                     valor_entrega || 0,
                     distancia_km || null,
-                    observacoes || null
+                    observacoes || null,
+                    tipoEntrega
                 ]);
                 const pedidoId = pedidoResult.insertId;
 
@@ -709,16 +718,30 @@ class PedidoController {
 
             const { id } = req.params;
 
-            const query = `
-                UPDATE pedido 
-                SET status = 'cancelado' 
-                WHERE idpedido = ? AND idusuario = ? AND ativo = 1 AND status = 'pendente'
-            `;
+            const isAdmin = req.usuario.type === 'admin' || req.usuario.type === 'adm';
+            const query = isAdmin
+                ? `UPDATE pedido SET status = 'cancelado' WHERE idpedido = ? AND ativo = 1 AND status != 'cancelado'`
+                : `UPDATE pedido SET status = 'cancelado' WHERE idpedido = ? AND idusuario = ? AND ativo = 1 AND status = 'pendente'`;
+            const params = isAdmin ? [id] : [id, userId];
 
-            const result = await db.execute(query, [id, userId]);
+            const [result] = await db.execute(query, params);
 
             if (result.affectedRows === 0) {
-                return res.status(404).json({ erro: 'Pedido não encontrado ou não pode ser cancelado' });
+                const [pedidoVerificado] = await db.execute(
+                    `SELECT status FROM pedido WHERE idpedido = ? AND ativo = 1`,
+                    [id]
+                );
+                
+                if (pedidoVerificado.length === 0) {
+                    return res.status(404).json({ erro: 'Pedido não encontrado' });
+                }
+                
+                const statusAtual = pedidoVerificado[0].status;
+                if (statusAtual === 'cancelado') {
+                    return res.json({ mensagem: 'Pedido já está cancelado' });
+                }
+                
+                return res.status(400).json({ erro: 'Pedido não pode ser cancelado', statusAtual });
             }
 
             res.json({ mensagem: 'Pedido cancelado com sucesso' });

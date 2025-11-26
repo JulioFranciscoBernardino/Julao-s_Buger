@@ -40,15 +40,15 @@ async function carregarCardapio() {
         }
         cardapioData = await response.json();
         
-        // Filtrar apenas produtos ativos (já filtrado por disponibilidade na API)
+        // Garantir que todas as categorias tenham um array de produtos
+        // A API já filtra produtos disponíveis, então não precisamos filtrar novamente
         if (cardapioData.categorias) {
             cardapioData.categorias = cardapioData.categorias.map(categoria => ({
                 ...categoria,
-                produtos: (categoria.produtos || []).filter(produto => !produto.excluido && produto.disponivel === 1)
+                produtos: categoria.produtos || []
             }));
         }
     } catch (error) {
-        console.error('Erro ao carregar cardápio:', error);
         throw error;
     }
 }
@@ -100,20 +100,17 @@ async function renderizarCategorias() {
         return;
     }
 
-    // Buscar todos os produtos primeiro
-    const todosProdutos = await buscarTodosProdutos();
-    
-    // Organizar produtos por categoria
-    const categoriasComProdutos = organizarProdutosPorCategoria(cardapioData.categorias, todosProdutos);
-    
-    // Filtrar apenas categorias que têm produtos
-    const categoriasAtivas = categoriasComProdutos.filter(cat => 
-        cat.produtos && cat.produtos.length > 0
-    );
+    // Usar diretamente as categorias que vêm da API (já incluem produtos)
+    // Garantir que todas as categorias tenham um array de produtos (mesmo que vazio)
+    const categoriasAtivas = cardapioData.categorias.map(categoria => ({
+        ...categoria,
+        produtos: categoria.produtos || []
+    }));
 
     // Renderizar tabs como âncoras
     categoryTabs.innerHTML = '';
-    categoriasAtivas.forEach(categoria => {
+    
+    categoriasAtivas.forEach((categoria, index) => {
         const tab = document.createElement('a');
         tab.className = 'category-tab';
         tab.textContent = categoria.nome;
@@ -125,33 +122,13 @@ async function renderizarCategorias() {
         categoryTabs.appendChild(tab);
     });
 
+    // Ajustar centralização após renderizar
+    ajustarCentralizacaoCategorias();
+
     // Renderizar todo o cardápio
     renderizarCardapioCompleto(categoriasAtivas);
 }
 
-// Buscar todos os produtos
-async function buscarTodosProdutos() {
-    try {
-        const response = await fetch('/api/produtos');
-        if (response.ok) {
-            return await response.json();
-        }
-        return [];
-    } catch (error) {
-        console.error('Erro ao buscar todos os produtos:', error);
-        return [];
-    }
-}
-
-// Organizar produtos por categoria
-function organizarProdutosPorCategoria(categorias, produtos) {
-    return categorias.map(categoria => ({
-        ...categoria,
-        produtos: produtos.filter(produto => 
-            produto.idcategoria === categoria.idcategoria
-        )
-    }));
-}
 
 // Renderizar cardápio completo com todas as categorias
 async function renderizarCardapioCompleto(categorias) {
@@ -159,10 +136,10 @@ async function renderizarCardapioCompleto(categorias) {
     
     let htmlCompleto = '';
     
-    for (const categoria of categorias) {
-        // Header da categoria
+    categorias.forEach((categoria, index) => {
+        // Header da categoria com delay escalonado para animação
         htmlCompleto += `
-            <div class="categoria-section" id="categoria-${categoria.idcategoria}">
+            <div class="categoria-section" id="categoria-${categoria.idcategoria}" style="animation-delay: ${index * 0.1}s">
                 <div class="categoria-header">
                     <h2 class="categoria-titulo">${categoria.nome}</h2>
                 </div>
@@ -171,53 +148,67 @@ async function renderizarCardapioCompleto(categorias) {
                 </div>
             </div>
         `;
-    }
+    });
     
     if (productsGrid) {
         productsGrid.innerHTML = htmlCompleto;
+        productsGrid.style.display = 'block';
     }
     
-    // Renderizar produtos para cada categoria (já organizados)
-    for (const categoria of categorias) {
-        try {
-            await renderizarProdutosCategoria(categoria.idcategoria, categoria.produtos);
-        } catch (error) {
-            console.error(`Erro ao renderizar produtos da categoria ${categoria.nome}:`, error);
-            document.getElementById(`produtos-categoria-${categoria.idcategoria}`).innerHTML = 
-                '<p class="erro-categoria">Erro ao carregar produtos desta categoria.</p>';
-        }
-    }
+    // Renderizar produtos para todas as categorias em paralelo
+    const promessasRenderizacao = categorias.map(categoria => 
+        renderizarProdutosCategoria(categoria.idcategoria, categoria.produtos)
+            .catch(error => {
+                const container = document.getElementById(`produtos-categoria-${categoria.idcategoria}`);
+                if (container) {
+                    container.innerHTML = '<p class="erro-categoria">Erro ao carregar produtos desta categoria.</p>';
+                }
+            })
+    );
     
+    // Não esperar todas as categorias - ocultar loading assim que possível
     ocultarLoading();
+    
+    // Aguardar renderização em background
+    await Promise.all(promessasRenderizacao);
 }
 
 // Renderizar produtos de uma categoria específica
-async function renderizarProdutosCategoria(idcategoria, produtos) {
+function renderizarProdutosCategoria(idcategoria, produtos) {
     const container = document.getElementById(`produtos-categoria-${idcategoria}`);
     if (!container) {
-        return;
+        return Promise.resolve();
     }
     
-    const produtosAtivos = produtos.filter(produto => produto.ativo && !produto.excluido && produto.disponivel === 1);
-    
-    if (produtosAtivos.length === 0) {
+    if (!produtos || produtos.length === 0) {
         container.innerHTML = '<p class="sem-produtos">Nenhum produto disponível nesta categoria.</p>';
-        return;
+        return Promise.resolve();
     }
     
-    // Criar grid container
+    // Criar grid container e fragment para melhor performance
     const gridContainer = document.createElement('div');
     gridContainer.className = 'products-grid';
+    const fragment = document.createDocumentFragment();
     
-    // Adicionar produtos ao grid
-    for (const produto of produtosAtivos) {
-        const card = await criarCardProduto(produto);
-        gridContainer.appendChild(card);
-    }
+    // Criar todos os cards de uma vez (síncrono, mais rápido)
+    produtos.forEach((produto, index) => {
+        const card = criarCardProduto(produto);
+        // Adicionar delay escalonado para animação suave
+        card.style.animationDelay = `${index * 0.05}s`;
+        fragment.appendChild(card);
+    });
     
-    // Substituir conteúdo do container
+    gridContainer.appendChild(fragment);
     container.innerHTML = '';
     container.appendChild(gridContainer);
+    
+    // Adicionar classe visible após um pequeno delay para triggerar animação
+    requestAnimationFrame(() => {
+        const cards = gridContainer.querySelectorAll('.product-card');
+        cards.forEach(card => card.classList.add('visible'));
+    });
+    
+    return Promise.resolve();
 }
 
 // Função para scroll suave para uma categoria
@@ -292,15 +283,28 @@ async function renderizarProdutos() {
 }
 
 // Criar card do produto
-async function criarCardProduto(produto) {
+function criarCardProduto(produto) {
     const card = document.createElement('div');
     card.className = 'product-card';
     card.dataset.produtoId = produto.idproduto;
     
     const preco = formatarPreco(produto.preco);
-    const imagem = produto.imagem ? 
-        (produto.imagem.startsWith('/imgs/') ? produto.imagem : `/imgs/${produto.imagem}`) : 
-        null;
+    
+    // Normalizar caminho da imagem (evitar duplicação)
+    let imagem = null;
+    if (produto.imagem) {
+        // Remover protocolo e domínio se existir
+        let imgPath = produto.imagem.replace(/^https?:\/\/[^\/]+/, '');
+        // Garantir que comece com /imgs/
+        if (!imgPath.startsWith('/imgs/')) {
+            // Se já contém /imgs/, remover duplicação
+            imgPath = imgPath.replace(/^\/imgs\/imgs\//, '/imgs/');
+            if (!imgPath.startsWith('/imgs/')) {
+                imgPath = `/imgs/${imgPath.replace(/^\//, '')}`;
+            }
+        }
+        imagem = imgPath;
+    }
     
     // Não carregar opcionais nos cards - apenas no modal
     
@@ -317,7 +321,7 @@ async function criarCardProduto(produto) {
             
             <div class="product-image">
                 ${imagem ? 
-                    `<img src="${imagem}" alt="${produto.nome}" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><i class=\\'fas fa-utensils\\'></i><span>Imagem não encontrada</span></div>';" />` :
+                    `<img src="${imagem}" alt="${produto.nome}" loading="lazy" class="product-img" data-fallback="true" />` :
                     `<div class="product-image-placeholder">
                         <i class="fas fa-utensils"></i>
                         <span>Sem imagem</span>
@@ -337,6 +341,18 @@ async function criarCardProduto(produto) {
     // Event listener para abrir modal (imagem e título)
     card.addEventListener('click', () => abrirModalProduto(produto));
     
+    // Event listener para imagens que falharem no carregamento
+    const img = card.querySelector('.product-img[data-fallback="true"]');
+    if (img) {
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            const placeholder = document.createElement('div');
+            placeholder.className = 'product-image-placeholder';
+            placeholder.innerHTML = '<i class="fas fa-utensils"></i><span>Imagem não encontrada</span>';
+            this.parentElement.appendChild(placeholder);
+        });
+    }
+    
     return card;
 }
 
@@ -344,7 +360,6 @@ async function criarCardProduto(produto) {
 async function abrirModalProduto(produtoEntrada) {
     const produtoId = typeof produtoEntrada === 'number' ? produtoEntrada : produtoEntrada?.idproduto;
     if (!produtoId) {
-        console.warn('ID do produto não informado para abrir modal.');
         return;
     }
     
@@ -358,7 +373,6 @@ async function abrirModalProduto(produtoEntrada) {
         
         renderizarModalProduto(produto, gruposOpcionais);
     } catch (error) {
-        console.error('Erro ao carregar produto:', error);
         alert('Não foi possível carregar os detalhes deste produto. Tente novamente.');
         fecharModal();
     }
@@ -418,7 +432,7 @@ async function obterGruposOpcionaisProduto(produtoId) {
             return grupos;
         }
     } catch (error) {
-        console.error('Erro ao carregar grupos de opcionais:', error);
+        return [];
     }
     
     return [];
@@ -897,7 +911,6 @@ function inicializarCarrinho() {
                 observacao: item && typeof item.observacao === 'string' ? item.observacao : ''
             }));
         } catch (error) {
-            console.error('Erro ao carregar carrinho:', error);
             carrinho = [];
         }
     }
@@ -1249,19 +1262,15 @@ function mostrarLoading() {
 }
 
 function esconderLoading() {
-    loadingState.style.display = 'none';
-}
-
-function ocultarLoading() {
     if (loadingState) {
         loadingState.style.display = 'none';
     }
-    
-    // Mostrar o productsGrid
     if (productsGrid) {
         productsGrid.style.display = 'block';
     }
 }
+
+const ocultarLoading = esconderLoading;
 
 function mostrarEstadoVazio() {
     loadingState.style.display = 'none';
@@ -1290,6 +1299,17 @@ function mostrarErro(mensagem) {
 
 // Configurar event listeners
 function configurarEventListeners() {
+    // Botão de busca inline
+    const searchBtnInline = document.getElementById('searchBtnInline');
+    if (searchBtnInline) {
+        searchBtnInline.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (window.executarBuscaInline) {
+                window.executarBuscaInline();
+            }
+        });
+    }
+    
     // Fechar modal
     if (closeModal) {
         closeModal.addEventListener('click', fecharModal);
@@ -1398,13 +1418,11 @@ async function verificarStatusFuncionamento() {
             aplicarStatusBotões();
             return statusFuncionamento;
         } else {
-            console.error('Erro ao verificar status de funcionamento');
             // Em caso de erro, assume aberto para não bloquear o usuário
             statusFuncionamento = { aberto: true };
             return statusFuncionamento;
         }
     } catch (error) {
-        console.error('Erro ao verificar status:', error);
         // Em caso de erro, assume aberto para não bloquear o usuário
         statusFuncionamento = { aberto: true };
         return statusFuncionamento;
@@ -1518,6 +1536,34 @@ function lidarComMudancaOrientacao() {
 
 window.addEventListener('orientationchange', lidarComMudancaOrientacao);
 window.addEventListener('resize', lidarComMudancaOrientacao);
+window.addEventListener('resize', ajustarCentralizacaoCategorias);
+
+// Função para ajustar centralização das categorias
+function ajustarCentralizacaoCategorias() {
+    const container = document.getElementById('categoryTabs');
+    if (!container) return;
+
+    // Aguardar um frame para garantir que o layout foi renderizado
+    requestAnimationFrame(() => {
+        const containerWidth = container.offsetWidth;
+        const tabs = Array.from(container.children);
+        
+        if (tabs.length === 0) return;
+
+        // Calcular largura total de todas as tabs
+        const totalWidth = tabs.reduce((sum, tab) => {
+            return sum + tab.offsetWidth;
+        }, 0);
+
+        // Se todas as categorias cabem na tela, centralizar
+        if (totalWidth <= containerWidth) {
+            container.style.justifyContent = 'center';
+        } else {
+            // Se não cabem, alinhar à esquerda para permitir scroll
+            container.style.justifyContent = 'flex-start';
+        }
+    });
+}
 
 // Função para lazy loading de imagens
 function configurarLazyLoading() {
@@ -1913,7 +1959,6 @@ async function inicializarCardapio() {
         // Verificar parâmetros da URL
         verificarParametrosURL();
     } catch (error) {
-        console.error('Erro ao inicializar cardápio:', error);
         mostrarErro('Erro ao carregar o cardápio. Tente novamente.');
     }
 }
