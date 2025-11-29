@@ -93,8 +93,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        console.log('Tentando login com:', { email, senha });
-
         try {
             showLoading('Fazendo login...');
             
@@ -112,17 +110,35 @@ document.addEventListener("DOMContentLoaded", function () {
                 hideLoading();
                 alert('Login bem-sucedido!');
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('jwt_token', data.token); // Compatibilidade
 
                 // Decodificar o token para obter o tipo
                 const payloadBase64 = data.token.split('.')[1];
                 const payloadJson = atob(payloadBase64);
                 const payload = JSON.parse(payloadJson);
 
+                // Verificar se há um redirect na URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirectUrl = urlParams.get('redirect');
+
                 // Redirecionar com base no tipo
-                if (payload.type === 'admin') {
-                    window.location.href = '/admin_dashboard';
+                if (payload.type === 'admin' || payload.type === 'adm') {
+                    // Se houver redirect, usar ele (adicionando token)
+                    if (redirectUrl) {
+                        const redirect = new URL(redirectUrl, window.location.origin);
+                        redirect.searchParams.set('token', data.token);
+                        window.location.href = redirect.toString();
+                    } else {
+                        // Redirecionar para dashboard com token
+                        window.location.href = `/admin_dashboard?token=${encodeURIComponent(data.token)}`;
+                    }
                 } else if (payload.type === 'cliente') {
-                    window.location.href = '/';
+                    // Cliente não precisa de token na URL
+                    if (redirectUrl) {
+                        window.location.href = redirectUrl;
+                    } else {
+                        window.location.href = '/';
+                    }
                 } else {
                     alert('Tipo de usuário não reconhecido.');
                 }
@@ -149,8 +165,6 @@ document.addEventListener("DOMContentLoaded", function () {
             alert('As senhas não coincidem!');
             return;
         }
-
-        console.log('Tentando cadastrar com:', { nome, email, senha });
 
         try {
             showLoading('Criando conta...');
@@ -202,18 +216,27 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function logout() {
+    // Limpa completamente a sessão do usuário
     localStorage.removeItem('token');
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('user_type');
     alert('Logout realizado com sucesso!');
     window.location.href = '/login_cadastro.html';
 }
 
 // Função para verificar autenticação e mostrar/ocultar elementos
 function verificarAutenticacao() {
-    const token = localStorage.getItem('token');
+    // Verificar ambas as chaves possíveis
+    let token = localStorage.getItem('jwt_token') || localStorage.getItem('token');
     const loginLink = document.getElementById('loginLink');
     const contaLink = document.getElementById('contaLink');
     const logoutBtn = document.getElementById('logoutBtn');
     const perfilBtn = document.getElementById('perfilBtn');
+    
+    // Verificar se estamos em uma página do retaguarda
+    const retaguardaPages = ['/admin_dashboard', '/cardapio', '/pedidos', '/horarios-funcionamento', '/taxas-entrega'];
+    const isRetaguarda = retaguardaPages.some(page => window.location.pathname.includes(page));
     
     if (token) {
         try {
@@ -225,8 +248,11 @@ function verificarAutenticacao() {
             // Verificar se o token não expirou
             const agora = Date.now() / 1000;
             if (payload.exp && payload.exp < agora) {
-                // Token expirado
-                localStorage.removeItem('token');
+                // Token expirado - só limpar se não estiver em página do retaguarda
+                if (!isRetaguarda) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('jwt_token');
+                }
                 throw new Error('Token expirado');
             }
             
@@ -238,7 +264,11 @@ function verificarAutenticacao() {
             
         } catch (error) {
             console.error('Erro ao verificar token:', error);
-            localStorage.removeItem('token');
+            // Só limpar token se não estiver em página do retaguarda
+            if (!isRetaguarda) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('jwt_token');
+            }
             mostrarElementosDeslogado();
         }
     } else {

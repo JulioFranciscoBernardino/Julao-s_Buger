@@ -21,6 +21,28 @@ const modalBody = document.getElementById('modalBody');
 const closeModal = document.getElementById('closeModal');
 
 // Inicialização quando o DOM estiver pronto
+// Handler global para imagens quebradas
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar handler global para todas as imagens de produtos
+    document.addEventListener('error', function(e) {
+        if (e.target.tagName === 'IMG' && e.target.src && e.target.src.includes('/imgs/')) {
+            // Se a imagem falhou ao carregar e é uma imagem de produto
+            if (!e.target.dataset.errorHandled) {
+                e.target.dataset.errorHandled = 'true';
+                e.target.style.display = 'none';
+                
+                // Verificar se já existe um placeholder
+                if (!e.target.parentElement.querySelector('.product-image-placeholder')) {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'product-image-placeholder';
+                    placeholder.innerHTML = '<i class="fas fa-utensils"></i><span>Imagem não encontrada</span>';
+                    e.target.parentElement.appendChild(placeholder);
+                }
+            }
+        }
+    }, true); // Usar capture phase para pegar erros antes que sejam tratados
+});
+
 document.addEventListener('DOMContentLoaded', async function() {
     // Verificar status de funcionamento primeiro
     await verificarStatusFuncionamento();
@@ -321,8 +343,8 @@ function criarCardProduto(produto) {
             
             <div class="product-image">
                 ${imagem ? 
-                    `<img src="${imagem}" alt="${produto.nome}" loading="lazy" class="product-img" data-fallback="true" />` :
-                    `<div class="product-image-placeholder">
+                    `<img src="${imagem}" alt="${produto.nome}" loading="lazy" decoding="async" fetchpriority="low" class="product-img" data-fallback="true" width="300" height="120" style="aspect-ratio: 16/9; object-fit: cover;" />` :
+                    `<div class="product-image-placeholder" style="width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <i class="fas fa-utensils"></i>
                         <span>Sem imagem</span>
                     </div>`
@@ -345,11 +367,18 @@ function criarCardProduto(produto) {
     const img = card.querySelector('.product-img[data-fallback="true"]');
     if (img) {
         img.addEventListener('error', function() {
-            this.style.display = 'none';
-            const placeholder = document.createElement('div');
-            placeholder.className = 'product-image-placeholder';
-            placeholder.innerHTML = '<i class="fas fa-utensils"></i><span>Imagem não encontrada</span>';
-            this.parentElement.appendChild(placeholder);
+            if (!this.dataset.errorHandled) {
+                this.dataset.errorHandled = 'true';
+                this.style.display = 'none';
+                // Verificar se já existe placeholder
+                if (!this.parentElement.querySelector('.product-image-placeholder')) {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'product-image-placeholder';
+                    placeholder.style.cssText = 'width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center;';
+                    placeholder.innerHTML = '<i class="fas fa-utensils"></i><span>Imagem não encontrada</span>';
+                    this.parentElement.appendChild(placeholder);
+                }
+            }
         });
     }
     
@@ -446,10 +475,10 @@ function renderizarModalProduto(produto, gruposOpcionais) {
     
     modalBody.innerHTML = `
         <div class="modal-product">
-            <div class="modal-product-image">
+            <div class="modal-product-image" style="width: 100%; min-height: 300px; aspect-ratio: 16/9;">
                 ${imagem ? 
-                    `<img src="${imagem}" alt="${produto.nome}" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><i class=\\'fas fa-utensils\\'></i><span>Imagem não encontrada</span></div>';" />` :
-                    `<div class="product-image-placeholder">
+                    `<img src="${imagem}" alt="${produto.nome}" width="400" height="300" loading="lazy" decoding="async" fetchpriority="low" style="width: 100%; height: auto; object-fit: cover; display: block;" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\' style=\\'width: 100%; height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center;\\'><i class=\\'fas fa-utensils\\'></i><span>Imagem não encontrada</span></div>';" />` :
+                    `<div class="product-image-placeholder" style="width: 100%; height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <i class="fas fa-utensils"></i>
                         <span>Sem imagem</span>
                     </div>`
@@ -1070,12 +1099,6 @@ function atualizarCarrinho() {
     carrinho.forEach((item, index) => {
         htmlItens += `
             <div class="cart-item" data-item-id="${item.id}">
-                <div class="cart-item-image">
-                    ${item.imagem ? 
-                        `<img src="${item.imagem.startsWith('/imgs/') ? item.imagem : `/imgs/${item.imagem}`}" alt="${item.nome}" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-utensils\\'></i>';" />` :
-                        `<i class="fas fa-utensils"></i>`
-                    }
-                </div>
                 <div class="cart-item-info">
                     <h4 class="cart-item-name">${item.nome}</h4>
                     ${item.opcionais && item.opcionais.length > 0 ? `
@@ -1670,7 +1693,7 @@ function mostrarResultadosNaPagina(produtos, termo) {
         return `
             <div class="produto-card" onclick="abrirModalProduto(${produto.idproduto})">
                 <div class="produto-image">
-                    <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><i class=\\'fas fa-utensils\\'></i><span>Imagem não encontrada</span></div>';" />
+                    <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy" decoding="async" fetchpriority="low" width="329" height="329" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><i class=\\'fas fa-utensils\\'></i><span>Imagem não encontrada</span></div>';" />
                     <div class="produto-overlay">
                         <button class="btn-overlay" onclick="event.stopPropagation(); abrirModalProduto(${produto.idproduto})">
                             <i class="fas fa-eye"></i>
@@ -1739,7 +1762,7 @@ function executarBusca() {
             <div class="search-result-item" onclick="selecionarProdutoDaBusca(${produto.idproduto})">
                 <div class="search-result-image">
                     ${imagem ? 
-                        `<img src="${imagem}" alt="${produto.nome}" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-utensils\\' style=\\'color: #adb5bd;\\'></i>';" />` :
+                        `<img src="${imagem}" alt="${produto.nome}" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-utensils\\' style=\\'color: #adb5bd;\\'></i>';" />` :
                         `<i class="fas fa-utensils" style="color: #adb5bd;"></i>`
                     }
                 </div>
@@ -2100,7 +2123,7 @@ function mostrarResultadosBusca(produtos) {
             return `
                 <div class="search-result-item" onclick="selecionarProdutoDaBusca(${produto.idproduto})">
                     <div class="search-result-image">
-                        <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy" onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-utensils\\' style=\\'color: #adb5bd;\\'></i>';" />
+                        <img src="${produto.imagem || '/imgs/placeholder.jpg'}" alt="${produto.nome}" loading="lazy" decoding="async" fetchpriority="low" onerror="if(!this.dataset.errorHandled){this.dataset.errorHandled='true';this.style.display='none';this.parentElement.innerHTML='<i class=\\'fas fa-utensils\\' style=\\'color: #adb5bd;\\'></i>';}" />
                     </div>
                     <div class="search-result-info">
                         <div class="search-result-name">${produto.nome}</div>

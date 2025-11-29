@@ -229,9 +229,28 @@ function renderizarFormularioDadosCliente(dadosPreenchidos = null) {
             </div>
             
             <div class="form-group">
-                <label for="emailCliente">E-mail</label>
+                <label for="emailCliente">E-mail *</label>
                 <input type="email" id="emailCliente" class="form-control" placeholder="seu@email.com"
-                       value="${dadosPreenchidos?.email || ''}">
+                       value="${dadosPreenchidos?.email || ''}" required>
+                <small class="form-text">Necessário para fazer login e acompanhar seu pedido</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="senhaCliente">Senha *</label>
+                <input type="password" id="senhaCliente" class="form-control" placeholder="Mínimo 6 caracteres" 
+                       minlength="6" required>
+                <small class="form-text">Crie uma senha para acompanhar seu pedido</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmarSenhaCliente">Confirmar Senha *</label>
+                <input type="password" id="confirmarSenhaCliente" class="form-control" placeholder="Digite a senha novamente" 
+                       minlength="6" required>
+            </div>
+            
+            <div class="info-box" style="background-color: #e3f2fd; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 0.9em; color: #1976d2;">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Você está criando uma conta!</strong> Após o pedido, você poderá fazer login com seu e-mail e senha para acompanhar seus pedidos.
             </div>
         </div>
     `;
@@ -1255,6 +1274,8 @@ async function confirmarPedido() {
         if (!isUsuarioLogado()) {
             const nomeCliente = document.getElementById('nomeCliente')?.value?.trim();
             const telefoneCliente = document.getElementById('telefoneCliente')?.value?.trim();
+            const senhaCliente = document.getElementById('senhaCliente')?.value;
+            const confirmarSenhaCliente = document.getElementById('confirmarSenhaCliente')?.value;
             
             if (!nomeCliente) {
                 alert('Por favor, preencha seu nome completo');
@@ -1263,6 +1284,22 @@ async function confirmarPedido() {
             
             if (!telefoneCliente) {
                 alert('Por favor, preencha seu telefone');
+                return;
+            }
+            
+            const emailCliente = document.getElementById('emailCliente')?.value?.trim();
+            if (!emailCliente) {
+                alert('Por favor, preencha seu e-mail');
+                return;
+            }
+            
+            if (!senhaCliente || senhaCliente.length < 6) {
+                alert('Por favor, crie uma senha com no mínimo 6 caracteres');
+                return;
+            }
+            
+            if (senhaCliente !== confirmarSenhaCliente) {
+                alert('As senhas não coincidem. Por favor, verifique e tente novamente.');
                 return;
             }
         }
@@ -1303,9 +1340,10 @@ async function confirmarPedido() {
         let dadosCliente = {};
         if (!isUsuarioLogado()) {
             dadosCliente = {
-                nome: document.getElementById('nomeCliente').value,
-                telefone: document.getElementById('telefoneCliente').value,
-                email: document.getElementById('emailCliente').value || null
+                nome: document.getElementById('nomeCliente').value.trim(),
+                telefone: document.getElementById('telefoneCliente').value.trim(),
+                email: document.getElementById('emailCliente').value.trim() || null,
+                senha: document.getElementById('senhaCliente').value
             };
         }
 
@@ -1332,8 +1370,9 @@ async function confirmarPedido() {
             dadosCliente: Object.keys(dadosCliente).length > 0 ? dadosCliente : null // Dados do cliente não logado
         };
 
-        // Se usuário está logado, enviar pedido para o backend
+        // Enviar pedido para o backend (logado ou não)
         if (isUsuarioLogado()) {
+            // Usuário logado - usar rota autenticada
             const token = localStorage.getItem('token');
             const response = await fetch('/api/pedidos', {
                 method: 'POST',
@@ -1345,42 +1384,22 @@ async function confirmarPedido() {
             });
 
             if (response.status === 401) {
-                // Token inválido, salvar pedido localmente
-                alert('Sua sessão expirou. O pedido será salvo localmente.');
-                salvarPedidoLocal(pedidoData);
+                // Token inválido: usar rota pública
+                await enviarPedidoPublico(pedidoData);
                 return;
             }
 
             const resultado = await response.json();
 
             if (response.ok) {
-                // Limpar carrinho
-                localStorage.removeItem('julaosBurger_carrinho');
-                localStorage.removeItem('cart');
-                
-                // Obter ID do pedido
-                const pedidoId = resultado?.pedidoId;
-                
-                // Abrir WhatsApp com mensagem do pedido
-                abrirWhatsAppPedido(pedidoId, pedidoData);
-                
-                // Redirecionar para a tela de acompanhamento do pedido
-                const rotaAcompanhamento = pedidoId
-                    ? `/pedidos_cliente?pedido=${pedidoId}`
-                    : '/pedidos_cliente';
-
-                // Pequeno delay para garantir que o WhatsApp abra antes do redirecionamento
-                setTimeout(() => {
-                    window.location.href = rotaAcompanhamento;
-                }, 500);
+                processarPedidoSucesso(resultado?.pedidoId, pedidoData);
             } else {
-                alert('Erro ao confirmar pedido: ' + (resultado.erro || 'Erro desconhecido'));
+                // Falha na rota autenticada: usar rota pública
+                await enviarPedidoPublico(pedidoData);
             }
         } else {
-            // Usuário não logado, salvar pedido localmente
-            // Abrir WhatsApp mesmo para pedidos não logados
-            abrirWhatsAppPedido(null, pedidoData);
-            salvarPedidoLocal(pedidoData);
+            // Usuário não logado - usar rota pública
+            await enviarPedidoPublico(pedidoData);
         }
 
     } catch (error) {
@@ -1388,7 +1407,95 @@ async function confirmarPedido() {
     }
 }
 
-// Salvar pedido localmente (para usuários não logados)
+// Enviar pedido usando rota pública (sem autenticação)
+async function enviarPedidoPublico(pedidoData) {
+    try {
+        const response = await fetch('/api/pedidos/publico', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(pedidoData)
+        });
+
+        const resultado = await response.json();
+
+        if (response.ok) {
+            processarPedidoSucesso(resultado?.pedidoId, pedidoData);
+        } else {
+            // Se falhar, salvar localmente como fallback
+            console.error('Erro ao enviar pedido público:', resultado.erro);
+            alert('Erro ao confirmar pedido: ' + (resultado.erro || 'Erro desconhecido') + '. O pedido será salvo localmente.');
+            salvarPedidoLocal(pedidoData);
+        }
+    } catch (error) {
+        console.error('Erro ao enviar pedido público:', error);
+        alert('Erro ao confirmar pedido. O pedido será salvo localmente.');
+        salvarPedidoLocal(pedidoData);
+    }
+}
+
+// Processar sucesso do pedido (logado ou não)
+async function processarPedidoSucesso(pedidoId, pedidoData) {
+    // Limpar carrinho
+    localStorage.removeItem('julaosBurger_carrinho');
+    localStorage.removeItem('cart');
+    
+    // Abrir WhatsApp com mensagem do pedido
+    abrirWhatsAppPedido(pedidoId, pedidoData);
+    
+    // Se não estiver logado mas criou conta, tentar fazer login automático
+    if (!isUsuarioLogado() && pedidoData.dadosCliente) {
+        try {
+            const email = pedidoData.dadosCliente.email;
+            const senha = pedidoData.dadosCliente.senha;
+            
+            // Se tiver email, tentar fazer login
+            if (email && senha) {
+                const response = await fetch('/api/usuarios/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, senha })
+                });
+                
+                if (response.ok) {
+                    const resultado = await response.json();
+                    // Garantir que o token do usuário logado seja sempre o mais recente
+                    localStorage.setItem('token', resultado.token);
+                    localStorage.setItem('jwt_token', resultado.token);
+                    // Redirecionar para acompanhamento do pedido
+                    const rotaAcompanhamento = pedidoId 
+                        ? `/pedidos_cliente?pedido=${pedidoId}`
+                        : '/pedidos_cliente';
+                    setTimeout(() => {
+                        window.location.href = rotaAcompanhamento;
+                    }, 500);
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao fazer login automático:', error);
+        }
+    }
+    
+    // Redirecionar para a tela de acompanhamento do pedido (se logado) ou página de confirmação
+    if (isUsuarioLogado() && pedidoId) {
+        const rotaAcompanhamento = `/pedidos_cliente?pedido=${pedidoId}`;
+        setTimeout(() => {
+            window.location.href = rotaAcompanhamento;
+        }, 500);
+    } else {
+        // Cliente não logado - mostrar mensagem de sucesso
+        alert('Pedido confirmado com sucesso! Número do pedido: #' + (pedidoId ? String(pedidoId).padStart(3, '0') : 'aguardando') + '\n\nVocê pode fazer login com seu email e senha para acompanhar o pedido.');
+        setTimeout(() => {
+            window.location.href = '/login_cadastro.html';
+        }, 1000);
+    }
+}
+
+// Salvar pedido localmente (para usuários não logados - fallback)
 function salvarPedidoLocal(pedidoData) {
     // Adicionar timestamp
     pedidoData.timestamp = Date.now();
@@ -1403,11 +1510,18 @@ function salvarPedidoLocal(pedidoData) {
     pedidos.push(pedidoData);
     localStorage.setItem('pedidos_locais', JSON.stringify(pedidos));
 
+    // Mesmo em modo offline/falha de backend, ainda avisar a loja via WhatsApp
+    try {
+        abrirWhatsAppPedido(null, pedidoData);
+    } catch (e) {
+        console.error('Erro ao tentar abrir WhatsApp para pedido salvo localmente:', e);
+    }
+
     // Limpar carrinho
     localStorage.removeItem('julaosBurger_carrinho');
     localStorage.removeItem('cart');
     
-    // Redirecionar para página de confirmação
+    // Redirecionar para página de confirmação / login
     alert('Pedido salvo! Faça login para acompanhar seu pedido.');
     window.location.href = '/login_cadastro.html';
 }
@@ -1517,9 +1631,23 @@ function abrirWhatsAppPedido(pedidoId, pedidoData) {
         const mensagem = gerarMensagemWhatsApp(pedidoId, pedidoData);
         const mensagemEncoded = encodeURIComponent(mensagem);
         const urlWhatsApp = `https://wa.me/${WHATSAPP_RESTAURANTE}?text=${mensagemEncoded}`;
-        
-        // Abrir WhatsApp em nova aba
-        window.open(urlWhatsApp, '_blank');
+
+        // Detectar iOS (iPhone / iPad) – Safari é mais restritivo com popups
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+
+        if (isIOS) {
+            // Em iOS, abrir na MESMA aba reduz muito a chance de bloqueio
+            window.location.href = urlWhatsApp;
+        } else {
+            // Em outros dispositivos, tentar nova aba primeiro
+            const novaJanela = window.open(urlWhatsApp, '_blank');
+
+            // Se o navegador bloquear o popup, cair para mesma aba
+            if (!novaJanela || novaJanela.closed || typeof novaJanela.closed === 'undefined') {
+                window.location.href = urlWhatsApp;
+            }
+        }
     } catch (error) {
         // Se houver erro, não bloquear o fluxo do pedido
         console.error('Erro ao abrir WhatsApp:', error);

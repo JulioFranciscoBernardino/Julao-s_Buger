@@ -2,12 +2,54 @@ const Produto = require('../models/produtoModel');
 const Categoria = require('../models/categoriaModel');
 const SaborBebida = require('../models/saborBebidaModel');
 const ProdutoGrupoOpcional = require('../models/produtoGrupoOpcionalModel');
+const fs = require('fs').promises;
+const path = require('path');
+
+// Cache simples para verificação de existência de arquivos
+const imagemCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+async function verificarImagemExiste(imagemPath) {
+    const now = Date.now();
+    const cached = imagemCache.get(imagemPath);
+    
+    // Se existe no cache e ainda é válido, retornar resultado
+    if (cached && (now - cached.timestamp) < CACHE_TTL) {
+        return cached.exists;
+    }
+    
+    // Verificar arquivo
+    let exists = false;
+    try {
+        await fs.access(imagemPath);
+        exists = true;
+    } catch (error) {
+        // Se não encontrou, tentar normalizar o caminho
+        const normalizedPath = imagemPath.replace(/\\/g, '/');
+        try {
+            await fs.access(normalizedPath);
+            exists = true;
+        } catch (err) {
+            exists = false;
+        }
+    }
+    
+    // Atualizar cache
+    imagemCache.set(imagemPath, { timestamp: now, exists });
+    
+    return exists;
+}
+
+// Função para limpar cache de imagens (útil para debug)
+function limparCacheImagens() {
+    imagemCache.clear();
+}
 
 const produtoController = {
   listarProdutos: async (req, res) => {
     try {
       const produtos = await Produto.getAll();
-      const produtosLimpos = produtos.map(produto => {
+      const produtosLimpos = await Promise.all(produtos.map(async (produto) => {
         if (produto.imagem) {
           if (produto.imagem.startsWith('http://') || produto.imagem.startsWith('https://')) {
             const fileName = produto.imagem.split('/').pop().split('?')[0];
@@ -15,9 +57,17 @@ const produtoController = {
           } else if (!produto.imagem.startsWith('/imgs/')) {
             produto.imagem = `/imgs/${produto.imagem}`;
           }
+          
+          // Verificar se o arquivo realmente existe (com cache)
+          const imagemPath = path.join(__dirname, '..', 'public', produto.imagem);
+          const existe = await verificarImagemExiste(imagemPath);
+          if (!existe) {
+            console.warn(`Imagem não encontrada: ${produto.imagem}`);
+            produto.imagem = null;
+          }
         }
         return produto;
-      });
+      }));
       res.json(produtosLimpos);
     } catch (err) {
       console.error('Erro ao buscar produtos');
@@ -107,6 +157,14 @@ const produtoController = {
           produto.imagem = `/imgs/${fileName}`;
         } else if (!produto.imagem.startsWith('/imgs/')) {
           produto.imagem = `/imgs/${produto.imagem}`;
+        }
+        
+        // Verificar se o arquivo realmente existe (com cache)
+        const imagemPath = path.join(__dirname, '..', 'public', produto.imagem);
+        const existe = await verificarImagemExiste(imagemPath);
+        if (!existe) {
+          console.warn(`Imagem não encontrada: ${produto.imagem}`);
+          produto.imagem = null;
         }
       }
       

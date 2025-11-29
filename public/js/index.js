@@ -33,12 +33,50 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         cart.classList.add('open');
         openCartButton.classList.add('hidden');
+        // Bloquear scroll do body quando carrinho estiver aberto (mobile)
+        if (window.innerWidth <= 768) {
+            // Salvar posição do scroll antes de bloquear
+            const scrollY = window.scrollY;
+            document.documentElement.classList.add('cart-open');
+            document.body.classList.add('cart-open');
+            document.body.style.top = `-${scrollY}px`;
+        }
     });
 
     // Função para fechar o carrinho
     closeCartButton.addEventListener('click', function() {
+        fecharCarrinho();
+    });
+    
+    // Função para fechar carrinho (reutilizável)
+    function fecharCarrinho() {
         cart.classList.remove('open');
         openCartButton.classList.remove('hidden');
+        // Restaurar scroll do body quando carrinho fechar (mobile)
+        if (window.innerWidth <= 768) {
+            const scrollY = document.body.style.top;
+            document.documentElement.classList.remove('cart-open');
+            document.body.classList.remove('cart-open');
+            document.body.style.top = '';
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY || '0') * -1);
+            }
+        }
+    }
+    
+    // Fechar carrinho ao clicar fora dele (no overlay)
+    cart.addEventListener('click', function(e) {
+        // Se clicar no próprio carrinho (não no conteúdo), fechar
+        if (e.target === cart) {
+            fecharCarrinho();
+        }
+    });
+    
+    // Fechar carrinho ao pressionar ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && cart.classList.contains('open')) {
+            fecharCarrinho();
+        }
     });
     
     // Atualizar status periodicamente

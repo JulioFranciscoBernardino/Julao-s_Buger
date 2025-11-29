@@ -41,9 +41,12 @@ app.use(cors());
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "https://gc.kis.v2.scr.kaspersky-labs.com", "https://code.jquery.com"],
+        scriptSrcAttr: ["'unsafe-hashes'", "'unsafe-inline'"], // Permite event handlers inline
         styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://gc.kis.v2.scr.kaspersky-labs.com"],
+        styleSrcAttr: ["'unsafe-inline'"], // Permite style inline
         fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
         connectSrc: ["'self'", "https://viacep.com.br", "https://maps.googleapis.com", "https://gc.kis.v2.scr.kaspersky-labs.com"],
+        imgSrc: ["'self'", "data:", "https:"], // Permite imagens do próprio servidor e data URIs
       }
     }
   }));

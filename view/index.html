@@ -6,27 +6,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Julão's Burger - Cardápio</title>
   
-  <!-- Preconnect para CDNs -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <!-- Preconnect para CDNs (otimizado) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   
   <!-- Preload de recursos críticos -->
   <link rel="preload" href="/styles/index.css" as="style">
   <link rel="preload" href="/imgs/logoJulaos.png" as="image">
   
-  <!-- Google Fonts com font-display: swap -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  
-  <!-- CSS -->
+  <!-- CSS crítico inline ou carregado primeiro -->
   <link rel="stylesheet" href="/styles/index.css">
   
-  <link rel="shortcut icon" href="/imgs/logoJulaos.png" type="image/x-icon">
+  <!-- Google Fonts com font-display: swap (deferido) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
   
-  <!-- Font Awesome com font-display -->
+  <link rel="icon" href="/imgs/logoJulaos.png" type="image/png">
+  <link rel="shortcut icon" href="/imgs/logoJulaos.png" type="image/png">
+  <link rel="apple-touch-icon" href="/imgs/logoJulaos.png">
+  
+  <!-- Font Awesome deferido (não bloqueia renderização) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
+    crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
 </head>
 
 <body>
@@ -36,7 +44,7 @@
     <div class="navbar-container">
       <div class="navbar-left">
         <a href="/" class="navbar-logo">
-          <img src="/imgs/logoJulaos.png" alt="Julão's Burguinho" class="logo-img">
+          <img src="/imgs/logoJulaos.png" alt="Julão's Burguinho" class="logo-img" width="40" height="40" loading="eager" decoding="async" fetchpriority="high">
           <span class="logo-text">Julão's Burger Mega Lanches</span>
         </a>
       </div>
@@ -96,7 +104,7 @@
     <div class="header-container">
       <div class="restaurant-info">
         <div class="restaurant-logo">
-          <img src="/imgs/logoJulaos.png" alt="Julão's Burger" class="logo-img">
+          <img src="/imgs/logoJulaos.png" alt="Julão's Burger" class="logo-img" width="80" height="80" loading="eager">
         </div>
         <div class="restaurant-details">
           <h1 class="restaurant-name">JULÃO'S BURGER MEGA LANCHES</h1>
@@ -107,7 +115,7 @@
         </div>
       </div>
       
-      <div class="delivery-info">
+      <div class="delivery-info" style="min-height: 120px;">
         <a href="#" class="delivery-link">Ver tempo e taxa de entrega</a>
         <p class="min-order">Pedido mínimo: R$ 25,00</p>
         
@@ -149,7 +157,7 @@
             <p>Selecione uma categoria para visualizar os produtos disponíveis.</p>
           </div>
 
-          <div class="products-grid" id="productsGrid" style="display: none;">
+          <div class="products-grid" id="productsGrid" style="display: none; min-height: 400px;">
             <!-- Produtos serão carregados dinamicamente -->
           </div>
         </div>

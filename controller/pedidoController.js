@@ -1,6 +1,7 @@
 const db = require('../config/bd');
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/usuarioModel');
+const argon2 = require('argon2');
 
 // Função para obter a data atual em Brasília (UTC-3)
 // O Node.js já está configurado com TZ=America/Sao_Paulo no app.js
@@ -142,6 +143,156 @@ class PedidoController {
         }
     }
 
+    // Listar todos os pedidos (público - para testes - SEM autenticação)
+    static async listarTodosPublico(req, res) {
+        try {
+            const params = [];
+            let whereClause = 'p.excluido = 0';
+
+            // SEMPRE filtrar apenas pedidos do dia atual (sem exceções)
+            // Pedidos de dias anteriores NÃO devem aparecer no gestor
+            // Se houver parâmetro 'data' na query, usar essa data específica (para relatórios/histórico)
+            if (req.query.data) {
+                // Validar formato da data (YYYY-MM-DD)
+                const dataRegex = /^\d{4}-\d{2}-\d{2}$/;
+                if (dataRegex.test(req.query.data)) {
+                    // Converter timestamp de UTC para Brasília (-03:00) antes de comparar a data
+                    // data_pedido está salvo em UTC, então convertemos para Brasília para comparar
+                    whereClause += ' AND DATE(CONVERT_TZ(p.data_pedido, "+00:00", "-03:00")) = ?';
+                    params.push(req.query.data);
+                } else {
+                    // Se a data for inválida, usar data atual em Brasília
+                    const dataBrasilia = getDataAtualBrasilia();
+                    whereClause += ' AND DATE(CONVERT_TZ(p.data_pedido, "+00:00", "-03:00")) = ?';
+                    params.push(dataBrasilia);
+                }
+            } else {
+                // Por padrão: APENAS pedidos do dia atual em Brasília (UTC-3)
+                // Converter timestamp de UTC para Brasília (-03:00) antes de comparar a data
+                // data_pedido está salvo em UTC, então convertemos para Brasília para comparar
+                const dataBrasilia = getDataAtualBrasilia();
+                whereClause += ' AND DATE(CONVERT_TZ(p.data_pedido, "+00:00", "-03:00")) = ?';
+                params.push(dataBrasilia);
+            }
+
+            if (req.query.status) {
+                whereClause += ' AND p.status = ?';
+                params.push(req.query.status);
+            }
+
+            const query = `
+                SELECT 
+                    p.idpedido,
+                    p.idusuario,
+                    CASE 
+                        WHEN p.data_pedido IS NOT NULL 
+                        THEN CONVERT_TZ(p.data_pedido, '+00:00', '-03:00')
+                        ELSE NULL
+                    END AS data_pedido,
+                    p.status,
+                    p.valor_total,
+                    p.valor_entrega,
+                    p.distancia_km,
+                    p.observacoes,
+                    p.tipo_entrega,
+                    u.nome AS cliente_nome,
+                    u.telefone AS cliente_telefone,
+                    u.email AS cliente_email,
+                    e.logradouro AS end_logradouro,
+                    e.numero AS end_numero,
+                    e.complemento AS end_complemento,
+                    e.bairro AS end_bairro,
+                    e.cidade AS end_cidade,
+                    e.estado AS end_estado,
+                    e.cep AS end_cep
+                FROM pedido p
+                LEFT JOIN usuario u ON p.idusuario = u.idusuario
+                LEFT JOIN endereco e ON p.idendereco = e.idendereco
+                WHERE ${whereClause}
+                ORDER BY p.data_pedido DESC
+                LIMIT 200
+            `;
+
+            const [pedidos] = await db.execute(query, params);
+
+            if (!pedidos || pedidos.length === 0) {
+                return res.json([]);
+            }
+
+            const pedidosComDetalhes = await Promise.all(
+                pedidos.map(async (pedido) => {
+                    try {
+                        const { itensDetalhados, totalItens } = await carregarItensDetalhados(pedido.idpedido);
+                        const totalFinal = totalItens + (parseFloat(pedido.valor_entrega) || 0);
+
+                        return {
+                            idpedido: pedido.idpedido,
+                            idusuario: pedido.idusuario,
+                            data_pedido: pedido.data_pedido,
+                            status: pedido.status,
+                            valor_total: parseFloat(pedido.valor_total || 0),
+                            valor_entrega: parseFloat(pedido.valor_entrega || 0),
+                            distancia_km: pedido.distancia_km ? Number(pedido.distancia_km) : null,
+                            observacoes: pedido.observacoes,
+                            tipo_entrega: pedido.tipo_entrega || 'entrega',
+                            cliente: {
+                                nome: pedido.cliente_nome || 'Cliente',
+                                telefone: pedido.cliente_telefone || '',
+                                email: pedido.cliente_email || ''
+                            },
+                            endereco: {
+                                logradouro: pedido.end_logradouro || '',
+                                numero: pedido.end_numero || '',
+                                complemento: pedido.end_complemento || '',
+                                bairro: pedido.end_bairro || '',
+                                cidade: pedido.end_cidade || '',
+                                estado: pedido.end_estado || '',
+                                cep: pedido.end_cep || ''
+                            },
+                            itens: itensDetalhados,
+                            totalPedido: totalFinal
+                        };
+                    } catch (error) {
+                        console.error('Erro ao montar pedido (admin):', error);
+                        return {
+                            idpedido: pedido.idpedido,
+                            idusuario: pedido.idusuario,
+                            data_pedido: pedido.data_pedido,
+                            status: pedido.status,
+                            valor_total: parseFloat(pedido.valor_total || 0),
+                            valor_entrega: parseFloat(pedido.valor_entrega || 0),
+                            distancia_km: pedido.distancia_km ? Number(pedido.distancia_km) : null,
+                            observacoes: pedido.observacoes,
+                            tipo_entrega: pedido.tipo_entrega || 'entrega',
+                            cliente: {
+                                nome: pedido.cliente_nome || 'Cliente',
+                                telefone: pedido.cliente_telefone || '',
+                                email: pedido.cliente_email || ''
+                            },
+                            endereco: {
+                                logradouro: pedido.end_logradouro || '',
+                                numero: pedido.end_numero || '',
+                                complemento: pedido.end_complemento || '',
+                                bairro: pedido.end_bairro || '',
+                                cidade: pedido.end_cidade || '',
+                                estado: pedido.end_estado || '',
+                                cep: pedido.end_cep || ''
+                            },
+                            itens: [],
+                            totalPedido: parseFloat(pedido.valor_total || 0)
+                        };
+                    }
+                })
+            );
+
+            res.json(pedidosComDetalhes);
+        } catch (error) {
+            console.error('Erro ao listar pedidos (público):', error);
+            res.status(500).json({ erro: 'Erro interno do servidor' });
+        }
+    }
+
+    // Listar todos os pedidos (com autenticação e verificação de admin)
     static async listarTodos(req, res) {
         try {
             if (!req.usuario || !['admin', 'adm'].includes(req.usuario.type)) {
@@ -294,19 +445,9 @@ class PedidoController {
         }
     }
 
-    // Buscar pedido por ID
-    static async buscarPorId(req, res) {
+    // Buscar pedido por ID (público - para testes)
+    static async buscarPorIdPublico(req, res) {
         try {
-            if (!req.usuario) {
-                return res.status(401).json({ erro: 'Token inválido' });
-            }
-
-            // Verificar se req.usuario.id existe, senão usar idusuario
-            const userId = req.usuario.id || req.usuario.idusuario;
-            if (!userId) {
-                return res.status(401).json({ erro: 'ID do usuário não encontrado' });
-            }
-
             const { id } = req.params;
 
             const pedidoQuery = `
@@ -331,10 +472,115 @@ class PedidoController {
                 FROM pedido p
                 LEFT JOIN usuario u ON p.idusuario = u.idusuario
                 LEFT JOIN endereco e ON p.idendereco = e.idendereco
-                WHERE p.idpedido = ? AND p.idusuario = ? AND p.ativo = 1 AND p.excluido = 0
+                WHERE p.idpedido = ? AND p.ativo = 1 AND p.excluido = 0
             `;
 
-            const [pedidos] = await db.execute(pedidoQuery, [id, userId]);
+            const [pedidos] = await db.execute(pedidoQuery, [id]);
+
+            if (!pedidos || pedidos.length === 0) {
+                return res.status(404).json({ erro: 'Pedido não encontrado' });
+            }
+
+            const pedido = pedidos[0];
+            pedido.distancia_km = pedido.distancia_km ? Number(pedido.distancia_km) : null;
+
+            // Buscar itens do pedido
+            const itensQuery = `
+                SELECT 
+                    pp.idpedidoproduto,
+                    pp.quantidade,
+                    pp.observacao,
+                    pr.idproduto,
+                    pr.nome,
+                    pr.preco,
+                    pr.imagem
+                FROM pedidoproduto pp
+                JOIN produto pr ON pp.idproduto = pr.idproduto
+                WHERE pp.idpedido = ?
+            `;
+            
+            const [itens] = await db.execute(itensQuery, [id]);
+
+            // Buscar opcionais de cada item
+            for (let item of itens) {
+                const opcionaisQuery = `
+                    SELECT 
+                        o.idopcional,
+                        o.nome,
+                        o.preco,
+                        ppo.quantidade
+                    FROM pedidoprodutoopcional ppo
+                    JOIN opcional o ON ppo.idopcional = o.idopcional
+                    WHERE ppo.idpedidoproduto = ?
+                `;
+                
+                const [opcionais] = await db.execute(opcionaisQuery, [item.idpedidoproduto]);
+                item.opcionais = opcionais || [];
+                item.observacao = item.observacao || null;
+            }
+
+            pedido.itens = itens;
+            const totalItens = itens.reduce((total, item) => {
+                const precoProduto = parseFloat(item.preco || 0);
+                const totalOpcionais = (item.opcionais || []).reduce((subtotal, opcional) => {
+                    return subtotal + (parseFloat(opcional.preco || 0) * (opcional.quantidade || 1));
+                }, 0);
+                return total + ((precoProduto * item.quantidade) + totalOpcionais);
+            }, 0);
+            pedido.total = totalItens + (parseFloat(pedido.valor_entrega) || 0);
+
+            res.json(pedido);
+        } catch (error) {
+            console.error('Erro ao buscar pedido (público):', error);
+            res.status(500).json({ erro: 'Erro interno do servidor' });
+        }
+    }
+
+    // Buscar pedido por ID (com autenticação)
+    static async buscarPorId(req, res) {
+        try {
+            if (!req.usuario) {
+                return res.status(401).json({ erro: 'Token inválido' });
+            }
+
+            // Verificar se req.usuario.id existe, senão usar idusuario
+            const userId = req.usuario.id || req.usuario.idusuario;
+            if (!userId) {
+                return res.status(401).json({ erro: 'ID do usuário não encontrado' });
+            }
+
+            const { id } = req.params;
+
+            // Verificar se é admin - admin pode ver qualquer pedido
+            const isAdmin = req.usuario.type === 'admin' || req.usuario.type === 'adm';
+
+            const pedidoQuery = `
+                SELECT 
+                    p.idpedido,
+                    CONVERT_TZ(p.data_pedido, '+00:00', '-03:00') AS data_pedido,
+                    p.status,
+                    p.valor_total,
+                    p.valor_entrega,
+                    p.distancia_km,
+                    p.observacoes,
+                    p.tipo_entrega,
+                    u.nome AS nome_cliente,
+                    u.telefone AS telefone_cliente,
+                    e.logradouro,
+                    e.numero,
+                    e.complemento,
+                    e.bairro,
+                    e.cidade,
+                    e.estado,
+                    e.cep
+                FROM pedido p
+                LEFT JOIN usuario u ON p.idusuario = u.idusuario
+                LEFT JOIN endereco e ON p.idendereco = e.idendereco
+                WHERE p.idpedido = ? AND p.ativo = 1 AND p.excluido = 0 ${isAdmin ? '' : 'AND p.idusuario = ?'}
+            `;
+
+            const params = isAdmin ? [id] : [id, userId];
+            const [pedidos] = await db.execute(pedidoQuery, params);
 
             if (!pedidos || pedidos.length === 0) {
                 return res.status(404).json({ erro: 'Pedido não encontrado' });
@@ -395,7 +641,7 @@ class PedidoController {
         }
     }
 
-    // Criar novo pedido
+    // Criar novo pedido (com autenticação)
     static async criar(req, res) {
         try {
             if (!req.usuario) {
@@ -524,6 +770,276 @@ class PedidoController {
 
         } catch (error) {
             console.error('Erro ao criar pedido:', error);
+            res.status(500).json({ erro: 'Erro interno do servidor' });
+        }
+    }
+
+    // Criar novo pedido sem autenticação (para clientes não logados)
+    static async criarSemAutenticacao(req, res) {
+        try {
+            const { 
+                itens, 
+                observacoes, 
+                idendereco, 
+                idforma_pagamento, 
+                valor_total, 
+                valor_entrega, 
+                distancia_km, 
+                tipo_entrega,
+                dadosCliente,
+                enderecoCompleto
+            } = req.body;
+
+            // Validar dados do cliente (obrigatório quando não está logado)
+            if (!dadosCliente || !dadosCliente.nome || !dadosCliente.telefone || !dadosCliente.email || !dadosCliente.senha) {
+                return res.status(400).json({ erro: 'Dados do cliente são obrigatórios (nome, telefone, email e senha)' });
+            }
+            
+            // Validar senha
+            if (dadosCliente.senha.length < 6) {
+                return res.status(400).json({ erro: 'A senha deve ter no mínimo 6 caracteres' });
+            }
+
+            if (!itens || !Array.isArray(itens) || itens.length === 0) {
+                return res.status(400).json({ erro: 'Pedido deve conter pelo menos um item' });
+            }
+
+            if (!idforma_pagamento) {
+                return res.status(400).json({ erro: 'Forma de pagamento é obrigatória' });
+            }
+            
+            // Verificar se já existe usuário com esse email (antes de iniciar transação)
+            const [usuarioExistente] = await db.execute(
+                'SELECT idusuario FROM usuario WHERE email = ? LIMIT 1',
+                [dadosCliente.email]
+            );
+            
+            if (usuarioExistente.length > 0) {
+                return res.status(400).json({ erro: 'Já existe uma conta com este e-mail. Por favor, faça login para continuar.' });
+            }
+
+            // Iniciar transação
+            const connection = await db.getConnection();
+            await connection.beginTransaction();
+
+            try {
+                // SEMPRE criar um novo usuário para pedidos sem autenticação
+                // Isso evita associar pedidos a usuários existentes incorretamente
+                // Criar hash da senha
+                const senhaHash = await argon2.hash(dadosCliente.senha);
+                
+                const [usuarioResult] = await connection.execute(
+                    `INSERT INTO usuario (nome, telefone, email, tipo, senha) 
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [
+                        dadosCliente.nome,
+                        dadosCliente.telefone.replace(/\D/g, ''),
+                        dadosCliente.email || null,
+                        'cliente',
+                        senhaHash
+                    ]
+                );
+                const userId = usuarioResult.insertId;
+                
+                let enderecoId = null;
+
+                // Se for retirada, enderecoId deve ser null
+                if (tipo_entrega === 'retirada') {
+                    enderecoId = null;
+                } else {
+                    // Para entrega, verificar se tem idendereco ou enderecoCompleto
+                    if (idendereco) {
+                        // Verificar se o endereço existe e pertence ao usuário (ou é válido)
+                        const [enderecoExistente] = await connection.execute(
+                            'SELECT idendereco FROM endereco WHERE idendereco = ? LIMIT 1',
+                            [idendereco]
+                        );
+                        
+                        if (enderecoExistente.length > 0) {
+                            enderecoId = idendereco;
+                        } else {
+                            // idendereco fornecido não existe, criar novo se tiver enderecoCompleto
+                            if (enderecoCompleto) {
+                                const [enderecoResult] = await connection.execute(
+                                    `INSERT INTO endereco (idusuario, apelido, cep, logradouro, numero, complemento, bairro, cidade, estado, principal) 
+                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+                                    [
+                                        userId,
+                                        enderecoCompleto.nome || 'Endereço de Entrega',
+                                        enderecoCompleto.cep ? enderecoCompleto.cep.replace(/\D/g, '') : null,
+                                        enderecoCompleto.logradouro,
+                                        enderecoCompleto.numero,
+                                        enderecoCompleto.complemento || null,
+                                        enderecoCompleto.bairro,
+                                        enderecoCompleto.cidade,
+                                        enderecoCompleto.estado
+                                    ]
+                                );
+                                enderecoId = enderecoResult.insertId;
+                            } else {
+                                throw new Error('Endereço inválido ou não fornecido');
+                            }
+                        }
+                    } else if (enderecoCompleto) {
+                        // Criar endereço temporário
+                        const [enderecoResult] = await connection.execute(
+                            `INSERT INTO endereco (idusuario, apelido, cep, logradouro, numero, complemento, bairro, cidade, estado, principal) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+                            [
+                                userId,
+                                enderecoCompleto.nome || 'Endereço de Entrega',
+                                enderecoCompleto.cep ? enderecoCompleto.cep.replace(/\D/g, '') : null,
+                                enderecoCompleto.logradouro,
+                                enderecoCompleto.numero,
+                                enderecoCompleto.complemento || null,
+                                enderecoCompleto.bairro,
+                                enderecoCompleto.cidade,
+                                enderecoCompleto.estado
+                            ]
+                        );
+                        enderecoId = enderecoResult.insertId;
+                    } else {
+                        // Se for entrega mas não tiver endereço, retornar erro
+                        throw new Error('Endereço é obrigatório para entrega');
+                    }
+                }
+
+                // Criar pedido
+                const pedidoQuery = `
+                    INSERT INTO pedido (idusuario, idendereco, idforma_pagamento, status, valor_total, valor_entrega, distancia_km, observacoes, tipo_entrega, data_pedido) 
+                    VALUES (?, ?, ?, 'pendente', ?, ?, ?, ?, ?, UTC_TIMESTAMP())
+                `;
+                
+                const tipoEntrega = tipo_entrega === 'retirada' ? 'retirada' : 'entrega';
+                
+                const [pedidoResult] = await connection.execute(pedidoQuery, [
+                    userId,
+                    enderecoId,
+                    idforma_pagamento,
+                    valor_total || 0,
+                    valor_entrega || 0,
+                    distancia_km || null,
+                    observacoes || null,
+                    tipoEntrega
+                ]);
+                const pedidoId = pedidoResult.insertId;
+
+                let totalPedido = 0;
+
+                // Adicionar itens do pedido
+                for (let item of itens) {
+                    const { idproduto, quantidade, observacao = null, opcionais = [] } = item;
+
+                    // Buscar preço do produto
+                    const produtoQuery = `SELECT preco FROM produto WHERE idproduto = ? AND ativo = 1`;
+                    const [produtos] = await connection.execute(produtoQuery, [idproduto]);
+
+                    if (produtos.length === 0) {
+                        throw new Error(`Produto ${idproduto} não encontrado`);
+                    }
+
+                    const precoProduto = parseFloat(produtos[0].preco);
+
+                    // Adicionar produto ao pedido
+                    const itemQuery = `
+                        INSERT INTO pedidoproduto (idpedido, idproduto, quantidade, observacao) 
+                        VALUES (?, ?, ?, ?)
+                    `;
+                    
+                    const [itemResult] = await connection.execute(itemQuery, [pedidoId, idproduto, quantidade, observacao]);
+                    const pedidoProdutoId = itemResult.insertId;
+
+                    let precoItem = precoProduto * quantidade;
+
+                    // Adicionar opcionais
+                    for (let opcional of opcionais) {
+                        const opcionalId = opcional?.idopcional || opcional?.id;
+                        if (!opcionalId) {
+                            continue;
+                        }
+                        const qtdOpcional = opcional?.quantidade ?? 1;
+                        
+                        // Buscar preço do opcional
+                        const opcionalQuery = `SELECT preco FROM opcional WHERE idopcional = ? AND ativo = 1`;
+                        const [opcionais_db] = await connection.execute(opcionalQuery, [opcionalId]);
+
+                        if (opcionais_db.length > 0) {
+                            const precoOpcional = parseFloat(opcionais_db[0].preco);
+                            precoItem += precoOpcional * qtdOpcional;
+
+                            // Adicionar opcional ao item
+                            const opcionalItemQuery = `
+                                INSERT INTO pedidoprodutoopcional (idpedidoproduto, idopcional, quantidade) 
+                                VALUES (?, ?, ?)
+                            `;
+                            
+                            await connection.execute(opcionalItemQuery, [pedidoProdutoId, opcionalId, qtdOpcional]);
+                        }
+                    }
+
+                    totalPedido += precoItem;
+                }
+
+                // Confirmar transação
+                await connection.commit();
+                connection.release();
+
+                res.status(201).json({
+                    mensagem: 'Pedido criado com sucesso',
+                    pedidoId: pedidoId,
+                    total: totalPedido
+                });
+
+            } catch (error) {
+                await connection.rollback();
+                connection.release();
+                throw error;
+            }
+
+        } catch (error) {
+            console.error('Erro ao criar pedido sem autenticação:', error);
+            res.status(500).json({ erro: error.message || 'Erro interno do servidor' });
+        }
+    }
+
+    // Atualizar status do pedido (público - para testes)
+    static async atualizarStatusPublico(req, res) {
+        try {
+            const { id } = req.params;
+            const { status } = req.body;
+
+            const statusMap = {
+                pendente: 'pendente',
+                aceito: 'aceito',
+                preparo: 'preparando',
+                entrega: 'entregue',
+                concluido: 'concluido'
+            };
+
+            const statusConvertido = statusMap[status] || status;
+
+            const statusValidos = ['pendente', 'aceito', 'preparando', 'pronto', 'entregue', 'cancelado', 'concluido'];
+            if (!statusValidos.includes(statusConvertido)) {
+                return res.status(400).json({ erro: 'Status inválido' });
+            }
+
+            // Para testes: permitir atualização sem verificação de usuário
+            const query = `
+                UPDATE pedido 
+                SET status = ? 
+                WHERE idpedido = ? AND ativo = 1
+            `;
+            const params = [statusConvertido, id];
+
+            const [result] = await db.execute(query, params);
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ erro: 'Pedido não encontrado' });
+            }
+
+            res.json({ mensagem: 'Status atualizado com sucesso' });
+        } catch (error) {
+            console.error('Erro ao atualizar status:', error);
             res.status(500).json({ erro: 'Erro interno do servidor' });
         }
     }
@@ -699,6 +1215,42 @@ class PedidoController {
 
         } catch (error) {
             console.error('Erro ao atualizar status:', error);
+            res.status(500).json({ erro: 'Erro interno do servidor' });
+        }
+    }
+
+    // Cancelar pedido (público - para testes)
+    static async cancelarPublico(req, res) {
+        try {
+            const { id } = req.params;
+
+            // Para testes: permitir cancelamento sem verificação de usuário
+            const query = `UPDATE pedido SET status = 'cancelado' WHERE idpedido = ? AND ativo = 1 AND status != 'cancelado'`;
+            const params = [id];
+
+            const [result] = await db.execute(query, params);
+
+            if (result.affectedRows === 0) {
+                const [pedidoVerificado] = await db.execute(
+                    `SELECT status FROM pedido WHERE idpedido = ? AND ativo = 1`,
+                    [id]
+                );
+                
+                if (pedidoVerificado.length === 0) {
+                    return res.status(404).json({ erro: 'Pedido não encontrado' });
+                }
+                
+                const statusAtual = pedidoVerificado[0].status;
+                if (statusAtual === 'cancelado') {
+                    return res.json({ mensagem: 'Pedido já está cancelado' });
+                }
+                
+                return res.status(400).json({ erro: 'Pedido não pode ser cancelado', statusAtual });
+            }
+
+            res.json({ mensagem: 'Pedido cancelado com sucesso' });
+        } catch (error) {
+            console.error('Erro ao cancelar pedido:', error);
             res.status(500).json({ erro: 'Erro interno do servidor' });
         }
     }

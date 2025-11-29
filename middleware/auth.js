@@ -25,7 +25,7 @@ const authJWTQuery = (req, res, next) => {
     const token = req.query.token;
     
     if (!token) {
-        return res.redirect('/login_cadastro.html');
+        return res.redirect('/login_cadastro');
     }
     
     try {
@@ -33,7 +33,42 @@ const authJWTQuery = (req, res, next) => {
         req.usuario = decoded;
         next();
     } catch (error) {
-        return res.redirect('/login_cadastro.html');
+        return res.redirect('/login_cadastro');
+    }
+};
+
+// Middleware para verificar JWT via query parameter ou header (para páginas HTML do retaguarda)
+const authJWTAdminPage = (req, res, next) => {
+    // Tentar obter token de várias fontes
+    let token = null;
+    
+    // 1. Do header Authorization
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+    }
+    
+    // 2. Do query parameter
+    if (!token && req.query.token) {
+        token = req.query.token;
+    }
+    
+    if (!token) {
+        return res.redirect('/login_cadastro?redirect=' + encodeURIComponent(req.originalUrl) + '&error=token_necessario');
+    }
+    
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        
+        // Verificar se é admin
+        if (!decoded.type || !['admin', 'adm'].includes(decoded.type)) {
+            return res.redirect('/login_cadastro?redirect=' + encodeURIComponent(req.originalUrl) + '&error=acesso_negado');
+        }
+        
+        req.usuario = decoded;
+        next();
+    } catch (error) {
+        return res.redirect('/login_cadastro?redirect=' + encodeURIComponent(req.originalUrl) + '&error=token_invalido');
     }
 };
 
@@ -55,6 +90,7 @@ const authAdmin = (req, res, next) => {
 module.exports = {
     authJWT,
     authJWTQuery,
+    authJWTAdminPage,
     authSession,
     authAdmin
 };

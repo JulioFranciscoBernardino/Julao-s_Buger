@@ -14,6 +14,7 @@ body button {
   font-family: "Poppins", sans-serif;
   background-color: #f4f4f4;
   color: #333;
+  padding-top: 44px; /* Compensar altura do navbar fixo */
 }
 
 /* Espaçamento superior/inferior */
@@ -32,6 +33,7 @@ body button {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
+  margin-top: 0; /* Remover margem superior já que o body tem padding */
 }
 
 .restaurant-header::before {
@@ -119,6 +121,7 @@ body button {
 .delivery-info {
   text-align: right;
   min-width: 250px;
+  min-height: 120px;
 }
 
 .delivery-link {
@@ -248,6 +251,7 @@ body button {
 .main-content {
   min-height: calc(100vh - 300px);
   padding: 2rem 0;
+  contain: layout;
 }
 
 .content-container {
@@ -435,6 +439,7 @@ body button {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
+  min-height: 400px;
 }
 
 .product-card {
@@ -447,6 +452,9 @@ body button {
   overflow: hidden;
   cursor: pointer;
   margin-bottom: 0.5rem;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
   opacity: 0;
   transform: translateY(20px);
   animation: fadeInUp 0.5s ease-out forwards;
@@ -550,6 +558,7 @@ body button {
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  display: block;
 }
 
 .product-card:hover .product-image img {
@@ -1048,8 +1057,11 @@ body button {
 .apple-navbar {
   background: #FFCC00;
   border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   z-index: 1000;
   height: 44px;
 }
@@ -2125,6 +2137,25 @@ body button {
   transition: right 0.3s ease;
   z-index: 1001;
   border-left: 0.5px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bloquear scroll do body quando carrinho estiver aberto (mobile) */
+@media (max-width: 768px) {
+  body.cart-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    touch-action: none; /* Previne gestos de scroll no mobile */
+  }
+  
+  /* Prevenir scroll no html também */
+  html.cart-open {
+    overflow: hidden !important;
+    height: 100% !important;
+  }
 }
 
 .cart.open {
@@ -2161,13 +2192,24 @@ body button {
 .cart-items {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 20px;
+  -webkit-overflow-scrolling: touch; /* Scroll suave no iOS */
+  max-height: calc(100vh - 200px); /* Altura máxima para garantir scroll */
+  overscroll-behavior: contain; /* Evita scroll do body quando chega no fim */
+  min-height: 0; /* Permite que o flex item encolha */
 }
 
 .cart-footer {
   padding: 20px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1002;
+  flex-shrink: 0; /* Evita que o footer encolha */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); /* Sombra superior para destacar */
 }
 
 .cart-footer button {
@@ -2334,27 +2376,9 @@ body button {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* Imagem removida do carrinho */
 .cart-item-image {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cart-item-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.cart-item-image i {
-  font-size: 1.5rem;
-  color: #adb5bd;
+  display: none !important;
 }
 
 .cart-item-info {
@@ -2683,10 +2707,18 @@ body button {
   .cart {
     width: 100%;
     right: -100%;
+    height: 100dvh; /* Usa dynamic viewport height para mobile */
   }
 
   .cart.open {
     right: 0;
+  }
+  
+  .cart-footer {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(20px + constant(safe-area-inset-bottom)); /* Fallback para iOS antigo */
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+    margin-bottom: constant(safe-area-inset-bottom); /* Fallback para iOS antigo */
   }
 
   .cart-icon {
@@ -2709,8 +2741,14 @@ body button {
   }
 
   .cart-item-image {
-    width: 50px;
-    height: 50px;
+    display: none;
+  }
+  
+  .cart-items {
+    max-height: calc(100dvh - 180px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 180px - constant(safe-area-inset-bottom)); /* Fallback para iOS antigo */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .cart-item-name {
@@ -2765,8 +2803,20 @@ body button {
   }
 
   .cart-item-image {
-    width: 100%;
-    height: 120px;
+    display: none;
+  }
+  
+  .cart-items {
+    max-height: calc(100dvh - 160px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 160px - constant(safe-area-inset-bottom)); /* Fallback para iOS antigo */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 15px;
+  }
+  
+  .cart-footer {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(20px + constant(safe-area-inset-bottom)); /* Fallback para iOS antigo */
   }
 
   .cart-item-actions {

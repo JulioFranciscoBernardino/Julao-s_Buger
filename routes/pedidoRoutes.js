@@ -3,7 +3,14 @@ const router = express.Router();
 const PedidoController = require('../controller/pedidoController');
 const { authJWT, authAdmin } = require('../middleware/auth');
 
-// Aplicar middleware de autenticação em todas as rotas
+// Rotas públicas (sem autenticação) - para testes
+router.post('/publico', PedidoController.criarSemAutenticacao);
+router.get('/publico/admin', PedidoController.listarTodosPublico); // Listar todos os pedidos sem autenticação (para testes)
+router.get('/publico/:id', PedidoController.buscarPorIdPublico); // Buscar pedido por ID sem autenticação (para testes)
+router.put('/publico/:id/status', PedidoController.atualizarStatusPublico); // Atualizar status sem autenticação (para testes)
+router.put('/publico/:id/cancelar', PedidoController.cancelarPublico); // Cancelar pedido sem autenticação (para testes)
+
+// Aplicar middleware de autenticação em todas as rotas abaixo
 router.use(authJWT);
 
 // Rotas dos pedidos

@@ -111,7 +111,7 @@ input[type="file"]:hover::-webkit-file-upload-button {
 }
 
 #Concluir{
-    font-family: "Poppins", sans-serif;
+    font-family: 'Poppins', sans-serif;
     padding: 3px;
     border-radius: 2px;
     border: none;
@@ -183,7 +183,7 @@ select.texto {
 }
 
 #Concluir, #concluirOpcional {
-  font-family: "Poppins", sans-serif;
+  font-family: 'Poppins', sans-serif;
   padding: 1rem 2rem;
   border-radius: 12px;
   border: none;

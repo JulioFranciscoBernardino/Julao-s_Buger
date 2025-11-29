@@ -727,7 +727,7 @@ function carregarProdutosCategoria(categoria) {
             <div class="produto-conteudo">
               <div class="produto-img">
                 ${srcImg ? 
-                  `<img src="${srcImg}" alt="Imagem do produto" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'placeholder-img\\'><i class=\\'fas fa-image\\'></i><span>Imagem não encontrada</span></div>';">` : 
+                  `<img src="${srcImg}" alt="Imagem do produto" onerror="if(!this.dataset.errorHandled){this.dataset.errorHandled='true';this.onerror=null;this.parentElement.innerHTML='<div class=\\'placeholder-img\\'><i class=\\'fas fa-image\\'></i><span>Imagem não encontrada</span></div>';}">` : 
                   `<div class="placeholder-img"><i class="fas fa-image"></i><span>Sem imagem</span></div>`
                 }
               </div>
