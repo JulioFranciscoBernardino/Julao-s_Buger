@@ -1,47 +1,108 @@
 const pool = require('../config/bd');
 const argon2 = require('argon2');
 
+// Função auxiliar para executar query com retry em caso de erro de conexão
+async function executarQueryComRetry(queryFn, maxTentativas = 3) {
+    for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+        try {
+            return await queryFn();
+        } catch (error) {
+            // Se for erro de conexão e não for a última tentativa, tentar novamente
+            if ((error.code === 'ECONNRESET' || error.code === 'PROTOCOL_CONNECTION_LOST' || error.code === 'ETIMEDOUT') && tentativa < maxTentativas) {
+                console.warn(`[UsuarioModel] Tentativa ${tentativa} falhou, tentando novamente... (${error.code})`);
+                // Aguardar um pouco antes de tentar novamente (backoff exponencial)
+                await new Promise(resolve => setTimeout(resolve, 200 * tentativa));
+                continue;
+            }
+            // Se não for erro de conexão ou for a última tentativa, lançar o erro
+            throw error;
+        }
+    }
+}
+
 class Usuario {
     static async buscarPorEmail(email) {
-        const [rows] = await pool.query('SELECT * FROM usuario WHERE email = ?', [email]);
-        return rows[0];
+        try {
+            const [rows] = await executarQueryComRetry(() => 
+                pool.query('SELECT * FROM usuario WHERE email = ?', [email])
+            );
+            return rows[0];
+        } catch (error) {
+            console.error('[UsuarioModel] Erro ao buscar usuário por email:', error);
+            throw error;
+        }
     }
 
     static async buscarPorId(idusuario) {
-        const [rows] = await pool.query('SELECT * FROM usuario WHERE idusuario = ?', [idusuario]);
-        return rows[0];
+        try {
+            const [rows] = await executarQueryComRetry(() => 
+                pool.query('SELECT * FROM usuario WHERE idusuario = ?', [idusuario])
+            );
+            return rows[0];
+        } catch (error) {
+            console.error('[UsuarioModel] Erro ao buscar usuário por ID:', error);
+            throw error;
+        }
     }
 
     static async cadastrar({ nome, email, senha, tipo, telefone }) {
-        const senhaHash = await argon2.hash(senha);
-        await pool.query(
-            'INSERT INTO usuario ( nome, email, senha, tipo, telefone) VALUES (?, ?, ?, ?, ?)',
-            [ nome, email, senhaHash, tipo || 'cliente', telefone || null ]
-        );
+        try {
+            const senhaHash = await argon2.hash(senha);
+            await executarQueryComRetry(() => 
+                pool.query(
+                    'INSERT INTO usuario ( nome, email, senha, tipo, telefone) VALUES (?, ?, ?, ?, ?)',
+                    [ nome, email, senhaHash, tipo || 'cliente', telefone || null ]
+                )
+            );
+        } catch (error) {
+            console.error('[UsuarioModel] Erro ao cadastrar usuário:', error);
+            throw error;
+        }
     }
 
     static async atualizarTelefone(idusuario, telefone) {
-        const [resultado] = await pool.query(
-            'UPDATE usuario SET telefone = ? WHERE idusuario = ?',
-            [telefone, idusuario]
-        );
-        return resultado.affectedRows > 0;
+        try {
+            const [resultado] = await executarQueryComRetry(() => 
+                pool.query(
+                    'UPDATE usuario SET telefone = ? WHERE idusuario = ?',
+                    [telefone, idusuario]
+                )
+            );
+            return resultado.affectedRows > 0;
+        } catch (error) {
+            console.error('[UsuarioModel] Erro ao atualizar telefone:', error);
+            throw error;
+        }
     }
 
     static async atualizarNome(idusuario, nome) {
-        const [resultado] = await pool.query(
-            'UPDATE usuario SET nome = ? WHERE idusuario = ?',
-            [nome, idusuario]
-        );
-        return resultado.affectedRows > 0;
+        try {
+            const [resultado] = await executarQueryComRetry(() => 
+                pool.query(
+                    'UPDATE usuario SET nome = ? WHERE idusuario = ?',
+                    [nome, idusuario]
+                )
+            );
+            return resultado.affectedRows > 0;
+        } catch (error) {
+            console.error('[UsuarioModel] Erro ao atualizar nome:', error);
+            throw error;
+        }
     }
 
     static async atualizarSenha(idusuario, senhaHash) {
-        const [resultado] = await pool.query(
-            'UPDATE usuario SET senha = ? WHERE idusuario = ?',
-            [senhaHash, idusuario]
-        );
-        return resultado.affectedRows > 0;
+        try {
+            const [resultado] = await executarQueryComRetry(() => 
+                pool.query(
+                    'UPDATE usuario SET senha = ? WHERE idusuario = ?',
+                    [senhaHash, idusuario]
+                )
+            );
+            return resultado.affectedRows > 0;
+        } catch (error) {
+            console.error('[UsuarioModel] Erro ao atualizar senha:', error);
+            throw error;
+        }
     }
 
     static async adicionarPontos(idusuario, pontos) {
@@ -54,9 +115,11 @@ class Usuario {
         }
         
         try {
-            const [resultado] = await pool.query(
-                'UPDATE usuario SET pontos = COALESCE(pontos, 0) + ? WHERE idusuario = ?',
-                [pontosInt, idusuario]
+            const [resultado] = await executarQueryComRetry(() => 
+                pool.query(
+                    'UPDATE usuario SET pontos = COALESCE(pontos, 0) + ? WHERE idusuario = ?',
+                    [pontosInt, idusuario]
+                )
             );
             
             console.log(`Query executada: UPDATE usuario SET pontos = COALESCE(pontos, 0) + ${pontosInt} WHERE idusuario = ${idusuario}`);
@@ -64,18 +127,34 @@ class Usuario {
             
             return resultado.affectedRows > 0;
         } catch (error) {
-            console.error('Erro na query de adicionar pontos:', error);
+            console.error('[UsuarioModel] Erro na query de adicionar pontos:', error);
             throw error;
         }
     }
 
     static async buscarPontos(idusuario, connection = null) {
-        const dbConnection = connection || pool;
-        const [rows] = await dbConnection.query(
-            'SELECT pontos FROM usuario WHERE idusuario = ?',
-            [idusuario]
-        );
-        return rows[0]?.pontos || 0;
+        try {
+            // Se uma conexão foi fornecida (transação), usar ela diretamente
+            if (connection) {
+                const [rows] = await connection.execute(
+                    'SELECT pontos FROM usuario WHERE idusuario = ?',
+                    [idusuario]
+                );
+                return rows[0]?.pontos || 0;
+            }
+            
+            // Caso contrário, usar o pool com retry
+            const [rows] = await executarQueryComRetry(() => 
+                pool.query(
+                    'SELECT pontos FROM usuario WHERE idusuario = ?',
+                    [idusuario]
+                )
+            );
+            return rows[0]?.pontos || 0;
+        } catch (error) {
+            console.error('[UsuarioModel] Erro ao buscar pontos:', error);
+            throw error;
+        }
     }
 
     static async descontarPontos(idusuario, pontos, connection = null) {

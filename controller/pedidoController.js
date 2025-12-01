@@ -26,8 +26,8 @@ async function executarQueryComRetry(queryFn, maxTentativas = 3) {
             // Se for erro de conexão e não for a última tentativa, tentar novamente
             if ((error.code === 'ECONNRESET' || error.code === 'PROTOCOL_CONNECTION_LOST' || error.code === 'ETIMEDOUT') && tentativa < maxTentativas) {
                 console.warn(`[DB] Tentativa ${tentativa} falhou, tentando novamente... (${error.code})`);
-                // Aguardar um pouco antes de tentar novamente (backoff exponencial)
-                await new Promise(resolve => setTimeout(resolve, 100 * tentativa));
+            // Aguardar um pouco antes de tentar novamente (backoff exponencial)
+            await new Promise(resolve => setTimeout(resolve, 200 * tentativa));
                 continue;
             }
             // Se não for erro de conexão ou for a última tentativa, lançar o erro
@@ -43,8 +43,10 @@ async function carregarItensDetalhados(pedidoId) {
             pp.idproduto,
             pp.quantidade,
             pp.observacao,
+            pp.pagar_com_pontos,
             pr.nome,
-            pr.preco
+            pr.preco,
+            pr.preco_pontos
         FROM pedidoproduto pp
         JOIN produto pr ON pp.idproduto = pr.idproduto
         WHERE pp.idpedido = ?
@@ -88,11 +90,20 @@ async function carregarItensDetalhados(pedidoId) {
             }
 
             const precoProduto = parseFloat(item.preco || 0);
+            const precoPontosProduto = parseFloat(item.preco_pontos || 0);
+            const pagarComPontos = item.pagar_com_pontos === 1 || item.pagar_com_pontos === true;
             const totalOpcionais = (opcionais || []).reduce((total, opcional) => {
                 return total + (parseFloat(opcional.preco || 0) * (opcional.quantidade || 1));
             }, 0);
-            const totalItem = (precoProduto * item.quantidade) + totalOpcionais;
-            totalItens += totalItem;
+            
+            // Se foi pago com pontos, usar preco_pontos, senão usar preco normal
+            const precoBase = pagarComPontos && precoPontosProduto > 0 ? precoPontosProduto : precoProduto;
+            const totalItem = (precoBase * item.quantidade) + totalOpcionais;
+            
+            // Só somar ao total se não foi pago com pontos (pois pontos não entram no valor total)
+            if (!pagarComPontos) {
+                totalItens += totalItem;
+            }
 
             return {
                 idpedidoproduto: item.idpedidoproduto,
@@ -100,6 +111,8 @@ async function carregarItensDetalhados(pedidoId) {
                 nome: item.nome,
                 quantidade: item.quantidade,
                 preco: precoProduto,
+                preco_pontos: precoPontosProduto,
+                pagar_com_pontos: pagarComPontos,
                 observacao: item.observacao || null,
                 opcionais: opcionais || [],
                 totalItem
@@ -150,7 +163,7 @@ class PedidoController {
                 LIMIT 50
             `;
             
-            const [pedidos] = await db.execute(query, [userId]);
+            const [pedidos] = await executarQueryComRetry(() => db.execute(query, [userId]));
             
             // Calcular total do pedido para cada pedido
             const pedidosComTotal = await Promise.all(
@@ -535,42 +548,10 @@ class PedidoController {
             const pedido = pedidos[0];
             pedido.distancia_km = pedido.distancia_km ? Number(pedido.distancia_km) : null;
 
-            // Buscar itens do pedido
-            const itensQuery = `
-                SELECT 
-                    pp.idpedidoproduto,
-                    pp.quantidade,
-                    pp.observacao,
-                    pr.idproduto,
-                    pr.nome,
-                    pr.preco,
-                    pr.imagem
-                FROM pedidoproduto pp
-                JOIN produto pr ON pp.idproduto = pr.idproduto
-                WHERE pp.idpedido = ?
-            `;
-            
-            const [itens] = await db.execute(itensQuery, [id]);
+            // Buscar itens detalhados usando a função auxiliar (inclui pagar_com_pontos e preco_pontos)
+            const { itensDetalhados } = await carregarItensDetalhados(id);
 
-            // Buscar opcionais de cada item
-            for (let item of itens) {
-                const opcionaisQuery = `
-                    SELECT 
-                        o.idopcional,
-                        o.nome,
-                        o.preco,
-                        ppo.quantidade
-                    FROM pedidoprodutoopcional ppo
-                    JOIN opcional o ON ppo.idopcional = o.idopcional
-                    WHERE ppo.idpedidoproduto = ?
-                `;
-                
-                const [opcionais] = await db.execute(opcionaisQuery, [item.idpedidoproduto]);
-                item.opcionais = opcionais || [];
-                item.observacao = item.observacao || null;
-            }
-
-            pedido.itens = itens;
+            pedido.itens = itensDetalhados;
             // Usar valor_total do banco de dados (já calculado corretamente considerando pontos)
             // Não recalcular, pois pode incluir produtos pagos com pontos que não devem entrar no total
             pedido.total = parseFloat(pedido.valor_total || 0);
@@ -635,42 +616,10 @@ class PedidoController {
             const pedido = pedidos[0];
             pedido.distancia_km = pedido.distancia_km ? Number(pedido.distancia_km) : null;
 
-            // Buscar itens do pedido
-            const itensQuery = `
-                SELECT 
-                    pp.idpedidoproduto,
-                    pp.quantidade,
-                    pp.observacao,
-                    pr.idproduto,
-                    pr.nome,
-                    pr.preco,
-                    pr.imagem
-                FROM pedidoproduto pp
-                JOIN produto pr ON pp.idproduto = pr.idproduto
-                WHERE pp.idpedido = ?
-            `;
-            
-            const [itens] = await db.execute(itensQuery, [id]);
+            // Buscar itens detalhados usando a função auxiliar (inclui pagar_com_pontos e preco_pontos)
+            const { itensDetalhados } = await carregarItensDetalhados(id);
 
-            // Buscar opcionais de cada item
-            for (let item of itens) {
-                const opcionaisQuery = `
-                    SELECT 
-                        o.idopcional,
-                        o.nome,
-                        o.preco,
-                        ppo.quantidade
-                    FROM pedidoprodutoopcional ppo
-                    JOIN opcional o ON ppo.idopcional = o.idopcional
-                    WHERE ppo.idpedidoproduto = ?
-                `;
-                
-                const [opcionais] = await db.execute(opcionaisQuery, [item.idpedidoproduto]);
-                item.opcionais = opcionais || [];
-                item.observacao = item.observacao || null;
-            }
-
-            pedido.itens = itens;
+            pedido.itens = itensDetalhados;
             // Usar valor_total do banco de dados (já calculado corretamente considerando pontos)
             // Não recalcular, pois pode incluir produtos pagos com pontos que não devem entrar no total
             pedido.total = parseFloat(pedido.valor_total || 0);
@@ -771,11 +720,11 @@ class PedidoController {
 
                     // Adicionar produto ao pedido
                     const itemQuery = `
-                        INSERT INTO pedidoproduto (idpedido, idproduto, quantidade, observacao) 
-                        VALUES (?, ?, ?, ?)
+                        INSERT INTO pedidoproduto (idpedido, idproduto, quantidade, observacao, pagar_com_pontos) 
+                        VALUES (?, ?, ?, ?, ?)
                     `;
                     
-                    const [itemResult] = await connection.execute(itemQuery, [pedidoId, idproduto, quantidade, observacao]);
+                    const [itemResult] = await connection.execute(itemQuery, [pedidoId, idproduto, quantidade, observacao, pagar_com_pontos ? 1 : 0]);
                     const pedidoProdutoId = itemResult.insertId;
 
                     let precoItem = precoProduto * quantidade;
@@ -1060,11 +1009,11 @@ class PedidoController {
 
                     // Adicionar produto ao pedido
                     const itemQuery = `
-                        INSERT INTO pedidoproduto (idpedido, idproduto, quantidade, observacao) 
-                        VALUES (?, ?, ?, ?)
+                        INSERT INTO pedidoproduto (idpedido, idproduto, quantidade, observacao, pagar_com_pontos) 
+                        VALUES (?, ?, ?, ?, ?)
                     `;
                     
-                    const [itemResult] = await connection.execute(itemQuery, [pedidoId, idproduto, quantidade, observacao]);
+                    const [itemResult] = await connection.execute(itemQuery, [pedidoId, idproduto, quantidade, observacao, pagar_com_pontos ? 1 : 0]);
                     const pedidoProdutoId = itemResult.insertId;
 
                     let precoItem = precoProduto * quantidade;

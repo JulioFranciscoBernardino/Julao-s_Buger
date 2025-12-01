@@ -91,6 +91,12 @@ exports.perfil = async (req, res) => {
         
     } catch (error) {
         console.error('Erro ao buscar perfil:', error);
+        
+        // Verificar se é erro de conexão
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.code === 'PROTOCOL_CONNECTION_LOST') {
+            return res.status(503).json({ erro: 'Erro ao conectar com o banco de dados. Tente novamente em alguns instantes.' });
+        }
+        
         res.status(500).json({ erro: 'Erro ao buscar perfil' });
     }
 };

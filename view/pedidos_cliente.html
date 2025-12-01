@@ -70,80 +70,6 @@
         <p>Visualize seus pedidos anteriores e repita-os facilmente</p>
       </div>
       
-      <!-- FILTROS -->
-      <div class="filtros-section">
-        <div class="filtros-grid">
-          <div class="filtro-card">
-            <label for="status-filtro">Status</label>
-            <select id="status-filtro" class="filtro-select">
-              <option value="">Todos</option>
-              <option value="pendente">Pendente</option>
-              <option value="preparando">Preparando</option>
-              <option value="pronto">Pronto</option>
-              <option value="entregue">Entregue</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
-          </div>
-          
-          <div class="filtro-card">
-            <label for="data-filtro">Data</label>
-            <input type="date" id="data-filtro" class="filtro-input">
-          </div>
-          
-          <div class="filtro-card">
-            <button class="filtro-btn" onclick="aplicarFiltros()">
-              <i class="fas fa-search"></i>
-              Filtrar
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- ESTATÍSTICAS -->
-      <div class="stats-section">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-receipt"></i>
-            </div>
-            <div class="stat-content">
-              <h3>Total de Pedidos</h3>
-              <p class="stat-number" id="totalPedidos">0</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-content">
-              <h3>Pedidos Entregues</h3>
-              <p class="stat-number" id="pedidosEntregues">0</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-dollar-sign"></i>
-            </div>
-            <div class="stat-content">
-              <h3>Total Gasto</h3>
-              <p class="stat-number" id="totalGasto">R$ 0,00</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-star"></i>
-            </div>
-            <div class="stat-content">
-              <h3>Pedido Favorito</h3>
-              <p class="stat-number" id="pedidoFavorito">-</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
       <!-- LISTA DE PEDIDOS -->
       <div class="pedidos-section">
         <div class="section-header">
@@ -256,7 +182,6 @@ async function carregarPedidos() {
         
         pedidosData = await response.json();
         exibirPedidos(pedidosData);
-        atualizarEstatisticas(pedidosData);
         
     } catch (error) {
         console.error('Erro ao carregar pedidos:', error);
@@ -285,44 +210,35 @@ function exibirPedidos(pedidos) {
             <div class="pedido-header">
                 <div class="pedido-info">
                     <h3>Pedido #${(pedido.idpedido || 0).toString().padStart(3, '0')}</h3>
-                    <p>Data: ${formatarData(pedido.data_pedido || new Date())}</p>
-                    <p>Itens: ${pedido.itens ? pedido.itens.length : 0}</p>
+                    <p>${formatarData(pedido.data_pedido || new Date())}</p>
                 </div>
-                <div class="pedido-status">
-                    <span class="status-badge status-${pedido.status || 'pendente'}">${formatarStatus(pedido.status || 'pendente')}</span>
-                </div>
+                <span class="status-badge status-${pedido.status || 'pendente'}">${formatarStatus(pedido.status || 'pendente')}</span>
             </div>
             
             <div class="pedido-items">
-                ${pedido.itens ? pedido.itens.slice(0, 3).map(item => `
+                ${pedido.itens ? pedido.itens.slice(0, 2).map(item => `
                     <div class="item-pedido">
                         <span class="item-nome">${item.nome}</span>
                         <span class="item-qtd">x${item.quantidade}</span>
-                        <span class="item-preco">R$ ${parseFloat(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
-                        ${item.observacao ? `<span class="item-observacao"><i class="fas fa-sticky-note"></i>${escapeHtml(item.observacao)}</span>` : ''}
                     </div>
                 `).join('') : ''}
-                ${pedido.itens && pedido.itens.length > 3 ? `
-                    <div class="item-pedido">
-                        <span class="item-nome">... e mais ${pedido.itens.length - 3} item(s)</span>
-                        <span class="item-qtd"></span>
-                        <span class="item-preco"></span>
+                ${pedido.itens && pedido.itens.length > 2 ? `
+                    <div class="item-pedido item-extra">
+                        +${pedido.itens.length - 2} item${pedido.itens.length - 2 > 1 ? 's' : ''}
                     </div>
                 ` : ''}
             </div>
             
             <div class="pedido-footer">
                 <div class="pedido-total">
-                    <strong>Total: R$ ${parseFloat(pedido.valor_total ?? pedido.totalPedido ?? pedido.total ?? 0).toFixed(2).replace('.', ',')}</strong>
+                    <strong>R$ ${parseFloat(pedido.valor_total ?? pedido.totalPedido ?? pedido.total ?? 0).toFixed(2).replace('.', ',')}</strong>
                 </div>
                 <div class="pedido-actions">
                     <button class="action-btn btn-repetir" ${pedido.idpedido === 0 ? 'disabled' : ''} onclick="event.stopPropagation(); repetirPedido(${pedido.idpedido || 0})">
                         <i class="fas fa-redo"></i>
-                        Repetir
                     </button>
                     <button class="action-btn btn-detalhes" ${pedido.idpedido === 0 ? 'disabled' : ''} onclick="event.stopPropagation(); verDetalhesPedido(${pedido.idpedido || 0})">
                         <i class="fas fa-eye"></i>
-                        Detalhes
                     </button>
                 </div>
             </div>
@@ -330,30 +246,6 @@ function exibirPedidos(pedidos) {
     `).join('');
 }
 
-// Atualizar estatísticas
-function atualizarEstatisticas(pedidos) {
-    const totalPedidos = pedidos.length;
-    const pedidosEntregues = pedidos.filter(p => p.status === 'entregue').length;
-    const totalGasto = pedidos.reduce((total, pedido) => total + parseFloat(pedido.total || 0), 0);
-    
-    // Encontrar pedido favorito (mais repetido)
-    const pedidosFavoritos = {};
-    pedidos.forEach(pedido => {
-        const key = pedido.itens ? pedido.itens.map(item => item.idproduto).sort().join(',') : '';
-        if (key) {
-            pedidosFavoritos[key] = (pedidosFavoritos[key] || 0) + 1;
-        }
-    });
-    
-    const pedidoMaisRepetido = Object.keys(pedidosFavoritos).reduce((a, b) => 
-        pedidosFavoritos[a] > pedidosFavoritos[b] ? a : b, '');
-    
-    document.getElementById('totalPedidos').textContent = totalPedidos;
-    document.getElementById('pedidosEntregues').textContent = pedidosEntregues;
-    document.getElementById('totalGasto').textContent = `R$ ${totalGasto.toFixed(2).replace('.', ',')}`;
-    document.getElementById('pedidoFavorito').textContent = pedidosFavoritos[pedidoMaisRepetido] > 1 ? 
-        `${pedidosFavoritos[pedidoMaisRepetido]}x` : '-';
-}
 
 // Ver detalhes do pedido
 async function verDetalhesPedido(idPedido) {
@@ -382,39 +274,48 @@ async function verDetalhesPedido(idPedido) {
         document.getElementById('modalPedidoTitulo').textContent = `Pedido #${idPedido.toString().padStart(3, '0')}`;
         
         const modalBody = document.getElementById('modalPedidoBody');
+        const { data, hora } = formatarDataHora(pedido.data_pedido);
         modalBody.innerHTML = `
             <div class="pedido-detalhes">
-                <div class="pedido-info-detalhes">
-                    <p><strong>Data:</strong> ${formatarData(pedido.data_pedido)}</p>
-                    <p><strong>Status:</strong> <span class="status-badge status-${pedido.status}">${formatarStatus(pedido.status)}</span></p>
+                <div class="pedido-info-simple">
+                    <p>${data}, ${hora}</p>
+                    <span class="status-badge status-${pedido.status}">${formatarStatus(pedido.status)}</span>
                 </div>
                 
-                <div class="pedido-itens-detalhes">
-                    <h4>Itens do Pedido:</h4>
-                    ${pedido.itens ? pedido.itens.map(item => `
-                        <div class="item-detalhes">
-                            <div class="item-info">
-                                <h5>${item.nome}</h5>
-                                <p>Quantidade: ${item.quantidade}</p>
-                                ${item.opcionais && item.opcionais.length > 0 ? `
-                                    <p><strong>Opcionais:</strong></p>
-                                    <ul>
-                                        ${item.opcionais.map(opcional => `
-                                            <li>${opcional.nome} ${opcional.preco > 0 ? `(+R$ ${parseFloat(opcional.preco).toFixed(2).replace('.', ',')})` : ''}</li>
-                                        `).join('')}
-                                    </ul>
-                                ` : ''}
-                            ${item.observacao ? `<p class="item-observacao-detalhe"><strong>Observação:</strong> ${escapeHtml(item.observacao)}</p>` : ''}
+                <div class="pedido-itens-simple">
+                    ${pedido.itens ? pedido.itens.map(item => {
+                        const foiPagoComPontos = item.pagar_com_pontos === true || item.pagar_com_pontos === 1;
+                        const precoPontos = item.preco_pontos || 0;
+                        const totalPontos = foiPagoComPontos && precoPontos > 0 ? precoPontos * item.quantidade : 0;
+                        const totalReais = !foiPagoComPontos ? parseFloat(item.preco * item.quantidade) : 0;
+                        
+                        return `
+                        <div class="item-simple">
+                            <div class="item-nome-qtd">
+                                <span class="item-nome"><span class="item-qtd">x${item.quantidade}</span> ${item.nome}</span>
                             </div>
-                            <div class="item-preco-detalhes">
-                                R$ ${parseFloat(item.preco * item.quantidade).toFixed(2).replace('.', ',')}
+                            ${item.opcionais && item.opcionais.length > 0 ? `
+                                <div class="item-opcionais-simple">
+                                    ${item.opcionais.map(opcional => `
+                                        <span class="opcional-item">${opcional.nome}</span>
+                                    `).join(', ')}
+                                </div>
+                            ` : ''}
+                            ${item.observacao ? `
+                                <div class="item-obs-simple">${escapeHtml(item.observacao)}</div>
+                            ` : ''}
+                            <div class="item-preco ${foiPagoComPontos ? 'item-pontos' : ''}">
+                                ${foiPagoComPontos && totalPontos > 0 
+                                    ? `${totalPontos.toLocaleString('pt-BR')} pontos` 
+                                    : `R$ ${totalReais.toFixed(2).replace('.', ',')}`}
                             </div>
                         </div>
-                    `).join('') : ''}
+                    `;
+                    }).join('') : '<p class="empty-message">Nenhum item encontrado.</p>'}
                 </div>
                 
-                <div class="pedido-total-detalhes">
-                    <strong>Total do Pedido: R$ ${parseFloat(pedido.valor_total ?? pedido.total ?? 0).toFixed(2).replace('.', ',')}</strong>
+                <div class="pedido-total-simple">
+                    <span>Total: R$ ${parseFloat(pedido.valor_total ?? pedido.total ?? 0).toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
         `;
@@ -535,27 +436,6 @@ async function repetirPedido(idPedido = null) {
     }, 1500);
 }
 
-// Aplicar filtros
-function aplicarFiltros() {
-    const statusFiltro = document.getElementById('status-filtro').value;
-    const dataFiltro = document.getElementById('data-filtro').value;
-    
-    let pedidosFiltrados = [...pedidosData];
-    
-    if (statusFiltro) {
-        pedidosFiltrados = pedidosFiltrados.filter(pedido => pedido.status === statusFiltro);
-    }
-    
-    if (dataFiltro) {
-        const dataSelecionada = new Date(dataFiltro);
-        pedidosFiltrados = pedidosFiltrados.filter(pedido => {
-            const dataPedido = new Date(pedido.data_pedido);
-            return dataPedido.toDateString() === dataSelecionada.toDateString();
-        });
-    }
-    
-    exibirPedidos(pedidosFiltrados);
-}
 
 // Funções auxiliares
 function formatarData(data) {
@@ -567,6 +447,20 @@ function formatarData(data) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+function formatarDataHora(data) {
+    const date = new Date(data);
+    const dataFormatada = date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+    const horaFormatada = date.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    return { data: dataFormatada, hora: horaFormatada };
 }
 
 function formatarStatus(status) {

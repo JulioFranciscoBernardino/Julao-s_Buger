@@ -12,8 +12,7 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
     enableKeepAlive: true,
-    keepAliveInitialDelay: 0,
-    reconnect: true
+    keepAliveInitialDelay: 0
 }).promise();
 
 // Interceptar novas conexões para configurar timezone de Brasília

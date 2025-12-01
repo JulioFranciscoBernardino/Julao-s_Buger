@@ -563,7 +563,10 @@ async function abrirModalDetalhes(pedidoId) {
                     const nomeItem = item.nome || item.produto_nome || 'Produto';
                     const quantidade = item.quantidade ?? item.qtd ?? 1;
                     const precoUnitario = Number(item.preco || 0);
+                    const precoPontosUnitario = Number(item.preco_pontos || 0);
+                    const foiPagoComPontos = item.pagar_com_pontos === true || item.pagar_com_pontos === 1;
                     const totalItem = Number(item.totalItem ?? (precoUnitario * quantidade));
+                    const totalPontos = foiPagoComPontos && precoPontosUnitario > 0 ? precoPontosUnitario * quantidade : 0;
                     const observacao = item.observacao ? `<p class="item-observacao-detalhe"><strong>Observação:</strong> ${escapeHtml(item.observacao)}</p>` : '';
                     const opcionaisHtml = (item.opcionais || []).map(op => 
                         `<li>${escapeHtml(op.nome)}${op.preco > 0 ? ` (+R$ ${formatarPreco(op.preco)})` : ''}</li>`
@@ -573,11 +576,17 @@ async function abrirModalDetalhes(pedidoId) {
                         <div class="item-info">
                             <h5>${escapeHtml(nomeItem)}</h5>
                             <p><strong>Quantidade:</strong> ${quantidade}</p>
-                            <p><strong>Preço unitário:</strong> R$ ${formatarPreco(precoUnitario)}</p>
+                            ${foiPagoComPontos && precoPontosUnitario > 0 
+                                ? `<p><strong>Preço unitário:</strong> <span class="preco-pontos-badge">${precoPontosUnitario.toLocaleString('pt-BR')} pontos</span></p>`
+                                : `<p><strong>Preço unitário:</strong> R$ ${formatarPreco(precoUnitario)}</p>`}
                             ${opcionaisHtml ? `<p><strong>Opcionais:</strong></p><ul>${opcionaisHtml}</ul>` : ''}
                             ${observacao}
                         </div>
-                        <div class="item-preco-detalhes">R$ ${formatarPreco(totalItem)}</div>
+                        <div class="item-preco-detalhes ${foiPagoComPontos ? 'item-pontos' : ''}">
+                            ${foiPagoComPontos && totalPontos > 0 
+                                ? `${totalPontos.toLocaleString('pt-BR')} pontos` 
+                                : `R$ ${formatarPreco(totalItem)}`}
+                        </div>
                     </div>`;
                 }).join('');
 

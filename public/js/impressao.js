@@ -804,7 +804,10 @@ async function abrirModalDetalhes(pedidoId) {
             const nomeItem = item.nome || item.produto_nome || 'Produto';
             const quantidade = item.quantidade ?? item.qtd ?? 1;
             const precoUnitario = Number(item.preco || 0);
+            const precoPontosUnitario = Number(item.preco_pontos || 0);
+            const foiPagoComPontos = item.pagar_com_pontos === true || item.pagar_com_pontos === 1;
             const totalItem = Number(item.totalItem ?? (precoUnitario * quantidade));
+            const totalPontos = foiPagoComPontos && precoPontosUnitario > 0 ? precoPontosUnitario * quantidade : 0;
             const observacao = item.observacao ? `<p class="item-observacao-detalhe"><strong>Observação:</strong> ${escapeHtml(item.observacao)}</p>` : '';
             const opcionaisHtml = (item.opcionais || []).map(opcional => `
                 <li class="opcional-item">
@@ -818,7 +821,11 @@ async function abrirModalDetalhes(pedidoId) {
                 <div class="item-detalhes-card">
                     <div class="item-header">
                         <h5 class="item-nome">${escapeHtml(nomeItem)}</h5>
-                        <span class="item-preco">R$ ${formatarPreco(totalItem)}</span>
+                        <span class="item-preco ${foiPagoComPontos ? 'item-pontos' : ''}">
+                            ${foiPagoComPontos && totalPontos > 0 
+                                ? `${totalPontos.toLocaleString('pt-BR')} pontos` 
+                                : `R$ ${formatarPreco(totalItem)}`}
+                        </span>
                     </div>
                     <div class="item-detalhes-body">
                         <div class="item-meta">
@@ -827,8 +834,11 @@ async function abrirModalDetalhes(pedidoId) {
                                 <strong>Quantidade:</strong> ${quantidade}
                             </span>
                             <span class="item-meta-item">
-                                <i class="fas fa-tag"></i>
-                                <strong>Preço unitário:</strong> R$ ${formatarPreco(precoUnitario)}
+                                <i class="fas ${foiPagoComPontos ? 'fa-star' : 'fa-tag'}"></i>
+                                <strong>Preço unitário:</strong> 
+                                ${foiPagoComPontos && precoPontosUnitario > 0 
+                                    ? `<span class="preco-pontos-badge">${precoPontosUnitario.toLocaleString('pt-BR')} pontos</span>` 
+                                    : `R$ ${formatarPreco(precoUnitario)}`}
                             </span>
                         </div>
                         ${opcionaisHtml ? `
