@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="/styles/cardapio.css">
   <link rel="stylesheet" href="/styles/navbar.css">
   <link rel="stylesheet" href="/styles/formCardapio.css">
+  <link rel="stylesheet" href="/styles/notifications.css">
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
@@ -86,8 +87,10 @@
         <input type="text" id="nomeProduto" class="texto" placeholder="Ex: Cheese Burger..." required /><br>
         <label for="descricaoProduto">Descrição</label><br>
         <textarea id="descricaoProduto" class="texto" placeholder="Ex: Hamburguer, queijo..." required></textarea><br>
-        <label for="precoProduto">Preço</label><br>
+        <label for="precoProduto">Preço (R$)</label><br>
         <input type="number" id="precoProduto" class="texto" placeholder="Ex: 22,90..." required step="0.01" min="0"><br>
+        <label for="precoPontosProduto">Preço em Pontos</label><br>
+        <input type="number" id="precoPontosProduto" class="texto" placeholder="Ex: 100..." step="0.01" min="0"><br>
         <label for="produtoCategoria">Categoria</label><br>
         <select id="produtoCategoria" class="texto" required></select><br>
         <label for="produtoImagem">Imagem</label><br>
@@ -113,7 +116,7 @@
         <input type="text" id="nomeOpcional" class="texto" placeholder="Ex: Bacon Extra..." required /><br>
         <div id="grupoOpcionalContainer">
           <label for="grupoOpcional">Grupo</label><br>
-          <select id="grupoOpcional" class="texto" required>
+          <select id="grupoOpcional" class="texto">
             <option value="">Selecione um grupo</option>
           </select><br>
         </div>
@@ -210,6 +213,7 @@
     </div>
   </div>
 
+  <script src="/js/notifications.js" defer></script>
   <script src="/js/cardapio.js" defer></script>
   <script src="/js/login_cadastro.js" defer></script>
   <script src="/js/cardapioNavbarCategoria.js" defer></script>

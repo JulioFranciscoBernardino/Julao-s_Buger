@@ -9,6 +9,8 @@ let taxasEntrega = [];
 let taxaEntregaSelecionada = null;
 let distanciaCalculada = null;
 let tipoPedido = 'entrega'; // 'entrega' ou 'retirada'
+let pontosDisponiveis = 0;
+let pagamentoPorProduto = {}; // { index: 'pontos' | 'dinheiro' }
 
 // Endereço do restaurante (configurável - pode vir de uma API ou configuração)
 const ENDERECO_RESTAURANTE = {
@@ -31,6 +33,11 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarEnderecos();
     carregarFormasPagamento();
     carregarTaxasEntrega();
+    
+    // Carregar pontos se estiver logado
+    if (isUsuarioLogado()) {
+        carregarPontosUsuario();
+    }
     
     // Configurar event listeners
     configurarEventListeners();
@@ -76,8 +83,10 @@ function carregarCarrinhoLocalStorage() {
         carrinhoData = carrinhoRawData.map(normalizarItemCarrinho);
         renderizarResumoPedido();
     } else {
-        alert('Seu carrinho está vazio!');
-        window.location.href = '/';
+        showWarning('Seu carrinho está vazio!');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1500);
     }
 }
 
@@ -90,12 +99,17 @@ function normalizarItemCarrinho(item) {
             nome: '',
             imagem: null,
             opcionais: [],
-            observacao: ''
+            observacao: '',
+            preco_pontos: 0
         };
     }
 
     const preco = parseFloat(
         item.precoFinal ?? item.preco ?? item.precoBase ?? 0
+    );
+    
+    const precoPontos = parseFloat(
+        item.preco_pontos ?? item.precoPontos ?? 0
     );
 
     return {
@@ -105,7 +119,8 @@ function normalizarItemCarrinho(item) {
         nome: item.nome || 'Produto',
         imagem: item.imagem || null,
         opcionais: item.opcionais || [],
-        observacao: item.observacao || ''
+        observacao: item.observacao || '',
+        preco_pontos: Number.isNaN(precoPontos) ? 0 : precoPontos
     };
 }
 
@@ -632,11 +647,9 @@ function renderizarResumoPedido() {
     }
 
     let html = '';
-    let subtotal = 0;
 
     carrinhoData.forEach((item, index) => {
         const itemTotal = item.precoFinal * item.quantidade;
-        subtotal += itemTotal;
 
         const observacaoSanitizada = escaparHTML(item.observacao || '');
 
@@ -659,6 +672,17 @@ function renderizarResumoPedido() {
             imagemHtml += '<div class="summary-item-placeholder" style="display:none;"><i class="fas fa-utensils"></i></div>';
         }
 
+        // Verificar se produto tem preco_pontos e se usuário está logado
+        const podePagarComPontos = isUsuarioLogado() && item.preco_pontos && item.preco_pontos > 0;
+        const pontosItem = item.preco_pontos * item.quantidade;
+        // Sempre inicializar como 'dinheiro' por padrão
+        const pagamentoAtual = pagamentoPorProduto[index] || 'dinheiro';
+        
+        // Inicializar pagamento por produto se não existir (sempre como 'dinheiro')
+        if (!pagamentoPorProduto.hasOwnProperty(index)) {
+            pagamentoPorProduto[index] = 'dinheiro';
+        }
+        
         html += `
             <div class="summary-item" data-index="${index}">
                 ${imagemHtml}
@@ -707,13 +731,33 @@ function renderizarResumoPedido() {
         });
     });
     
-    // Atualizar totais
-    const totalTaxaEntrega = calcularTaxaEntrega(subtotal);
-    const totalFinal = subtotal + totalTaxaEntrega;
+    // Registrar listeners para seleção de pagamento por produto
+    const selectsPagamento = container.querySelectorAll('.summary-item-pagamento-select');
+    selectsPagamento.forEach(select => {
+        select.addEventListener('change', (evento) => {
+            const index = Number(evento.target.dataset.index);
+            if (Number.isNaN(index) || !carrinhoData[index]) {
+                return;
+            }
+            
+            pagamentoPorProduto[index] = evento.target.value;
+            renderizarResumoPedido(); // Re-renderizar para atualizar totais
+        });
+    });
     
-    document.getElementById('subtotal').textContent = `R$ ${formatarPreco(subtotal)}`;
-    document.getElementById('taxaEntrega').textContent = `R$ ${formatarPreco(totalTaxaEntrega)}`;
-    document.getElementById('totalPedido').textContent = `R$ ${formatarPreco(totalFinal)}`;
+    // Calcular valores considerando pagamento por produto
+    const valores = calcularValoresPedido();
+    const pontosNecessarios = calcularPontosNecessarios();
+    
+    // Atualizar totais
+    document.getElementById('subtotal').textContent = `R$ ${formatarPreco(valores.subtotalDinheiro)}`;
+    document.getElementById('taxaEntrega').textContent = `R$ ${formatarPreco(valores.taxaEntrega)}`;
+    document.getElementById('totalPedido').textContent = `R$ ${formatarPreco(valores.totalFinal)}`;
+    
+    // Atualizar seção de pontos com prévia dos produtos (sempre, mesmo sem produtos)
+    if (isUsuarioLogado()) {
+        atualizarSecaoPontos();
+    }
 
 }
 
@@ -812,6 +856,207 @@ function renderizarFormasPagamento(formas) {
             }
         });
     });
+}
+
+// Carregar pontos do usuário
+async function carregarPontosUsuario() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            return;
+        }
+        
+        const response = await fetch('/api/usuarios/perfil', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const usuario = await response.json();
+            pontosDisponiveis = usuario.pontos || 0;
+            // Atualizar interface de pontos
+            atualizarSecaoPontos();
+            // Se houver carrinho, atualizar resumo também
+            if (carrinhoData.length > 0) {
+                renderizarResumoPedido();
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao carregar pontos:', error);
+    }
+}
+
+// Calcular pontos necessários para produtos selecionados
+function calcularPontosNecessarios() {
+    let pontosTotal = 0;
+    
+    carrinhoData.forEach((item, index) => {
+        // Se o produto foi selecionado para pagar com pontos
+        if (pagamentoPorProduto[index] === 'pontos' && item.preco_pontos && item.preco_pontos > 0) {
+            pontosTotal += item.preco_pontos * item.quantidade;
+        }
+    });
+    
+    return pontosTotal;
+}
+
+// Calcular valores do pedido (dinheiro e pontos)
+function calcularValoresPedido() {
+    let subtotalDinheiro = 0;
+    let pontosNecessarios = 0;
+    
+    carrinhoData.forEach((item, index) => {
+        const itemTotal = item.precoFinal * item.quantidade;
+        
+        if (pagamentoPorProduto[index] === 'pontos' && item.preco_pontos && item.preco_pontos > 0) {
+            // Produto será pago com pontos
+            pontosNecessarios += item.preco_pontos * item.quantidade;
+        } else {
+            // Produto será pago com dinheiro
+            subtotalDinheiro += itemTotal;
+        }
+    });
+    
+    const taxaEntrega = calcularTaxaEntrega(subtotalDinheiro);
+    const totalFinal = subtotalDinheiro + taxaEntrega;
+    
+    return {
+        subtotalDinheiro,
+        pontosNecessarios,
+        taxaEntrega,
+        totalFinal
+    };
+}
+
+// Atualizar seção de pontos com prévia dos produtos
+function atualizarSecaoPontos() {
+    const pontosSection = document.getElementById('pontosSection');
+    const pontosDisponiveisEl = document.getElementById('pontosDisponiveis');
+    
+    if (!pontosSection) {
+        return;
+    }
+    
+    // Filtrar produtos que podem ser pagos com pontos
+    const produtosComPontos = carrinhoData
+        .map((item, index) => ({ ...item, index }))
+        .filter(item => item.preco_pontos && item.preco_pontos > 0);
+    
+    if (!isUsuarioLogado() || produtosComPontos.length === 0) {
+        pontosSection.style.display = 'none';
+        // Mesmo oculto, atualizar o saldo caso a seção seja exibida depois
+        if (pontosDisponiveisEl) {
+            pontosDisponiveisEl.textContent = pontosDisponiveis.toLocaleString('pt-BR');
+        }
+        return;
+    }
+    
+    pontosSection.style.display = 'block';
+    
+    // Atualizar saldo disponível
+    if (pontosDisponiveisEl) {
+        pontosDisponiveisEl.textContent = pontosDisponiveis.toLocaleString('pt-BR');
+    }
+    
+    // Calcular pontos necessários
+    const pontosNecessarios = calcularPontosNecessarios();
+    document.getElementById('pontosNecessarios').textContent = pontosNecessarios.toLocaleString('pt-BR');
+    
+    // Renderizar produtos com pontos
+    const produtosContainer = document.getElementById('produtosPontosContainer');
+    if (produtosContainer) {
+        let htmlProdutos = '';
+        
+        produtosComPontos.forEach((item) => {
+            const pontosItem = item.preco_pontos * item.quantidade;
+            const pagamentoAtual = pagamentoPorProduto[item.index] || 'dinheiro'; // Sempre começa como 'dinheiro'
+            const isSelected = pagamentoAtual === 'pontos';
+            const temPontosSuficientes = pontosDisponiveis >= pontosItem;
+            const isDisabled = !temPontosSuficientes && !isSelected; // Desabilitar apenas se não tiver pontos e não estiver selecionado
+            
+            // Normalizar caminho da imagem
+            let imgPath = item.imagem || '';
+            if (imgPath) {
+                imgPath = imgPath.replace(/^https?:\/\/[^\/]+/, '');
+                if (!imgPath.startsWith('/imgs/')) {
+                    imgPath = imgPath.replace(/^\/imgs\/imgs\//, '/imgs/');
+                    if (!imgPath.startsWith('/imgs/')) {
+                        imgPath = `/imgs/${imgPath.replace(/^\//, '')}`;
+                    }
+                }
+            }
+            
+            htmlProdutos += `
+                <label class="produto-pontos-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}" data-index="${item.index}">
+                    <input type="checkbox" name="produtoPontos" value="${item.index}" ${isSelected ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
+                    <div class="produto-pontos-card">
+                        ${imgPath ? `
+                            <img src="${imgPath}" alt="${item.nome}" class="produto-pontos-img" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="produto-pontos-placeholder" style="display:none;"><i class="fas fa-utensils"></i></div>
+                        ` : `
+                            <div class="produto-pontos-placeholder"><i class="fas fa-utensils"></i></div>
+                        `}
+                        <div class="produto-pontos-info">
+                            <div class="produto-pontos-nome">${item.nome}</div>
+                            <div class="produto-pontos-pontos">${pontosItem.toLocaleString('pt-BR')} pts</div>
+                        </div>
+                    </div>
+                </label>
+            `;
+        });
+        
+        produtosContainer.innerHTML = htmlProdutos;
+        
+        // Registrar listeners para checkboxes
+        produtosContainer.querySelectorAll('input[name="produtoPontos"]').forEach(checkbox => {
+            checkbox.addEventListener('change', async function() {
+                const index = Number(this.value);
+                if (Number.isNaN(index) || !carrinhoData[index]) {
+                    return;
+                }
+                
+                // Se está tentando marcar para pagar com pontos, validar se tem pontos suficientes
+                if (this.checked) {
+                    const item = carrinhoData[index];
+                    const pontosNecessariosItem = (item.preco_pontos || 0) * item.quantidade;
+                    
+                    // Recarregar pontos para garantir dados atualizados
+                    if (isUsuarioLogado()) {
+                        await carregarPontosUsuario();
+                    }
+                    
+                    // Validar se tem pontos suficientes para este item
+                    if (pontosDisponiveis < pontosNecessariosItem) {
+                        this.checked = false; // Desmarcar checkbox
+                        showWarning(`Você não tem pontos suficientes para este produto. Faltam ${(pontosNecessariosItem - pontosDisponiveis).toLocaleString('pt-BR')} pontos.`);
+                        return;
+                    }
+                    
+                    pagamentoPorProduto[index] = 'pontos';
+                } else {
+                    pagamentoPorProduto[index] = 'dinheiro';
+                }
+                
+                renderizarResumoPedido(); // Re-renderizar para atualizar
+            });
+        });
+    }
+    
+    // Atualizar mensagem (apenas se não tiver pontos suficientes)
+    const pontosDescricao = document.getElementById('pontosDescricao');
+    if (pontosDescricao) {
+        if (pontosNecessarios > 0 && pontosDisponiveis < pontosNecessarios) {
+            pontosDescricao.textContent = `Você precisa de mais ${(pontosNecessarios - pontosDisponiveis).toLocaleString('pt-BR')} pontos.`;
+            pontosDescricao.style.color = '#f59e0b';
+            pontosDescricao.style.display = 'block';
+        } else {
+            // Ocultar mensagem quando tiver pontos suficientes ou não houver produtos selecionados
+            pontosDescricao.style.display = 'none';
+        }
+    }
 }
 
 // Taxas de entrega
@@ -1183,17 +1428,17 @@ async function salvarNovoEndereco(event) {
     const estado = document.getElementById('estadoEndereco').value.trim().toUpperCase();
 
     if (!nome || !cep || !logradouro || !numero || !bairro || !cidade || !estado) {
-        alert('Por favor, preencha todos os campos obrigatórios.');
+        showWarning('Por favor, preencha todos os campos obrigatórios.');
         return;
     }
 
     if (cep.length !== 8) {
-        alert('CEP inválido. Deve conter 8 dígitos.');
+        showWarning('CEP inválido. Deve conter 8 dígitos.');
         return;
     }
 
     if (estado.length !== 2) {
-        alert('Estado inválido. Deve conter 2 letras (ex: SP).');
+        showWarning('Estado inválido. Deve conter 2 letras (ex: SP).');
         return;
     }
 
@@ -1234,7 +1479,7 @@ async function salvarNovoEndereco(event) {
             } else {
                 // Tentar obter mensagem de erro do backend
                 const erroData = await response.json().catch(() => ({ erro: 'Erro ao salvar endereço' }));
-                alert(erroData.erro || 'Erro ao salvar endereço');
+                showError(erroData.erro || 'Erro ao salvar endereço');
             }
         } catch (error) {
             // Em caso de erro, tentar salvar temporariamente
@@ -1267,9 +1512,28 @@ function salvarEnderecoTemporario(endereco) {
     window.location.reload();
 }
 
+// Função para ativar/desativar loading no botão de confirmar
+function setLoadingConfirmar(loading) {
+    const btnConfirmar = document.getElementById('btnConfirmarPedido');
+    if (!btnConfirmar) return;
+    
+    if (loading) {
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando pedido...';
+        btnConfirmar.classList.add('loading');
+    } else {
+        btnConfirmar.disabled = false;
+        btnConfirmar.innerHTML = '<i class="fas fa-check-circle"></i> Confirmar Pedido';
+        btnConfirmar.classList.remove('loading');
+    }
+}
+
 // Confirmar pedido
 async function confirmarPedido() {
     try {
+        // Ativar loading
+        setLoadingConfirmar(true);
+        
         // Validar dados do cliente (se não estiver logado)
         if (!isUsuarioLogado()) {
             const nomeCliente = document.getElementById('nomeCliente')?.value?.trim();
@@ -1278,60 +1542,81 @@ async function confirmarPedido() {
             const confirmarSenhaCliente = document.getElementById('confirmarSenhaCliente')?.value;
             
             if (!nomeCliente) {
-                alert('Por favor, preencha seu nome completo');
+                setLoadingConfirmar(false);
+                showWarning('Por favor, preencha seu nome completo');
                 return;
             }
             
             if (!telefoneCliente) {
-                alert('Por favor, preencha seu telefone');
+                setLoadingConfirmar(false);
+                showWarning('Por favor, preencha seu telefone');
                 return;
             }
             
             const emailCliente = document.getElementById('emailCliente')?.value?.trim();
             if (!emailCliente) {
-                alert('Por favor, preencha seu e-mail');
+                setLoadingConfirmar(false);
+                showWarning('Por favor, preencha seu e-mail');
                 return;
             }
             
             if (!senhaCliente || senhaCliente.length < 6) {
-                alert('Por favor, crie uma senha com no mínimo 6 caracteres');
+                setLoadingConfirmar(false);
+                showWarning('Por favor, crie uma senha com no mínimo 6 caracteres');
                 return;
             }
             
             if (senhaCliente !== confirmarSenhaCliente) {
-                alert('As senhas não coincidem. Por favor, verifique e tente novamente.');
+                setLoadingConfirmar(false);
+                showWarning('As senhas não coincidem. Por favor, verifique e tente novamente.');
                 return;
             }
         }
         
         // Validar dados
         if (tipoPedido === 'entrega' && !enderecoSelecionado) {
-            alert('Selecione um endereço de entrega');
-            return;
-        }
-
-        if (!formaPagamentoSelecionada) {
-            alert('Selecione uma forma de pagamento');
+            setLoadingConfirmar(false);
+            showWarning('Selecione um endereço de entrega');
             return;
         }
 
         if (carrinhoData.length === 0) {
-            alert('Seu carrinho está vazio');
+            setLoadingConfirmar(false);
+            showWarning('Seu carrinho está vazio');
             return;
         }
 
-        // Calcular totais
-        const subtotal = carrinhoData.reduce((total, item) => total + (item.precoFinal * item.quantidade), 0);
+        // Recarregar pontos do usuário antes de validar (garantir dados atualizados)
+        if (isUsuarioLogado()) {
+            await carregarPontosUsuario();
+        }
+        
+        // Calcular valores considerando pagamento por produto
+        const valores = calcularValoresPedido();
+        const pontosNecessarios = calcularPontosNecessarios();
+        
+        // Validar pontos se houver produtos selecionados para pagar com pontos
+        if (pontosNecessarios > 0) {
+            if (pontosDisponiveis < pontosNecessarios) {
+                setLoadingConfirmar(false);
+                showWarning(`Você não tem pontos suficientes. Faltam ${(pontosNecessarios - pontosDisponiveis).toLocaleString('pt-BR')} pontos.`);
+                return;
+            }
+        }
+        
+        // Validar forma de pagamento se houver produtos para pagar com dinheiro
+        if (valores.subtotalDinheiro > 0 && !formaPagamentoSelecionada) {
+            setLoadingConfirmar(false);
+            showWarning('Selecione uma forma de pagamento para os produtos em dinheiro.');
+            return;
+        }
 
         // Validar taxa de entrega apenas se for entrega
         if (tipoPedido === 'entrega' && taxasEntrega.length > 0 && !taxaEntregaSelecionada) {
-            alert('Aguarde o cálculo da distância ou selecione um endereço válido.');
+            setLoadingConfirmar(false);
+            showWarning('Aguarde o cálculo da distância ou selecione um endereço válido.');
             return;
         }
-
-        // Calcular taxa de entrega (zero se for retirada)
-        const totalTaxaEntrega = tipoPedido === 'retirada' ? 0 : calcularTaxaEntrega(subtotal);
-        const totalFinal = subtotal + totalTaxaEntrega;
 
         // Coletar observações
         const observacoes = document.getElementById('observacoesPedido').value;
@@ -1346,24 +1631,27 @@ async function confirmarPedido() {
                 senha: document.getElementById('senhaCliente').value
             };
         }
-
+        
         // Preparar dados do pedido
         const pedidoData = {
             tipo_entrega: tipoPedido, // 'entrega' ou 'retirada'
             idendereco: tipoPedido === 'entrega' && enderecoSelecionado ? enderecoSelecionado.idendereco : null,
-            idforma_pagamento: formaPagamentoSelecionada.idforma_pagamento,
-            itens: carrinhoData.map(item => {
+            idforma_pagamento: valores.subtotalDinheiro > 0 ? (formaPagamentoSelecionada ? formaPagamentoSelecionada.idforma_pagamento : null) : null,
+            pagamento_pontos: pontosNecessarios > 0, // Flag indicando se há pagamento com pontos
+            pontos_usados: pontosNecessarios,
+            itens: carrinhoData.map((item, index) => {
                 const observacaoItem = item.observacao ? item.observacao.trim() : '';
                 return {
                     idproduto: item.idproduto,
                     quantidade: item.quantidade,
                     preco_unitario: item.precoFinal,
                     observacao: observacaoItem.length > 0 ? observacaoItem : null,
-                    opcionais: item.opcionais || []
+                    opcionais: item.opcionais || [],
+                    pagar_com_pontos: pagamentoPorProduto[index] === 'pontos' && item.preco_pontos && item.preco_pontos > 0
                 };
             }),
-            valor_total: totalFinal,
-            valor_entrega: totalTaxaEntrega,
+            valor_total: valores.totalFinal, // Total sempre inclui taxa de entrega
+            valor_entrega: valores.taxaEntrega, // Taxa sempre cobrada
             distancia_km: tipoPedido === 'entrega' && distanciaCalculada ? Number(distanciaCalculada) : null,
             observacoes: observacoes,
             enderecoCompleto: tipoPedido === 'entrega' && enderecoSelecionado ? enderecoSelecionado : null, // Para endereços temporários
@@ -1384,7 +1672,7 @@ async function confirmarPedido() {
             });
 
             if (response.status === 401) {
-                // Token inválido: usar rota pública
+                // Token inválido: usar rota pública (mantém loading ativo)
                 await enviarPedidoPublico(pedidoData);
                 return;
             }
@@ -1392,10 +1680,17 @@ async function confirmarPedido() {
             const resultado = await response.json();
 
             if (response.ok) {
+                // Se pagou com pontos, recarregar pontos do usuário
+                if (resultado?.pontos_usados && resultado.pontos_usados > 0) {
+                    await carregarPontosUsuario();
+                }
                 processarPedidoSucesso(resultado?.pedidoId, pedidoData);
             } else {
-                // Falha na rota autenticada: usar rota pública
-                await enviarPedidoPublico(pedidoData);
+                // Desativar loading em caso de erro
+                setLoadingConfirmar(false);
+                // Mostrar erro específico do backend
+                const erroData = await response.json().catch(() => ({ erro: 'Erro desconhecido' }));
+                showError(erroData.erro || 'Erro ao confirmar pedido. Tente novamente.');
             }
         } else {
             // Usuário não logado - usar rota pública
@@ -1403,7 +1698,10 @@ async function confirmarPedido() {
         }
 
     } catch (error) {
-        alert('Erro ao confirmar pedido. Tente novamente.');
+        console.error('Erro ao confirmar pedido:', error);
+        // Desativar loading em caso de erro
+        setLoadingConfirmar(false);
+        showError('Erro ao confirmar pedido. Tente novamente.');
     }
 }
 
@@ -1423,14 +1721,18 @@ async function enviarPedidoPublico(pedidoData) {
         if (response.ok) {
             processarPedidoSucesso(resultado?.pedidoId, pedidoData);
         } else {
+            // Desativar loading em caso de erro
+            setLoadingConfirmar(false);
             // Se falhar, salvar localmente como fallback
             console.error('Erro ao enviar pedido público:', resultado.erro);
-            alert('Erro ao confirmar pedido: ' + (resultado.erro || 'Erro desconhecido') + '. O pedido será salvo localmente.');
+            showWarning('Erro ao confirmar pedido: ' + (resultado.erro || 'Erro desconhecido') + '. O pedido será salvo localmente.');
             salvarPedidoLocal(pedidoData);
         }
     } catch (error) {
+        // Desativar loading em caso de erro
+        setLoadingConfirmar(false);
         console.error('Erro ao enviar pedido público:', error);
-        alert('Erro ao confirmar pedido. O pedido será salvo localmente.');
+        showWarning('Erro ao confirmar pedido. O pedido será salvo localmente.');
         salvarPedidoLocal(pedidoData);
     }
 }
@@ -1488,7 +1790,7 @@ async function processarPedidoSucesso(pedidoId, pedidoData) {
         }, 500);
     } else {
         // Cliente não logado - mostrar mensagem de sucesso
-        alert('Pedido confirmado com sucesso! Número do pedido: #' + (pedidoId ? String(pedidoId).padStart(3, '0') : 'aguardando') + '\n\nVocê pode fazer login com seu email e senha para acompanhar o pedido.');
+        showSuccess('Pedido confirmado com sucesso! Número do pedido: #' + (pedidoId ? String(pedidoId).padStart(3, '0') : 'aguardando') + '. Você pode fazer login com seu email e senha para acompanhar o pedido.');
         setTimeout(() => {
             window.location.href = '/login_cadastro.html';
         }, 1000);
@@ -1522,8 +1824,10 @@ function salvarPedidoLocal(pedidoData) {
     localStorage.removeItem('cart');
     
     // Redirecionar para página de confirmação / login
-    alert('Pedido salvo! Faça login para acompanhar seu pedido.');
-    window.location.href = '/login_cadastro.html';
+    showSuccess('Pedido salvo! Faça login para acompanhar seu pedido.');
+    setTimeout(() => {
+        window.location.href = '/login_cadastro.html';
+    }, 2000);
 }
 
 // Função auxiliar para formatar preço

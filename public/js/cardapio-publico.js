@@ -402,7 +402,7 @@ async function abrirModalProduto(produtoEntrada) {
         
         renderizarModalProduto(produto, gruposOpcionais);
     } catch (error) {
-        alert('Não foi possível carregar os detalhes deste produto. Tente novamente.');
+        showError('Não foi possível carregar os detalhes deste produto. Tente novamente.');
         fecharModal();
     }
 }
@@ -953,10 +953,10 @@ function salvarCarrinho() {
 }
 
 // Adicionar ao carrinho com opcionais
-function adicionarAoCarrinhoComOpcionais(idproduto) {
+async function adicionarAoCarrinhoComOpcionais(idproduto) {
     // Verificar se o estabelecimento está aberto
     if (!statusFuncionamento.aberto) {
-        alert(statusFuncionamento.mensagem || 'Estabelecimento fechado. Não é possível adicionar produtos ao carrinho.');
+        showWarning(statusFuncionamento.mensagem || 'Estabelecimento fechado. Não é possível adicionar produtos ao carrinho.');
         return;
     }
     
@@ -992,9 +992,14 @@ function adicionarAoCarrinhoComOpcionais(idproduto) {
     const campoObservacao = document.getElementById('observacaoProduto');
     const observacaoTexto = campoObservacao ? campoObservacao.value.trim() : '';
 
+    // Obter preco_pontos do produto
+    const produtoCompleto = await obterProdutoCompleto(null, idproduto);
+    const precoPontos = produtoCompleto?.preco_pontos || 0;
+    
     const itemCarrinho = {
         id: Date.now(), // ID único para o item
         produtoId: idproduto,
+        idproduto: idproduto,
         nome: produtoNome,
         precoBase: precoBase,
         precoFinal: precoFinal,
@@ -1007,7 +1012,8 @@ function adicionarAoCarrinhoComOpcionais(idproduto) {
             nome: obterNomeOpcional(opcional.id)
         })),
         imagem: imagemProduto,
-        observacao: observacaoTexto
+        observacao: observacaoTexto,
+        preco_pontos: precoPontos
     };
     
     // Adicionar ao carrinho
@@ -1147,16 +1153,6 @@ function atualizarCarrinho() {
                     <span>Subtotal:</span>
                     <span>R$ ${formatarPreco(total)}</span>
                 </div>
-                ${total >= 200 ? `
-                    <div class="cart-free-delivery">
-                        <i class="fas fa-truck"></i>
-                        <span>Entrega Grátis!</span>
-                    </div>
-                ` : `
-                    <div class="cart-delivery-info">
-                        <small>Faltam R$ ${formatarPreco(200 - total)} para entrega grátis</small>
-                    </div>
-                `}
                 <div class="cart-total">
                     <span>Total:</span>
                     <span class="total-value">R$ ${formatarPreco(total)}</span>
@@ -1248,7 +1244,7 @@ function calcularTotalCarrinho() {
 // Finalizar compra
 function finalizarCompra() {
     if (carrinho.length === 0) {
-        alert('Seu carrinho está vazio!');
+        showWarning('Seu carrinho está vazio!');
         return;
     }
     
@@ -1256,7 +1252,7 @@ function finalizarCompra() {
     
     // Verificar pedido mínimo
     if (total < 25) {
-        alert(`O pedido mínimo é de R$ 25,00. Adicione mais R$ ${formatarPreco(25 - total)} ao carrinho.`);
+        showWarning(`O pedido mínimo é de R$ 25,00. Adicione mais R$ ${formatarPreco(25 - total)} ao carrinho.`);
         return;
     }
     
@@ -1389,17 +1385,17 @@ function formatarPreco(preco) {
 function adicionarAoCarrinho(produtoId) {
     // Verificar se o estabelecimento está aberto
     if (!statusFuncionamento.aberto) {
-        alert(statusFuncionamento.mensagem || 'Estabelecimento fechado. Não é possível adicionar produtos ao carrinho.');
+        showWarning(statusFuncionamento.mensagem || 'Estabelecimento fechado. Não é possível adicionar produtos ao carrinho.');
         return;
     }
     
     // TODO: Implementar funcionalidade de carrinho
-    alert(`Produto ${produtoId} adicionado ao carrinho!`);
+    showSuccess(`Produto adicionado ao carrinho!`);
 }
 
 function adicionarAosFavoritos(produtoId) {
     // TODO: Implementar funcionalidade de favoritos
-    alert(`Produto ${produtoId} adicionado aos favoritos!`);
+    showSuccess(`Produto adicionado aos favoritos!`);
 }
 
 // Função de busca (placeholder)
@@ -1908,7 +1904,7 @@ function compartilharProduto(produtoId) {
         // Fallback: copiar URL para clipboard
         const url = `${window.location.origin}/cardapio-publico?produto=${produtoId}`;
         navigator.clipboard.writeText(url).then(() => {
-            alert('Link do produto copiado para a área de transferência!');
+            showSuccess('Link do produto copiado para a área de transferência!');
         });
     }
 }

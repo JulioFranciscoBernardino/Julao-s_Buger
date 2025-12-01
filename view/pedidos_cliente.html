@@ -20,6 +20,7 @@
     
     <link rel="stylesheet" href="/styles/navbar.css">
     <link rel="stylesheet" href="/styles/pedidos.css">
+    <link rel="stylesheet" href="/styles/notifications.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
@@ -203,6 +204,7 @@
     Pedido adicionado ao carrinho!
   </div>
 
+<script src="/js/notifications.js" defer></script>
 <script src="/js/logout.js" defer></script>
 <script>
 // Variáveis globais
@@ -311,7 +313,7 @@ function exibirPedidos(pedidos) {
             
             <div class="pedido-footer">
                 <div class="pedido-total">
-                    <strong>Total: R$ ${parseFloat(pedido.totalPedido ?? pedido.total ?? 0).toFixed(2).replace('.', ',')}</strong>
+                    <strong>Total: R$ ${parseFloat(pedido.valor_total ?? pedido.totalPedido ?? pedido.total ?? 0).toFixed(2).replace('.', ',')}</strong>
                 </div>
                 <div class="pedido-actions">
                     <button class="action-btn btn-repetir" ${pedido.idpedido === 0 ? 'disabled' : ''} onclick="event.stopPropagation(); repetirPedido(${pedido.idpedido || 0})">
@@ -412,7 +414,7 @@ async function verDetalhesPedido(idPedido) {
                 </div>
                 
                 <div class="pedido-total-detalhes">
-                    <strong>Total: R$ ${parseFloat(pedido.total).toFixed(2).replace('.', ',')}</strong>
+                    <strong>Total do Pedido: R$ ${parseFloat(pedido.valor_total ?? pedido.total ?? 0).toFixed(2).replace('.', ',')}</strong>
                 </div>
             </div>
         `;
@@ -422,7 +424,7 @@ async function verDetalhesPedido(idPedido) {
         
     } catch (error) {
         console.error('Erro ao carregar detalhes do pedido:', error);
-        alert('Erro ao carregar detalhes do pedido');
+        showError('Erro ao carregar detalhes do pedido');
     }
 }
 
@@ -433,7 +435,7 @@ function fecharModalPedido() {
 }
 
 // Repetir pedido
-function repetirPedido(idPedido = null) {
+async function repetirPedido(idPedido = null) {
     // Não permitir repetir pedido com ID 0 ou inválido
     if (idPedido === 0) {
         console.log('ID de pedido inválido para repetir:', idPedido);
@@ -443,34 +445,87 @@ function repetirPedido(idPedido = null) {
     const pedido = idPedido ? pedidosData.find(p => p.idpedido === idPedido) : pedidoSelecionado;
     
     if (!pedido || !pedido.itens) {
-        alert('Pedido não encontrado ou sem itens');
+        showWarning('Pedido não encontrado ou sem itens');
         return;
     }
     
-    // Preparar itens para o carrinho
+    // Preparar itens para o carrinho no formato correto
     const itensCarrinho = [];
+    let baseId = Date.now();
     
-    pedido.itens.forEach(item => {
-        const produto = {
-            id: item.idproduto,
-            nome: item.nome,
-            preco: parseFloat(item.preco),
-            imagem: item.imagem || '/imgs/placeholder.jpg',
-            quantidade: item.quantidade,
-            opcionais: item.opcionais || []
+    for (let i = 0; i < pedido.itens.length; i++) {
+        const item = pedido.itens[i];
+        
+        // Buscar informações completas do produto para obter preco_pontos
+        let produtoCompleto = null;
+        try {
+            const response = await fetch(`/api/produtos/${item.idproduto}`);
+            if (response.ok) {
+                produtoCompleto = await response.json();
+            }
+        } catch (error) {
+            console.error('Erro ao buscar produto:', error);
+        }
+        
+        // Calcular preço final (preço base + opcionais)
+        let precoBase = parseFloat(item.preco || item.preco_unitario || 0);
+        let precoFinal = precoBase;
+        const opcionaisFormatados = [];
+        
+        if (item.opcionais && Array.isArray(item.opcionais)) {
+            item.opcionais.forEach(opcional => {
+                const precoOpcional = parseFloat(opcional.preco || 0);
+                const qtdOpcional = opcional.quantidade || 1;
+                precoFinal += precoOpcional * qtdOpcional;
+                
+                opcionaisFormatados.push({
+                    id: opcional.idopcional || opcional.id,
+                    tipo: opcional.tipo || 'adicional',
+                    preco: precoOpcional,
+                    quantidade: qtdOpcional,
+                    nome: opcional.nome || opcional.nome_opcional || 'Opcional'
+                });
+            });
+        }
+        
+        // Normalizar caminho da imagem
+        let imagem = item.imagem || produtoCompleto?.imagem || null;
+        if (imagem) {
+            imagem = imagem.replace(/^https?:\/\/[^\/]+/, '');
+            if (!imagem.startsWith('/imgs/')) {
+                imagem = imagem.replace(/^\/imgs\/imgs\//, '/imgs/');
+                if (!imagem.startsWith('/imgs/')) {
+                    imagem = `/imgs/${imagem.replace(/^\//, '')}`;
+                }
+            }
+        }
+        
+        const itemCarrinho = {
+            id: baseId + i, // ID único para o item
+            produtoId: item.idproduto,
+            idproduto: item.idproduto,
+            nome: item.nome || item.produto_nome || 'Produto',
+            precoBase: precoBase,
+            precoFinal: precoFinal,
+            quantidade: item.quantidade || 1,
+            opcionais: opcionaisFormatados,
+            imagem: imagem,
+            observacao: item.observacao || '',
+            preco_pontos: produtoCompleto?.preco_pontos || 0
         };
         
-        itensCarrinho.push(produto);
-    });
+        itensCarrinho.push(itemCarrinho);
+    }
     
-    // Salvar no localStorage
-    localStorage.setItem('cart', JSON.stringify(itensCarrinho));
+    // Salvar no localStorage usando a chave correta
+    localStorage.setItem('julaosBurger_carrinho', JSON.stringify(itensCarrinho));
+    localStorage.setItem('cart', JSON.stringify(itensCarrinho)); // Compatibilidade
     
     // Mostrar notificação
-    mostrarNotificacao('Pedido adicionado ao carrinho!');
+    showSuccess('Pedido adicionado ao carrinho!');
     
     // Fechar modal se estiver aberto
-    if (document.getElementById('pedidoModal').style.display === 'flex') {
+    if (document.getElementById('pedidoModal') && document.getElementById('pedidoModal').style.display === 'flex') {
         fecharModalPedido();
     }
     

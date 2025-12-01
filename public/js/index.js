@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Verificar se está aberto antes de abrir o carrinho
         if (!statusFuncionamento.aberto) {
-            alert(statusFuncionamento.mensagem || 'Estabelecimento fechado. Não é possível acessar o carrinho.');
+            showWarning(statusFuncionamento.mensagem || 'Estabelecimento fechado. Não é possível acessar o carrinho.');
             return;
         }
         cart.classList.add('open');

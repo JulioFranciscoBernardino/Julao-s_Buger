@@ -241,7 +241,7 @@ function focarPedidoPorId(valor) {
         card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
         setTimeout(() => card.classList.remove('pedido-highlight'), 1600);
     } else {
-        alert('Pedido não encontrado no painel atual.');
+        showWarning('Pedido não encontrado no painel atual.');
     }
 }
 
@@ -418,7 +418,7 @@ async function atualizarStatus(id, novoStatus) {
         if (!response.ok) {
             // Não redirecionar durante testes
             if (response.status === 401 && token) {
-                alert('Sessão expirada. Recarregue a página.');
+                showWarning('Sessão expirada. Recarregue a página.');
                 return;
             }
             throw new Error('Erro ao atualizar status');
@@ -428,7 +428,7 @@ async function atualizarStatus(id, novoStatus) {
         agruparPedidosPorStatusGestor();
         renderizarColunasGestor();
     } catch {
-        alert('Não foi possível atualizar o status do pedido.');
+        showError('Não foi possível atualizar o status do pedido.');
     }
 }
 
@@ -454,7 +454,7 @@ async function cancelarPedido(id) {
         if (!response.ok) {
             // Não redirecionar durante testes
             if (response.status === 401 && token) {
-                alert('Sessão expirada. Recarregue a página.');
+                showWarning('Sessão expirada. Recarregue a página.');
                 return;
             }
             const errorData = await response.json().catch(() => ({}));
@@ -465,7 +465,7 @@ async function cancelarPedido(id) {
         agruparPedidosPorStatusGestor();
         renderizarColunasGestor();
     } catch (error) {
-        alert('Não foi possível cancelar o pedido: ' + (error.message || 'Erro desconhecido'));
+        showError('Não foi possível cancelar o pedido: ' + (error.message || 'Erro desconhecido'));
     }
 }
 
@@ -545,7 +545,7 @@ async function abrirModalDetalhes(pedidoId) {
             if (!response.ok) {
                 // Não redirecionar durante testes
                 if (response.status === 401 && token) {
-                    alert('Sessão expirada. Recarregue a página.');
+                    showWarning('Sessão expirada. Recarregue a página.');
                     return;
                 }
                 throw new Error('Erro ao buscar detalhes do pedido');
@@ -555,7 +555,7 @@ async function abrirModalDetalhes(pedidoId) {
             
             requestAnimationFrame(() => {
                 const { data, hora } = formatarDataHora(pedido.data_pedido);
-                const totalPedidoValor = Number(pedido.total ?? pedido.valor_total ?? 0);
+                const totalPedidoValor = Number(pedido.valor_total ?? pedido.total ?? 0);
                 const endereco = pedido.endereco_formatado || montarEnderecoPedido(pedido);
 
                 const itensPedido = Array.isArray(pedido.itens) ? pedido.itens : [];

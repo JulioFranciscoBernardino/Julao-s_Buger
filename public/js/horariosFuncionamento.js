@@ -106,7 +106,7 @@ async function carregarHorarios() {
     });
   } catch (error) {
     console.error('Erro ao carregar horários:', error);
-    alert('Erro ao carregar horários!');
+    showError('Erro ao carregar horários. Tente novamente.');
   }
 }
 
@@ -135,7 +135,7 @@ async function salvarHorarios() {
     const token = obterToken();
     if (!token) {
       hideLoading();
-      alert('Você precisa estar logado para salvar horários!');
+      showWarning('Você precisa estar logado para salvar horários!');
       window.location.href = '/login_cadastro';
       return;
     }
@@ -153,17 +153,17 @@ async function salvarHorarios() {
 
     if (response.ok) {
       hideLoading();
-      alert('Horários salvos com sucesso!');
+      showSuccess('Horários salvos com sucesso!');
       // Recarregar para garantir que está tudo atualizado
       await carregarHorarios();
     } else {
       hideLoading();
-      alert('Erro ao salvar horários: ' + (result.error || 'Erro desconhecido'));
+      showError(result.error || 'Erro ao salvar horários');
     }
   } catch (error) {
     hideLoading();
     console.error('Erro ao salvar horários:', error);
-    alert('Erro ao salvar horários!');
+    showError('Erro ao salvar horários. Tente novamente.');
   }
 }
 

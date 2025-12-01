@@ -578,16 +578,22 @@
   overflow: hidden;
 }
 
-.produto-preco {
+.produto-preco-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.produto-preco, .produto-pontos{
   font-weight: 700;
   font-size: 1.1rem;
   color: #28a745;
-  margin-top: 0.5rem;
   display: inline-block;
   background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  border: 1px solid #4caf50;
 }
 
 .produto-botoes {

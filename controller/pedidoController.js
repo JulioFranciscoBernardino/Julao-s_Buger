@@ -17,6 +17,25 @@ function getDataAtualBrasilia() {
     return `${ano}-${mes}-${dia}`;
 }
 
+// Função auxiliar para executar query com retry em caso de erro de conexão
+async function executarQueryComRetry(queryFn, maxTentativas = 3) {
+    for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+        try {
+            return await queryFn();
+        } catch (error) {
+            // Se for erro de conexão e não for a última tentativa, tentar novamente
+            if ((error.code === 'ECONNRESET' || error.code === 'PROTOCOL_CONNECTION_LOST' || error.code === 'ETIMEDOUT') && tentativa < maxTentativas) {
+                console.warn(`[DB] Tentativa ${tentativa} falhou, tentando novamente... (${error.code})`);
+                // Aguardar um pouco antes de tentar novamente (backoff exponencial)
+                await new Promise(resolve => setTimeout(resolve, 100 * tentativa));
+                continue;
+            }
+            // Se não for erro de conexão ou for a última tentativa, lançar o erro
+            throw error;
+        }
+    }
+}
+
 async function carregarItensDetalhados(pedidoId) {
     const itensQuery = `
         SELECT 
@@ -31,7 +50,19 @@ async function carregarItensDetalhados(pedidoId) {
         WHERE pp.idpedido = ?
     `;
 
-    const [itens] = await db.execute(itensQuery, [pedidoId]);
+    let itens;
+    try {
+        [itens] = await executarQueryComRetry(() => db.execute(itensQuery, [pedidoId]));
+    } catch (error) {
+        console.error(`[DB] Erro ao carregar itens do pedido ${pedidoId}:`, error);
+        // Retornar estrutura vazia em caso de erro
+        return { itensDetalhados: [], totalItens: 0 };
+    }
+
+    if (!itens || itens.length === 0) {
+        return { itensDetalhados: [], totalItens: 0 };
+    }
+
     let totalItens = 0;
 
     const itensDetalhados = await Promise.all(
@@ -47,7 +78,15 @@ async function carregarItensDetalhados(pedidoId) {
                 WHERE ppo.idpedidoproduto = ?
             `;
 
-            const [opcionais] = await db.execute(opcionaisQuery, [item.idpedidoproduto]);
+            let opcionais = [];
+            try {
+                [opcionais] = await executarQueryComRetry(() => db.execute(opcionaisQuery, [item.idpedidoproduto]));
+            } catch (error) {
+                console.error(`[DB] Erro ao carregar opcionais do item ${item.idpedidoproduto}:`, error);
+                // Continuar sem opcionais em caso de erro
+                opcionais = [];
+            }
+
             const precoProduto = parseFloat(item.preco || 0);
             const totalOpcionais = (opcionais || []).reduce((total, opcional) => {
                 return total + (parseFloat(opcional.preco || 0) * (opcional.quantidade || 1));
@@ -213,7 +252,13 @@ class PedidoController {
                 LIMIT 200
             `;
 
-            const [pedidos] = await db.execute(query, params);
+            let pedidos;
+            try {
+                [pedidos] = await executarQueryComRetry(() => db.execute(query, params));
+            } catch (error) {
+                console.error('Erro ao listar pedidos (público):', error);
+                return res.status(500).json({ erro: 'Erro ao conectar com o banco de dados. Tente novamente.' });
+            }
 
             if (!pedidos || pedidos.length === 0) {
                 return res.json([]);
@@ -253,7 +298,7 @@ class PedidoController {
                             totalPedido: totalFinal
                         };
                     } catch (error) {
-                        console.error('Erro ao montar pedido (admin):', error);
+                        console.error(`Erro ao montar pedido ${pedido.idpedido} (público):`, error);
                         return {
                             idpedido: pedido.idpedido,
                             idusuario: pedido.idusuario,
@@ -366,7 +411,13 @@ class PedidoController {
                 LIMIT 200
             `;
 
-            const [pedidos] = await db.execute(query, params);
+            let pedidos;
+            try {
+                [pedidos] = await executarQueryComRetry(() => db.execute(query, params));
+            } catch (error) {
+                console.error('Erro ao listar pedidos (admin):', error);
+                return res.status(500).json({ erro: 'Erro ao conectar com o banco de dados. Tente novamente.' });
+            }
 
             if (!pedidos || pedidos.length === 0) {
                 return res.json([]);
@@ -406,7 +457,7 @@ class PedidoController {
                             totalPedido: totalFinal
                         };
                     } catch (error) {
-                        console.error('Erro ao montar pedido (admin):', error);
+                        console.error(`Erro ao montar pedido ${pedido.idpedido} (admin):`, error);
                         return {
                             idpedido: pedido.idpedido,
                             idusuario: pedido.idusuario,
@@ -520,14 +571,9 @@ class PedidoController {
             }
 
             pedido.itens = itens;
-            const totalItens = itens.reduce((total, item) => {
-                const precoProduto = parseFloat(item.preco || 0);
-                const totalOpcionais = (item.opcionais || []).reduce((subtotal, opcional) => {
-                    return subtotal + (parseFloat(opcional.preco || 0) * (opcional.quantidade || 1));
-                }, 0);
-                return total + ((precoProduto * item.quantidade) + totalOpcionais);
-            }, 0);
-            pedido.total = totalItens + (parseFloat(pedido.valor_entrega) || 0);
+            // Usar valor_total do banco de dados (já calculado corretamente considerando pontos)
+            // Não recalcular, pois pode incluir produtos pagos com pontos que não devem entrar no total
+            pedido.total = parseFloat(pedido.valor_total || 0);
 
             res.json(pedido);
         } catch (error) {
@@ -625,14 +671,9 @@ class PedidoController {
             }
 
             pedido.itens = itens;
-            const totalItens = itens.reduce((total, item) => {
-                const precoProduto = parseFloat(item.preco || 0);
-                const totalOpcionais = (item.opcionais || []).reduce((subtotal, opcional) => {
-                    return subtotal + (parseFloat(opcional.preco || 0) * (opcional.quantidade || 1));
-                }, 0);
-                return total + ((precoProduto * item.quantidade) + totalOpcionais);
-            }, 0);
-            pedido.total = totalItens + (parseFloat(pedido.valor_entrega) || 0);
+            // Usar valor_total do banco de dados (já calculado corretamente considerando pontos)
+            // Não recalcular, pois pode incluir produtos pagos com pontos que não devem entrar no total
+            pedido.total = parseFloat(pedido.valor_total || 0);
 
             res.json(pedido);
         } catch (error) {
@@ -654,7 +695,7 @@ class PedidoController {
                 return res.status(401).json({ erro: 'ID do usuário não encontrado' });
             }
 
-            const { itens, observacoes, idendereco, idforma_pagamento, valor_total, valor_entrega, distancia_km, tipo_entrega } = req.body;
+            const { itens, observacoes, idendereco, idforma_pagamento, valor_total, valor_entrega, distancia_km, tipo_entrega, pagamento_pontos, pontos_usados } = req.body;
 
             if (!itens || !Array.isArray(itens) || itens.length === 0) {
                 return res.status(400).json({ erro: 'Pedido deve conter pelo menos um item' });
@@ -665,8 +706,22 @@ class PedidoController {
                 return res.status(400).json({ erro: 'Endereço é obrigatório para entrega' });
             }
 
-            if (!idforma_pagamento) {
+            // Se não estiver pagando com pontos, forma de pagamento é obrigatória
+            if (!pagamento_pontos && !idforma_pagamento) {
                 return res.status(400).json({ erro: 'Forma de pagamento é obrigatória' });
+            }
+            
+            // Se estiver pagando com pontos, validar pontos
+            if (pagamento_pontos) {
+                if (!pontos_usados || pontos_usados <= 0) {
+                    return res.status(400).json({ erro: 'Quantidade de pontos inválida' });
+                }
+                
+                // Verificar se o usuário tem pontos suficientes
+                const pontosDisponiveis = await Usuario.buscarPontos(userId);
+                if (pontosDisponiveis < pontos_usados) {
+                    return res.status(400).json({ erro: 'Pontos insuficientes para este pedido' });
+                }
             }
 
             // Iniciar transação
@@ -687,9 +742,9 @@ class PedidoController {
                 const [pedidoResult] = await connection.execute(pedidoQuery, [
                     userId,
                     idendereco || null, // Pode ser null se for retirada
-                    idforma_pagamento,
+                    idforma_pagamento || null, // Pode ser null se todos os produtos forem pagos com pontos
                     valor_total || 0,
-                    valor_entrega || 0,
+                    valor_entrega || 0, // Taxa sempre cobrada
                     distancia_km || null,
                     observacoes || null,
                     tipoEntrega
@@ -697,13 +752,14 @@ class PedidoController {
                 const pedidoId = pedidoResult.insertId;
 
                 let totalPedido = 0;
+                let pontosNecessariosCalculados = 0;
 
                 // Adicionar itens do pedido
                 for (let item of itens) {
-                    const { idproduto, quantidade, observacao = null, opcionais = [] } = item;
+                    const { idproduto, quantidade, observacao = null, opcionais = [], pagar_com_pontos = false } = item;
 
-                    // Buscar preço do produto
-                    const produtoQuery = `SELECT preco FROM produto WHERE idproduto = ? AND ativo = 1`;
+                    // Buscar preço e preco_pontos do produto
+                    const produtoQuery = `SELECT preco, preco_pontos FROM produto WHERE idproduto = ? AND ativo = 1`;
                     const [produtos] = await connection.execute(produtoQuery, [idproduto]);
 
                     if (produtos.length === 0) {
@@ -711,6 +767,7 @@ class PedidoController {
                     }
 
                     const precoProduto = parseFloat(produtos[0].preco);
+                    const precoPontosProduto = parseFloat(produtos[0].preco_pontos || 0);
 
                     // Adicionar produto ao pedido
                     const itemQuery = `
@@ -749,8 +806,47 @@ class PedidoController {
                         }
                     }
 
-                    totalPedido += precoItem;
+                    // Se o item será pago com pontos, calcular pontos necessários
+                    if (pagar_com_pontos && precoPontosProduto > 0) {
+                        pontosNecessariosCalculados += precoPontosProduto * quantidade;
+                    } else {
+                        // Se não for pago com pontos, adicionar ao total em dinheiro
+                        totalPedido += precoItem;
+                    }
                 }
+
+                // Se estiver pagando com pontos, verificar novamente e descontar os pontos
+                if (pagamento_pontos && pontos_usados > 0) {
+                    // Validar se os pontos calculados batem com os enviados
+                    if (pontosNecessariosCalculados !== pontos_usados && process.env.NODE_ENV === 'development') {
+                        console.warn(`[PONTOS] Divergência: calculado=${pontosNecessariosCalculados}, enviado=${pontos_usados}`);
+                    }
+                    
+                    // Verificar novamente dentro da transação (evitar condição de corrida)
+                    const pontosDisponiveisTransacao = await Usuario.buscarPontos(userId, connection);
+                    if (pontosDisponiveisTransacao < pontos_usados) {
+                        await connection.rollback();
+                        connection.release();
+                        return res.status(400).json({ erro: 'Pontos insuficientes para este pedido' });
+                    }
+                    
+                    // Passar a conexão da transação para usar a mesma conexão
+                    const pontosDescontados = await Usuario.descontarPontos(userId, pontos_usados, connection);
+                    if (!pontosDescontados) {
+                        await connection.rollback();
+                        connection.release();
+                        return res.status(400).json({ erro: 'Erro ao descontar pontos. Verifique se você tem pontos suficientes.' });
+                    }
+                }
+
+                // Calcular valor total final (produtos em dinheiro + taxa de entrega)
+                const valorTotalFinal = totalPedido + (valor_entrega || 0);
+                
+                // Atualizar o valor_total do pedido com o valor calculado corretamente
+                await connection.execute(
+                    'UPDATE pedido SET valor_total = ? WHERE idpedido = ?',
+                    [valorTotalFinal, pedidoId]
+                );
 
                 // Confirmar transação
                 await connection.commit();
@@ -759,7 +855,8 @@ class PedidoController {
                 res.status(201).json({
                     mensagem: 'Pedido criado com sucesso',
                     pedidoId: pedidoId,
-                    total: totalPedido
+                    total: valorTotalFinal,
+                    pontos_usados: pagamento_pontos ? pontos_usados : 0
                 });
 
             } catch (error) {
@@ -787,7 +884,9 @@ class PedidoController {
                 distancia_km, 
                 tipo_entrega,
                 dadosCliente,
-                enderecoCompleto
+                enderecoCompleto,
+                pagamento_pontos,
+                pontos_usados
             } = req.body;
 
             // Validar dados do cliente (obrigatório quando não está logado)
@@ -804,8 +903,25 @@ class PedidoController {
                 return res.status(400).json({ erro: 'Pedido deve conter pelo menos um item' });
             }
 
-            if (!idforma_pagamento) {
-                return res.status(400).json({ erro: 'Forma de pagamento é obrigatória' });
+            // Verificar se há produtos que serão pagos com dinheiro (não com pontos)
+            let temProdutosDinheiro = false;
+            for (let item of itens) {
+                if (!item.pagar_com_pontos) {
+                    temProdutosDinheiro = true;
+                    break;
+                }
+            }
+
+            // Se houver produtos em dinheiro, forma de pagamento é obrigatória
+            if (temProdutosDinheiro && !idforma_pagamento) {
+                return res.status(400).json({ erro: 'Forma de pagamento é obrigatória para produtos em dinheiro' });
+            }
+            
+            // Se estiver pagando com pontos, validar pontos
+            if (pagamento_pontos) {
+                if (!pontos_usados || pontos_usados <= 0) {
+                    return res.status(400).json({ erro: 'Quantidade de pontos inválida' });
+                }
             }
             
             // Verificar se já existe usuário com esse email (antes de iniciar transação)
@@ -915,9 +1031,9 @@ class PedidoController {
                 const [pedidoResult] = await connection.execute(pedidoQuery, [
                     userId,
                     enderecoId,
-                    idforma_pagamento,
+                    idforma_pagamento || null, // Pode ser null se todos os produtos forem pagos com pontos
                     valor_total || 0,
-                    valor_entrega || 0,
+                    valor_entrega || 0, // Taxa sempre cobrada
                     distancia_km || null,
                     observacoes || null,
                     tipoEntrega
@@ -925,13 +1041,14 @@ class PedidoController {
                 const pedidoId = pedidoResult.insertId;
 
                 let totalPedido = 0;
+                let pontosNecessariosCalculados = 0;
 
                 // Adicionar itens do pedido
                 for (let item of itens) {
-                    const { idproduto, quantidade, observacao = null, opcionais = [] } = item;
+                    const { idproduto, quantidade, observacao = null, opcionais = [], pagar_com_pontos = false } = item;
 
-                    // Buscar preço do produto
-                    const produtoQuery = `SELECT preco FROM produto WHERE idproduto = ? AND ativo = 1`;
+                    // Buscar preço e preco_pontos do produto
+                    const produtoQuery = `SELECT preco, preco_pontos FROM produto WHERE idproduto = ? AND ativo = 1`;
                     const [produtos] = await connection.execute(produtoQuery, [idproduto]);
 
                     if (produtos.length === 0) {
@@ -939,6 +1056,7 @@ class PedidoController {
                     }
 
                     const precoProduto = parseFloat(produtos[0].preco);
+                    const precoPontosProduto = parseFloat(produtos[0].preco_pontos || 0);
 
                     // Adicionar produto ao pedido
                     const itemQuery = `
@@ -977,8 +1095,50 @@ class PedidoController {
                         }
                     }
 
-                    totalPedido += precoItem;
+                    // Se o item será pago com pontos, calcular pontos necessários
+                    if (pagar_com_pontos && precoPontosProduto > 0) {
+                        pontosNecessariosCalculados += precoPontosProduto * quantidade;
+                    } else {
+                        // Se não for pago com pontos, adicionar ao total em dinheiro
+                        totalPedido += precoItem;
+                    }
                 }
+
+                // Se estiver pagando com pontos, verificar se o usuário tem pontos suficientes e descontar
+                if (pagamento_pontos && pontos_usados > 0) {
+                    // Validar se os pontos calculados batem com os enviados
+                    if (pontosNecessariosCalculados !== pontos_usados) {
+                        // Log apenas em desenvolvimento - remover em produção se necessário
+                        if (process.env.NODE_ENV === 'development') {
+                            console.warn(`[PONTOS] Divergência: calculado=${pontosNecessariosCalculados}, enviado=${pontos_usados}`);
+                        }
+                    }
+                    
+                    // Verificar se o usuário tem pontos suficientes (dentro da transação)
+                    const pontosDisponiveis = await Usuario.buscarPontos(userId, connection);
+                    if (pontosDisponiveis < pontos_usados) {
+                        await connection.rollback();
+                        connection.release();
+                        return res.status(400).json({ erro: 'Pontos insuficientes para este pedido' });
+                    }
+                    
+                    // Passar a conexão da transação para usar a mesma conexão
+                    const pontosDescontados = await Usuario.descontarPontos(userId, pontos_usados, connection);
+                    if (!pontosDescontados) {
+                        await connection.rollback();
+                        connection.release();
+                        return res.status(400).json({ erro: 'Erro ao descontar pontos. Verifique se você tem pontos suficientes.' });
+                    }
+                }
+
+                // Calcular valor total final (produtos em dinheiro + taxa de entrega)
+                const valorTotalFinal = totalPedido + (valor_entrega || 0);
+                
+                // Atualizar o valor_total do pedido com o valor calculado corretamente
+                await connection.execute(
+                    'UPDATE pedido SET valor_total = ? WHERE idpedido = ?',
+                    [valorTotalFinal, pedidoId]
+                );
 
                 // Confirmar transação
                 await connection.commit();
@@ -987,7 +1147,8 @@ class PedidoController {
                 res.status(201).json({
                     mensagem: 'Pedido criado com sucesso',
                     pedidoId: pedidoId,
-                    total: totalPedido
+                    total: valorTotalFinal,
+                    pontos_usados: pagamento_pontos ? pontos_usados : 0
                 });
 
             } catch (error) {
@@ -1137,7 +1298,6 @@ class PedidoController {
                 
                 // Se o pedido já está com o status desejado, retornar sucesso (não é um erro)
                 if (statusAtual === statusConvertido) {
-                    console.log(`[STATUS] Pedido ${id} já está com status "${statusConvertido}"`);
                     return res.json({ 
                         mensagem: `Pedido já está com status "${statusConvertido}"`,
                         statusAtual: statusAtual
@@ -1154,7 +1314,6 @@ class PedidoController {
                 
                 // Outro motivo (ex: tentando atualizar para "concluido" mas já está concluído)
                 if (statusConvertido === 'concluido' && statusAtual === 'concluido') {
-                    console.log('[FIDELIDADE] Pedido já estava concluído, ignorando atualização...');
                     return res.json({ 
                         mensagem: 'Pedido já está concluído',
                         statusAtual: statusAtual
@@ -1190,18 +1349,8 @@ class PedidoController {
                             // Calcular pontos: o valor total do pedido (arredondado para inteiro)
                             const pontosGanhos = Math.round(valorTotal);
                             
-                            console.log(`[FIDELIDADE] Adicionando ${pontosGanhos} pontos para o usuário ${pedidoUserId} (valor total: R$ ${valorTotal.toFixed(2)})`);
-                            
                             if (pontosGanhos > 0 && pontosGanhos !== null && pontosGanhos !== undefined && !isNaN(pontosGanhos)) {
-                                const resultadoPontos = await Usuario.adicionarPontos(pedidoUserId, pontosGanhos);
-                                
-                                if (resultadoPontos) {
-                                    console.log(`✓ [FIDELIDADE] Pontos adicionados com sucesso: ${pontosGanhos} pontos para o usuário ${pedidoUserId}`);
-                                } else {
-                                    console.error(`✗ [FIDELIDADE] Falha ao adicionar pontos: nenhuma linha afetada para o usuário ${pedidoUserId}`);
-                                }
-                            } else {
-                                console.warn(`[FIDELIDADE] Pontos inválidos: ${pontosGanhos} (valor total: ${valorTotal})`);
+                                await Usuario.adicionarPontos(pedidoUserId, pontosGanhos);
                             }
                         }
                     }

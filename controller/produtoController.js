@@ -88,7 +88,7 @@ const produtoController = {
 
   inserirProduto: async (req, res) => {
     try {
-      const { nome, descricao, preco, categoria } = req.body;
+      const { nome, descricao, preco, preco_pontos, categoria } = req.body;
 
       let imagemUrl = null;
       if (req.file) {
@@ -99,6 +99,7 @@ const produtoController = {
         nome, 
         descricao, 
         preco: parseFloat(preco), 
+        preco_pontos: parseFloat(preco_pontos) || 0,
         imagem: imagemUrl, 
         idcategoria: parseInt(categoria) 
       });
@@ -122,13 +123,14 @@ const produtoController = {
 
   atualizarProduto: async (req, res) => {
     try {
-      const { nome, descricao, preco, categoria } = req.body;
+      const { nome, descricao, preco, preco_pontos, categoria } = req.body;
       const idproduto = req.params.idproduto;
       
       const updateData = { 
         nome, 
         descricao, 
         preco: parseFloat(preco), 
+        preco_pontos: parseFloat(preco_pontos) || 0,
         idcategoria: parseInt(categoria) 
       };
       

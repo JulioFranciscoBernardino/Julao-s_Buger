@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function getToken() {
   const token = localStorage.getItem('token');
   if (!token) {
-    alert('Sessão expirada. Faça login novamente.');
+    showWarning('Sessão expirada. Faça login novamente.');
     window.location.href = '/login_cadastro';
     return null;
   }
@@ -139,7 +139,7 @@ async function handleSubmit(event) {
   };
 
   if (!payload.distancia_km || !payload.valor) {
-    alert('Informe distância e valor válidos.');
+    showWarning('Informe distância e valor válidos.');
     return;
   }
 
@@ -164,7 +164,7 @@ async function handleSubmit(event) {
     await carregarTaxas();
   } catch (error) {
     console.error(error);
-    alert(error.message);
+    showError(error.message);
   }
 }
 
@@ -213,7 +213,7 @@ async function excluirTaxa(id) {
     await carregarTaxas();
   } catch (error) {
     console.error(error);
-    alert(error.message);
+    showError(error.message);
   }
 }
 

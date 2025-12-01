@@ -11,10 +11,11 @@ const Produto = {
         ORDER BY produto.posicao ASC, produto.nome ASC
       `);
 
-      // Converter preço para número
+      // Converter preço e preco_pontos para número
       const produtosFormatados = rows.map(produto => ({
         ...produto,
-        preco: Number(produto.preco)
+        preco: Number(produto.preco),
+        preco_pontos: produto.preco_pontos ? Number(produto.preco_pontos) : null
       }));
 
       return produtosFormatados;
@@ -33,10 +34,11 @@ const Produto = {
         ORDER BY produto.posicao ASC, produto.nome ASC
       `, [idcategoria]);
 
-      // Converter preço para número
+      // Converter preço e preco_pontos para número
       const produtosFormatados = rows.map(produto => ({
         ...produto,
-        preco: Number(produto.preco)
+        preco: Number(produto.preco),
+        preco_pontos: produto.preco_pontos ? Number(produto.preco_pontos) : null
       }));
 
       return produtosFormatados;
@@ -45,11 +47,11 @@ const Produto = {
     }
   },
 
-  cadastrarProduto: async ({ nome, descricao, preco, imagem, idcategoria }) => {
+  cadastrarProduto: async ({ nome, descricao, preco, preco_pontos, imagem, idcategoria }) => {
     try {
       await db.query(
-        'INSERT INTO produto (nome, descricao, preco, imagem, idcategoria, disponivel) VALUES (?,?,?,?,?,?)',
-        [nome, descricao, preco, imagem, idcategoria, 1]
+        'INSERT INTO produto (nome, descricao, preco, preco_pontos, imagem, idcategoria, disponivel) VALUES (?,?,?,?,?,?,?)',
+        [nome, descricao, preco, preco_pontos || 0, imagem, idcategoria, 1]
       );
     } catch (err) {
       throw err;
@@ -91,6 +93,10 @@ const Produto = {
         updateFields.push('preco = ?');
         values.push(updateData.preco);
       }
+      if (updateData.preco_pontos !== undefined) {
+        updateFields.push('preco_pontos = ?');
+        values.push(updateData.preco_pontos);
+      }
       if (updateData.imagem !== undefined && updateData.imagem !== null) {
         updateFields.push('imagem = ?');
         values.push(updateData.imagem);
@@ -124,6 +130,7 @@ const Produto = {
       
       const produto = rows[0];
       produto.preco = Number(produto.preco);
+      produto.preco_pontos = produto.preco_pontos ? Number(produto.preco_pontos) : null;
       return produto;
     } catch (err) {
       throw err;

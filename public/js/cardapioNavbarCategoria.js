@@ -91,15 +91,15 @@ async function excluirCategoria(idCategoria) {
     const result = await response.json();
     
     if (response.ok) {
-      alert('Categoria excluída com sucesso!');
+      showSuccess('Categoria excluída com sucesso!');
       // Recarregar a página para atualizar a lista
       location.reload();
     } else {
-      alert('Erro ao excluir categoria: ' + result.error);
+      showError(result.error || 'Erro ao excluir categoria');
     }
   } catch (error) {
     console.error('Erro ao excluir categoria:', error);
-    alert('Erro ao excluir categoria!');
+    showError('Erro ao excluir categoria. Tente novamente.');
   }
 }
 
@@ -125,14 +125,14 @@ async function editarCategoria(idCategoria) {
     const result = await response.json();
     
     if (response.ok) {
-      alert('Categoria atualizada com sucesso!');
+      showSuccess('Categoria atualizada com sucesso!');
       // Recarregar a página para atualizar a lista
       location.reload();
     } else {
-      alert('Erro ao atualizar categoria: ' + result.error);
+      showError(result.error || 'Erro ao atualizar categoria');
     }
   } catch (error) {
     console.error('Erro ao atualizar categoria:', error);
-    alert('Erro ao atualizar categoria!');
+    showError('Erro ao atualizar categoria. Tente novamente.');
   }
 }

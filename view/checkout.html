@@ -17,6 +17,7 @@
     
     <link rel="stylesheet" href="/styles/checkout.css">
     <link rel="stylesheet" href="/styles/index.css">
+    <link rel="stylesheet" href="/styles/notifications.css">
     
     <link rel="icon" href="/imgs/logoJulaos.png" type="image/png">
     <link rel="shortcut icon" href="/imgs/logoJulaos.png" type="image/png">
@@ -121,8 +122,41 @@
                     </div>
                 </section>
 
+                <!-- SEÇÃO: RESUMO DE PONTOS -->
+                <section class="checkout-section" id="pontosSection" style="display: none;">
+                    <div class="section-header">
+                        <i class="fas fa-coins"></i>
+                        <h2>Resumo de Pontos</h2>
+                    </div>
+                    
+                    <div class="pontos-container">
+                        <div class="pontos-info">
+                            <div class="pontos-saldo">
+                                <i class="fas fa-wallet"></i>
+                                <div>
+                                    <span class="pontos-label">Seus pontos disponíveis:</span>
+                                    <span class="pontos-valor" id="pontosDisponiveis">0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="pontos-necessarios">
+                                <span class="pontos-label">Pontos necessários para produtos selecionados:</span>
+                                <span class="pontos-valor" id="pontosNecessarios">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="produtos-pontos-container" id="produtosPontosContainer">
+                            <!-- Produtos serão renderizados aqui -->
+                        </div>
+                        
+                        <div class="pontos-mensagem" id="pontosDescricao">
+                            Selecione quais produtos deseja pagar com pontos.
+                        </div>
+                    </div>
+                </section>
+
                 <!-- SEÇÃO: FORMA DE PAGAMENTO -->
-                <section class="checkout-section">
+                <section class="checkout-section" id="formaPagamentoSection">
                     <div class="section-header">
                         <i class="fas fa-credit-card"></i>
                         <h2>Forma de Pagamento</h2>

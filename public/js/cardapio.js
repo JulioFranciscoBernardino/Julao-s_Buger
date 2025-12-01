@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const nomeCategoria = document.getElementById('NovaCategoria').value.trim();
       
       if (!nomeCategoria) {
-        alert('Por favor, preencha o nome da categoria!');
+        showWarning('Por favor, preencha o nome da categoria!');
         return;
       }
       
@@ -197,17 +197,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (response.ok) {
           hideLoading();
-          alert(modo === 'editar' ? 'Categoria atualizada com sucesso!' : 'Categoria cadastrada com sucesso!');
+          showSuccess(modo === 'editar' ? 'Categoria atualizada com sucesso!' : 'Categoria cadastrada com sucesso!');
           modalCategoria.style.display = 'none';
           // Recarregar a página para atualizar a lista
-          location.reload();
+          setTimeout(() => location.reload(), 1000);
         } else {
           hideLoading();
-          alert('Erro: ' + result.error);
+          showError(result.error || 'Erro ao salvar categoria');
         }
       } catch (error) {
         hideLoading();
-        alert('Erro ao salvar categoria!');
+        showError('Erro ao salvar categoria. Tente novamente.');
       }
     });
   }
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const idCategoria = categoriaAtiva.dataset.id;
         editarCategoria(idCategoria);
       } else {
-        alert('Selecione uma categoria para editar!');
+        showWarning('Selecione uma categoria para editar!');
       }
     });
   }
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const idCategoria = categoriaAtiva.dataset.id;
         excluirCategoria(idCategoria);
       } else {
-        alert('Selecione uma categoria para excluir!');
+        showWarning('Selecione uma categoria para excluir!');
       }
     });
   }
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const posicaoGrupo = parseInt(document.getElementById('posicaoGrupoOpcional').value) || 0;
       
       if (!nomeGrupo) {
-        alert('Por favor, preencha o nome do grupo!');
+        showWarning('Por favor, preencha o nome do grupo!');
         return;
       }
 
@@ -329,15 +329,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
         
         if (response.ok) {
-          alert(modo === 'editar' ? 'Grupo atualizado com sucesso!' : 'Grupo cadastrado com sucesso!');
+          showSuccess(modo === 'editar' ? 'Grupo atualizado com sucesso!' : 'Grupo cadastrado com sucesso!');
           modalGrupoOpcional.style.display = 'none';
           carregarGruposOpcionais(); // Recarregar lista
         } else {
-          alert('Erro: ' + result.error);
+          showError(result.error || 'Erro ao salvar grupo');
         }
       } catch (error) {
         console.error('Erro ao salvar grupo:', error);
-        alert('Erro ao salvar grupo!');
+        showError('Erro ao salvar grupo. Tente novamente.');
       }
     });
   }
@@ -351,10 +351,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const nome = document.getElementById('nomeProduto').value.trim();
       const descricao = document.getElementById('descricaoProduto').value.trim();
       const preco = document.getElementById('precoProduto').value;
+      const precoPontos = document.getElementById('precoPontosProduto').value || '0';
       const categoria = document.getElementById('produtoCategoria').value;
       
       if (!nome || !descricao || !preco || !categoria) {
-        alert('Por favor, preencha todos os campos!');
+        showWarning('Por favor, preencha todos os campos obrigatórios!');
         return;
       }
       
@@ -392,6 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
           body.append('nome', nome);
           body.append('descricao', descricao);
           body.append('preco', parseFloat(preco));
+          body.append('preco_pontos', parseFloat(precoPontos) || 0);
           body.append('categoria', parseInt(categoria));
           body.append('imagem', file);
           
@@ -407,6 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nome: nome,
             descricao: descricao,
             preco: parseFloat(preco),
+            preco_pontos: parseFloat(precoPontos) || 0,
             categoria: parseInt(categoria)
           });
           
@@ -423,16 +426,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (response.ok) {
           hideLoading();
-          alert(modo === 'editar' ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
+          showSuccess(modo === 'editar' ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
         modalProduto.style.display = 'none';
-          location.reload(); // Recarregar página
+          setTimeout(() => location.reload(), 1000); // Recarregar página
       } else {
           hideLoading();
-          alert('Erro: ' + result.error);
+          showError(result.error || 'Erro ao salvar produto');
       }
     } catch (error) {
         hideLoading();
-        alert('Erro ao salvar produto!');
+        showError('Erro ao salvar produto. Tente novamente.');
       }
     });
   }
@@ -458,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       if (!nomeOpcional || !tipoOpcional || isNaN(precoOpcional) || !grupoOpcional) {
-        alert('Por favor, preencha todos os campos corretamente!');
+        showWarning('Por favor, preencha todos os campos corretamente!');
         return;
       }
       
@@ -491,15 +494,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
 
         if (response.ok) {
-          alert(modo === 'editar' ? 'Opcional atualizado com sucesso!' : 'Opcional cadastrado com sucesso!');
+          showSuccess(modo === 'editar' ? 'Opcional atualizado com sucesso!' : 'Opcional cadastrado com sucesso!');
           modalOpcional.style.display = 'none';
           carregarOpcionais(); // Recarregar lista
         } else {
-          alert('Erro: ' + result.error);
+          showError(result.error || 'Erro ao salvar opcional');
         }
       } catch (error) {
         console.error('Erro ao salvar opcional:', error);
-        alert('Erro ao salvar opcional!');
+        showError('Erro ao salvar opcional. Tente novamente.');
       }
     });
     }
@@ -592,7 +595,7 @@ async function editarCategoria(idCategoria) {
     const categoria = await response.json();
     
     if (!response.ok) {
-      alert('Erro ao carregar dados da categoria: ' + categoria.error);
+      showError('Erro ao carregar dados da categoria: ' + (categoria.error || 'Erro desconhecido'));
       return;
     }
     
@@ -611,7 +614,7 @@ async function editarCategoria(idCategoria) {
     
   } catch (error) {
     console.error('Erro ao carregar categoria:', error);
-    alert('Erro ao carregar dados da categoria!');
+    showError('Erro ao carregar dados da categoria. Tente novamente.');
   }
 }
 
@@ -632,16 +635,16 @@ async function excluirCategoria(idCategoria) {
     
     if (response.ok) {
       hideLoading();
-      alert('Categoria excluída com sucesso!');
+      showSuccess('Categoria excluída com sucesso!');
       // Recarregar a página para atualizar a lista
-      location.reload();
+      setTimeout(() => location.reload(), 1000);
     } else {
       hideLoading();
-      alert('Erro ao excluir categoria: ' + result.error);
+      showError(result.error || 'Erro ao excluir categoria');
     }
   } catch (error) {
     hideLoading();
-    alert('Erro ao excluir categoria!');
+    showError('Erro ao excluir categoria. Tente novamente.');
   }
 }
 
@@ -672,7 +675,7 @@ async function carregarCategoriasSelect() {
     
   } catch (error) {
     console.error('Erro ao carregar categorias:', error);
-    alert('Erro ao carregar categorias!');
+    showError('Erro ao carregar categorias. Tente recarregar a página.');
   }
 }
 
@@ -708,9 +711,18 @@ function carregarProdutosCategoria(categoria) {
 
             let precoFormatado = '--';
             if (typeof produto.preco === 'number') {
-              precoFormatado = produto.preco.toFixed(2);
+              precoFormatado = produto.preco.toFixed(2).replace('.', ',');
             } else if (produto.preco && !isNaN(Number(produto.preco))) {
-              precoFormatado = Number(produto.preco).toFixed(2);
+              precoFormatado = Number(produto.preco).toFixed(2).replace('.', ',');
+            }
+
+            let precoPontosFormatado = null;
+            if (produto.preco_pontos) {
+              if (typeof produto.preco_pontos === 'number') {
+                precoPontosFormatado = produto.preco_pontos.toFixed(2).replace('.', ',');
+              } else if (!isNaN(Number(produto.preco_pontos))) {
+                precoPontosFormatado = Number(produto.preco_pontos).toFixed(2).replace('.', ',');
+              }
             }
 
             let srcImg = produto.imagem || '';
@@ -735,7 +747,10 @@ function carregarProdutosCategoria(categoria) {
               <div class="produto-info">
                 <h4>${produto.nome}</h4>
                 <p>${produto.descricao}</p>
-                <span class="produto-preco">R$ ${precoFormatado}</span>
+                <div class="produto-preco-container">
+                  <span class="produto-preco">R$ ${precoFormatado}</span>
+                  ${precoPontosFormatado ? `<span class="produto-pontos">${precoPontosFormatado} pts</span>` : ''}
+                </div>
               </div>
             </div>
 
@@ -812,11 +827,11 @@ async function reordenarProdutos() {
       }
     } else {
       console.error('Erro ao reordenar produtos:', result.error);
-      alert('Erro ao reordenar produtos: ' + result.error);
+      showError(result.error || 'Erro ao reordenar produtos');
     }
   } catch (error) {
     console.error('Erro ao reordenar produtos:', error);
-    alert('Erro ao reordenar produtos!');
+    showError('Erro ao reordenar produtos. Tente novamente.');
   }
 }
 
@@ -871,11 +886,11 @@ async function salvarOrdenacao() {
       window.location.reload();
     } else {
       hideLoading();
-      alert('Erro ao reordenar produtos: ' + result.error);
+      showError(result.error || 'Erro ao reordenar produtos');
     }
   } catch (error) {
     hideLoading();
-    alert('Erro ao reordenar produtos!');
+    showError('Erro ao reordenar produtos. Tente novamente.');
   }
 }
 
@@ -931,7 +946,7 @@ async function salvarOrdenacaoCategorias() {
     const listaCategorias = document.getElementById('listaCategorias');
     if (!listaCategorias) {
       hideLoading();
-      alert('Lista de categorias não encontrada');
+      showError('Lista de categorias não encontrada');
       return;
     }
     
@@ -946,7 +961,7 @@ async function salvarOrdenacaoCategorias() {
 
     if (categorias.length === 0) {
       hideLoading();
-      alert('Nenhuma categoria válida encontrada para reordenar');
+      showWarning('Nenhuma categoria válida encontrada para reordenar');
       return;
     }
 
@@ -971,11 +986,11 @@ async function salvarOrdenacaoCategorias() {
       window.location.reload();
     } else {
       hideLoading();
-      alert('Erro ao reordenar categorias: ' + (result.error || 'Erro desconhecido'));
+      showError(result.error || 'Erro ao reordenar categorias');
     }
   } catch (error) {
     hideLoading();
-    alert('Erro ao reordenar categorias!');
+    showError('Erro ao reordenar categorias. Tente novamente.');
   }
 }
 
@@ -1077,13 +1092,13 @@ function adicionarEventListenersDisponibilidade() {
         } else {
           // Reverter o switch em caso de erro
           switchEl.checked = !disponivel;
-          alert('Erro ao atualizar disponibilidade: ' + result.error);
+          showError(result.error || 'Erro ao atualizar disponibilidade');
         }
       } catch (error) {
         // Reverter o switch em caso de erro
         switchEl.checked = !disponivel;
         console.error('Erro ao atualizar disponibilidade:', error);
-        alert('Erro ao atualizar disponibilidade do produto!');
+        showError('Erro ao atualizar disponibilidade do produto. Tente novamente.');
       }
     });
   });
@@ -1096,7 +1111,7 @@ async function editarProduto(idProduto) {
     const produto = await response.json();
     
     if (!produto) {
-      alert('Produto não encontrado!');
+      showError('Produto não encontrado!');
       return;
     }
 
@@ -1107,6 +1122,7 @@ async function editarProduto(idProduto) {
     document.getElementById('nomeProduto').value = produto.nome;
     document.getElementById('descricaoProduto').value = produto.descricao;
     document.getElementById('precoProduto').value = produto.preco;
+    document.getElementById('precoPontosProduto').value = produto.preco_pontos || '0';
     document.getElementById('produtoCategoria').value = produto.idcategoria;
     
     // Alterar título do modal
@@ -1129,7 +1145,7 @@ async function editarProduto(idProduto) {
     
   } catch (error) {
     console.error('Erro ao carregar produto:', error);
-    alert('Erro ao carregar dados do produto!');
+    showError('Erro ao carregar dados do produto. Tente novamente.');
   }
 }
 
@@ -1144,7 +1160,7 @@ async function gerenciarOpcionais(idProduto) {
     
   } catch (error) {
     console.error('Erro ao carregar grupos de opcionais do produto:', error);
-    alert('Erro ao carregar grupos de opcionais do produto!');
+    showError('Erro ao carregar grupos de opcionais do produto. Tente novamente.');
   }
 }
 
@@ -1313,15 +1329,15 @@ async function adicionarGrupoAoProduto(idProduto, idGrupo) {
     const result = await response.json();
     
     if (response.ok) {
-      alert('Grupo adicionado ao produto com sucesso!');
+      showSuccess('Grupo adicionado ao produto com sucesso!');
       carregarGruposDisponiveis(idProduto);
       carregarGruposProduto(idProduto);
     } else {
-      alert('Erro ao adicionar grupo: ' + result.error);
+      showError(result.error || 'Erro ao adicionar grupo');
     }
   } catch (error) {
     console.error('Erro ao adicionar grupo:', error);
-    alert('Erro ao adicionar grupo!');
+    showError('Erro ao adicionar grupo. Tente novamente.');
   }
 }
 
@@ -1339,15 +1355,15 @@ async function removerGrupoDoProduto(idProduto, idGrupo) {
     const result = await response.json();
     
     if (response.ok) {
-      alert('Grupo removido do produto com sucesso!');
+      showSuccess('Grupo removido do produto com sucesso!');
       carregarGruposDisponiveis(idProduto);
       carregarGruposProduto(idProduto);
     } else {
-      alert('Erro ao remover grupo: ' + result.error);
+      showError(result.error || 'Erro ao remover grupo');
     }
   } catch (error) {
     console.error('Erro ao remover grupo:', error);
-    alert('Erro ao remover grupo!');
+    showError('Erro ao remover grupo. Tente novamente.');
   }
 }
 
@@ -1363,10 +1379,10 @@ async function verOpcionaisDoGrupoNoProduto(idProduto, idGrupo) {
       mensagem += `• ${opcional.nome} - R$ ${preco.toFixed(2)}\n`;
     });
     
-    alert(mensagem);
+    showInfo(mensagem);
   } catch (error) {
     console.error('Erro ao carregar opcionais do grupo:', error);
-    alert('Erro ao carregar opcionais do grupo!');
+    showError('Erro ao carregar opcionais do grupo. Tente novamente.');
   }
 }
 
@@ -1434,15 +1450,15 @@ async function configurarGrupoNoProduto(idProduto, grupo) {
       const result = await response.json();
       
       if (response.ok) {
-        alert('Configurações salvas com sucesso!');
+        showSuccess('Configurações salvas com sucesso!');
         document.body.removeChild(modalConfig);
         carregarGruposProduto(idProduto);
       } else {
-        alert('Erro ao salvar configurações: ' + result.error);
+        showError(result.error || 'Erro ao salvar configurações');
       }
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
-      alert('Erro ao salvar configurações!');
+      showError('Erro ao salvar configurações. Tente novamente.');
     }
   });
 }
@@ -1464,15 +1480,15 @@ async function excluirProduto(idProduto) {
     
     if (response.ok) {
       hideLoading();
-      alert('Produto excluído com sucesso!');
-      location.reload(); // Recarregar página
+      showSuccess('Produto excluído com sucesso!');
+      setTimeout(() => location.reload(), 1000); // Recarregar página
     } else {
       hideLoading();
-      alert('Erro ao excluir produto: ' + result.error);
+      showError(result.error || 'Erro ao excluir produto');
     }
   } catch (error) {
     hideLoading();
-    alert('Erro ao excluir produto!');
+    showError('Erro ao excluir produto. Tente novamente.');
   }
 }
 
@@ -1550,7 +1566,7 @@ async function editarOpcional(idOpcional) {
     const opcional = await response.json();
     
     if (!opcional) {
-      alert('Opcional não encontrado!');
+      showError('Opcional não encontrado!');
       return;
     }
 
@@ -1572,7 +1588,7 @@ async function editarOpcional(idOpcional) {
     
   } catch (error) {
     console.error('Erro ao carregar opcional:', error);
-    alert('Erro ao carregar dados do opcional!');
+    showError('Erro ao carregar dados do opcional. Tente novamente.');
   }
 }
 
@@ -1590,14 +1606,14 @@ async function excluirOpcional(idOpcional) {
     const result = await response.json();
     
     if (response.ok) {
-      alert('Opcional excluído com sucesso!');
+      showSuccess('Opcional excluído com sucesso!');
       carregarOpcionais(); // Recarregar lista
     } else {
-      alert('Erro ao excluir opcional: ' + result.error);
+      showError(result.error || 'Erro ao excluir opcional');
     }
   } catch (error) {
     console.error('Erro ao excluir opcional:', error);
-    alert('Erro ao excluir opcional!');
+    showError('Erro ao excluir opcional. Tente novamente.');
   }
 }
 
@@ -1643,7 +1659,7 @@ async function carregarGruposSelect() {
     
   } catch (error) {
     console.error('Erro ao carregar grupos:', error);
-    alert('Erro ao carregar grupos!');
+    showError('Erro ao carregar grupos. Tente novamente.');
   }
 }
 
@@ -1729,7 +1745,7 @@ async function carregarGruposOpcionais() {
     
   } catch (error) {
     console.error('Erro ao carregar grupos de opcionais:', error);
-    alert('Erro ao carregar grupos de opcionais!');
+    showError('Erro ao carregar grupos de opcionais. Tente novamente.');
   }
 }
 
@@ -1785,11 +1801,12 @@ async function verOpcionaisDoGrupo(idGrupo) {
     const opcionais = await response.json();
     
     // Criar modal ou seção para mostrar opcionais
-    alert(`Opcionais do grupo:\n${opcionais.map(o => `• ${o.nome} - R$ ${Number(o.preco).toFixed(2)}`).join('\n')}`);
+    const mensagem = opcionais.map(o => `• ${o.nome} - R$ ${Number(o.preco).toFixed(2)}`).join('\n');
+    showInfo(mensagem, 'Opcionais do grupo');
     
   } catch (error) {
     console.error('Erro ao carregar opcionais do grupo:', error);
-    alert('Erro ao carregar opcionais do grupo!');
+    showError('Erro ao carregar opcionais do grupo. Tente novamente.');
   }
 }
 
@@ -1810,6 +1827,9 @@ async function adicionarOpcionalAoGrupo(idGrupo) {
   // Mostrar campo de grupo
   const grupoContainer = document.getElementById('grupoOpcionalContainer');
   grupoContainer.style.display = 'block';
+  
+  // Adicionar required quando o campo estiver visível
+  grupoSelect.required = true;
   
   // Alterar título do modal
   document.querySelector('#modalOpcional h2').textContent = 'Novo Opcional';
@@ -1837,6 +1857,10 @@ async function editarOpcionalDoGrupo(idOpcional, idGrupo) {
     const grupoContainer = document.getElementById('grupoOpcionalContainer');
     grupoContainer.style.display = 'none';
     
+    // Remover required quando o campo estiver oculto
+    const grupoSelect = document.getElementById('grupoOpcional');
+    grupoSelect.required = false;
+    
     // Alterar título do modal
     document.querySelector('#modalOpcional h2').textContent = 'Editar Opcional';
     
@@ -1850,7 +1874,7 @@ async function editarOpcionalDoGrupo(idOpcional, idGrupo) {
     
   } catch (error) {
     console.error('Erro ao carregar opcional:', error);
-    alert('Erro ao carregar dados do opcional!');
+    showError('Erro ao carregar dados do opcional. Tente novamente.');
   }
 }
 
@@ -1868,14 +1892,14 @@ async function excluirOpcionalDoGrupo(idOpcional, idGrupo) {
     const result = await response.json();
     
     if (response.ok) {
-      alert('Opcional excluído com sucesso!');
+      showSuccess('Opcional excluído com sucesso!');
       carregarOpcionais(); // Recarregar lista
     } else {
-      alert('Erro ao excluir opcional: ' + result.error);
+      showError(result.error || 'Erro ao excluir opcional');
     }
   } catch (error) {
     console.error('Erro ao excluir opcional:', error);
-    alert('Erro ao excluir opcional!');
+    showError('Erro ao excluir opcional. Tente novamente.');
   }
 }
 
@@ -1900,7 +1924,7 @@ async function editarGrupo(idGrupo) {
     
   } catch (error) {
     console.error('Erro ao carregar grupo:', error);
-    alert('Erro ao carregar grupo!');
+    showError('Erro ao carregar grupo. Tente novamente.');
   }
 }
 
@@ -1918,14 +1942,14 @@ async function excluirGrupo(idGrupo) {
     const result = await response.json();
     
     if (response.ok) {
-      alert('Grupo excluído com sucesso!');
+      showSuccess('Grupo excluído com sucesso!');
       carregarGruposOpcionais(); // Recarregar lista
     } else {
-      alert('Erro ao excluir grupo: ' + result.error);
+      showError(result.error || 'Erro ao excluir grupo');
     }
   } catch (error) {
     console.error('Erro ao excluir grupo:', error);
-    alert('Erro ao excluir grupo!');
+    showError('Erro ao excluir grupo. Tente novamente.');
   }
 }
 

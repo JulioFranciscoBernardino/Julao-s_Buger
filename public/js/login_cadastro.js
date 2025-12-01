@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 } else {
                     localStorage.removeItem('token');
-                    alert('Você foi deslogado.');
+                    showInfo('Você foi deslogado.');
                 }
 
             } catch (e) {
@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (data.token) {
                 hideLoading();
-                alert('Login bem-sucedido!');
+                showSuccess('Login bem-sucedido!');
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('jwt_token', data.token); // Compatibilidade
 
@@ -140,12 +140,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         window.location.href = '/';
                     }
                 } else {
-                    alert('Tipo de usuário não reconhecido.');
+                    showWarning('Tipo de usuário não reconhecido.');
                 }
 
             } else {
                 hideLoading();
-                alert('Erro no login: ' + data.error);
+                showError(data.error || 'Erro no login');
             }
         } catch (error) {
             console.error('Erro ao tentar fazer login:', error);
@@ -158,11 +158,17 @@ document.addEventListener("DOMContentLoaded", function () {
     async function cadastro() {
         const nome = document.getElementById('nome').value;
         const email = document.getElementById('emailCadastro').value;
+        const telefone = document.getElementById('telefone').value;
         const senha = document.getElementById('senha').value;
         const confirmarSenha = document.getElementById('confirmarSenha').value;
 
         if (senha !== confirmarSenha) {
-            alert('As senhas não coincidem!');
+            showWarning('As senhas não coincidem!');
+            return;
+        }
+
+        if (!telefone || telefone.trim() === '') {
+            showWarning('Por favor, informe seu telefone!');
             return;
         }
 
@@ -174,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ nome, email, senha })
+                body: JSON.stringify({ nome, email, telefone, senha })
             });
 
             const data = await response.json();
@@ -187,11 +193,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 toggleForms()
             } else {
                 hideLoading();
-                alert('Erro no cadastro: ' + data.error);
+                showError(data.error || 'Erro no cadastro');
             }
         } catch (error) {
             hideLoading();
-            alert('Erro ao cadastrar. Tente novamente.');
+            showError('Erro ao cadastrar. Tente novamente.');
         }
     }
 
@@ -221,8 +227,10 @@ function logout() {
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('user_data');
     localStorage.removeItem('user_type');
-    alert('Logout realizado com sucesso!');
-    window.location.href = '/login_cadastro.html';
+    showSuccess('Logout realizado com sucesso!');
+    setTimeout(() => {
+        window.location.href = '/login_cadastro.html';
+    }, 1000);
 }
 
 // Função para verificar autenticação e mostrar/ocultar elementos
@@ -297,8 +305,10 @@ function irParaConta() {
         const url = `/conta?token=${encodeURIComponent(token)}`;
         window.location.href = url;
     } else {
-        alert('Você precisa estar logado para acessar sua conta.');
-        window.location.href = '/login_cadastro';
+        showWarning('Você precisa estar logado para acessar sua conta.');
+        setTimeout(() => {
+            window.location.href = '/login_cadastro';
+        }, 1500);
     }
 }
 

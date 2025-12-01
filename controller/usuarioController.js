@@ -38,9 +38,11 @@ exports.login = async (req, res) => {
 
 
 exports.cadastro = async (req, res) => {
-    const {  nome, email, senha, tipo } = req.body;
+    const { nome, email, senha, tipo, telefone } = req.body;
     try {
-        await Usuario.cadastrar({ nome, email, senha, tipo });
+        // Remover caracteres não numéricos do telefone
+        const telefoneLimpo = telefone ? telefone.replace(/\D/g, '') : null;
+        await Usuario.cadastrar({ nome, email, senha, tipo, telefone: telefoneLimpo });
         res.json({ message: 'Usuário cadastrado com sucesso' });
     } catch (error) {
         console.error('Erro ao cadastrar usuário:', error);

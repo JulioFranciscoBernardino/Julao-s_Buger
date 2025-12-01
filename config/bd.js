@@ -7,7 +7,13 @@ const pool = mysql.createPool({
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_DATABASE || 'julaos_burger',
     port: process.env.DB_PORT || 3306,
-    timezone: '-03:00' // Horário de Brasília (UTC-3)
+    timezone: '-03:00', // Horário de Brasília (UTC-3)
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+    reconnect: true
 }).promise();
 
 // Interceptar novas conexões para configurar timezone de Brasília

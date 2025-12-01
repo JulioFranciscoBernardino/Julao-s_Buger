@@ -12,13 +12,18 @@ async function getCategoriasComProdutos() {
   // Para cada categoria, busca produtos ativos
   for (const categoria of categorias) {
     const [produtos] = await db.query(`
-      SELECT idproduto, nome, descricao, preco, imagem, posicao, disponivel
+      SELECT idproduto, nome, descricao, preco, preco_pontos, imagem, posicao, disponivel
       FROM produto
       WHERE idcategoria = ? AND excluido = 0 AND ativo = 1
       ORDER BY posicao ASC, nome ASC;
     `, [categoria.idcategoria]);
 
-    categoria.produtos = produtos;
+    // Converter preço e preco_pontos para número
+    categoria.produtos = produtos.map(produto => ({
+      ...produto,
+      preco: Number(produto.preco),
+      preco_pontos: produto.preco_pontos ? Number(produto.preco_pontos) : null
+    }));
   }
 
   return categorias;
@@ -37,13 +42,18 @@ async function getCategoriasComProdutosDisponiveis() {
   // Para cada categoria, busca apenas produtos disponíveis
   for (const categoria of categorias) {
     const [produtos] = await db.query(`
-      SELECT idproduto, nome, descricao, preco, imagem, posicao, disponivel
+      SELECT idproduto, nome, descricao, preco, preco_pontos, imagem, posicao, disponivel
       FROM produto
       WHERE idcategoria = ? AND excluido = 0 AND ativo = 1 AND disponivel = 1
       ORDER BY posicao ASC, nome ASC;
     `, [categoria.idcategoria]);
 
-    categoria.produtos = produtos;
+    // Converter preço e preco_pontos para número
+    categoria.produtos = produtos.map(produto => ({
+      ...produto,
+      preco: Number(produto.preco),
+      preco_pontos: produto.preco_pontos ? Number(produto.preco_pontos) : null
+    }));
   }
 
   return categorias;
